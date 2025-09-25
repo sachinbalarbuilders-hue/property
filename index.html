@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Management - Balar Builders</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="brand">
+                    <h1>Property Management</h1>
+                    <span class="brand-subtitle">Balar Builders</span>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn--primary" id="addPropertyBtn">
+                        <span>+ Add Property</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="main-content" id="mainDashboard">
+        <div class="container">
+            <!-- Dashboard Summary -->
+            <div class="dashboard-summary">
+                <div class="summary-card">
+                    <h3>Total Properties</h3>
+                    <span class="summary-value" id="totalProperties">0</span>
+                </div>
+                <div class="summary-card">
+                    <h3>Active Rentals</h3>
+                    <span class="summary-value" id="activeRentals">0</span>
+                </div>
+                <div class="summary-card">
+                    <h3>Pending Bills</h3>
+                    <span class="summary-value" id="pendingBills">0</span>
+                </div>
+                <div class="summary-card">
+                    <h3>Monthly Revenue</h3>
+                    <span class="summary-value" id="monthlyRevenue">₹0</span>
+                </div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="search-section">
+                <div class="search-controls">
+                    <input type="text" class="form-control search-input" placeholder="Search properties..." id="searchInput">
+                    <select class="form-control filter-select" id="typeFilter">
+                        <option value="">All Types</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Properties Table -->
+            <div class="table-container">
+                <table class="properties-table">
+                    <thead>
+                        <tr>
+                            <th>Serial No</th>
+                            <th>Name</th>
+                            <th>Address</th>
+                            <th>Type</th>
+                            <th>Rent</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="propertiesTableBody">
+                        <!-- Properties will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Payment Dashboard -->
+    <div class="main-content hidden" id="paymentDashboard">
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="dashboard-navigation">
+                    <button class="btn btn--outline" id="backToPropertiesBtn">← Back to Properties</button>
+                </div>
+                <div class="property-info">
+                    <h2 id="paymentPropertyName">Property Name</h2>
+                    <p id="paymentPropertyAddress">Property Address</p>
+                </div>
+            </div>
+
+            <!-- Payment Summary -->
+            <div class="payment-summary">
+                <div class="summary-card">
+                    <h3>Total Collected</h3>
+                    <span class="summary-value" id="totalCollected">₹0</span>
+                </div>
+                <div class="summary-card">
+                    <h3>Pending Amount</h3>
+                    <span class="summary-value" id="pendingAmount">₹0</span>
+                </div>
+                <div class="summary-card">
+                    <h3>Overdue Amount</h3>
+                    <span class="summary-value" id="overdueAmount">₹0</span>
+                </div>
+                <div class="summary-card">
+                    <h3>GST Collected</h3>
+                    <span class="summary-value" id="gstCollected">₹0</span>
+                </div>
+            </div>
+
+            <!-- Individual Bill Sections -->
+            <div class="individual-bill-sections" id="individualBillSections">
+                <!-- Individual bill sections will be populated by JavaScript -->
+            </div>
+
+            <!-- Payment History Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Payment History</h3>
+                    <div class="bill-buttons" id="billButtons">
+                        <!-- Bill buttons will be populated by JavaScript -->
+                    </div>
+                </div>
+                <table class="payment-table">
+                    <thead>
+                        <tr>
+                            <th>Serial No</th>
+                            <th>Date</th>
+                            <th>Due Date</th>
+                            <th>Base</th>
+                            <th>GST (%)</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentTableBody">
+                        <!-- Payment history will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Property Modal -->
+    <div class="modal hidden" id="propertyModal">
+        <div class="modal-overlay" id="modalOverlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Property</h2>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-btn active" data-tab="information">Property Information</button>
+                <button class="tab-btn" data-tab="rental">Rental Management</button>
+                <button class="tab-btn" data-tab="bills">Bill Tracking</button>
+                <button class="tab-btn" data-tab="documents">Documents</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Section 1: Property Information -->
+                <div class="tab-content active" id="information">
+                    <h3>Property Information</h3>
+                    <form id="propertyForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Property Name *</label>
+                                <input type="text" class="form-control" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Address *</label>
+                                <input type="text" class="form-control" name="address" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Type of Property</label>
+                                <select class="form-control" name="type" id="propertyTypeSelect">
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Rent per sqft</label>
+                                <input type="number" class="form-control" name="rentPerSqft" id="rentPerSqft" readonly>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Project Name</label>
+                                <input type="text" class="form-control" name="projectName">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Officer No</label>
+                                <input type="text" class="form-control" name="officerNo">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Floor No</label>
+                                <input type="text" class="form-control" name="floorNo">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Furniture Details</label>
+                                <select class="form-control" name="furniture">
+                                    <option value="">Select</option>
+                                    <option value="Fully Furnished">Fully Furnished</option>
+                                    <option value="Semi-Furnished">Semi-Furnished</option>
+                                    <option value="Unfurnished">Unfurnished</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Carpet Area</label>
+                                <input type="text" class="form-control" name="carpetArea" placeholder="e.g., 850 sqft">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Super Built-up Area</label>
+                                <input type="text" class="form-control" name="superBuiltupArea" placeholder="e.g., 1200 sqft">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Balcony Area</label>
+                                <input type="text" class="form-control" name="balconyArea" placeholder="e.g., 100 sqft">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Terrace Area</label>
+                                <input type="text" class="form-control" name="terraceArea" placeholder="e.g., 0 sqft">
+                            </div>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="isRental" id="isRentalCheckbox"> Rental Property
+                            </label>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Section 2: Rental Management -->
+                <div class="tab-content" id="rental">
+                    <h3>Rental Management</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Rent Amount</label>
+                            <input type="number" class="form-control" name="rentAmount">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Period</label>
+                            <select class="form-control" name="rentPeriod">
+                                <option value="month">Per Month</option>
+                                <option value="year">Per Year</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="gstIncludedInRent" onchange="toggleGstPercentage()">
+                                <span class="checkmark"></span>
+                                GST included in rent amount
+                            </label>
+                        </div>
+                        <div class="form-group" id="gstPercentageGroup" style="display: block;">
+                            <label class="form-label">GST Percentage (%)</label>
+                            <input type="number" class="form-control" name="gstPercentage" min="0" max="100" step="0.1" value="18">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Rent Payable Date</label>
+                            <input type="number" class="form-control" name="rentPayableDate" min="1" max="31" placeholder="Day of month">
+                        </div>
+                        <div class="form-group">
+                            <!-- Empty div for layout -->
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Agreement Start Date</label>
+                            <input type="date" class="form-control" name="agreementStartDate">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Agreement Tenure</label>
+                            <div class="form-row">
+                                <input type="number" class="form-control" name="agreementTenureAmount" min="1" max="120" value="12" style="width: 60%; margin-right: 10px;">
+                                <select class="form-control" name="agreementTenureUnit" style="width: 35%;">
+                                    <option value="months">Months</option>
+                                    <option value="years">Years</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Security Deposit</label>
+                            <input type="number" class="form-control" name="securityDeposit">
+                        </div>
+                        <div class="form-group">
+                            <!-- Empty div for layout -->
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Escalation Percentage</label>
+                            <input type="number" class="form-control" name="escalationPercentage" min="0" max="100" step="0.1" value="5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Escalation Period (Days)</label>
+                            <input type="number" class="form-control" name="escalationDays" min="1" max="3650" value="365">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Agreement Type</label>
+                            <select class="form-control" name="agreementType" id="agreementTypeSelect">
+                            </select>
+                        </div>
+                    </div>
+
+                    <h4>Lessor Details</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" name="lessorName">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Contact</label>
+                            <input type="tel" class="form-control" name="lessorContact">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Address</label>
+                            <input type="text" class="form-control" name="lessorAddress">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="lessorEmail">
+                        </div>
+                    </div>
+
+                    <h4>Lessee Details</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" name="lesseeName">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Contact</label>
+                            <input type="tel" class="form-control" name="lesseeContact">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Address</label>
+                            <input type="text" class="form-control" name="lesseeAddress">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="lesseeEmail">
+                        </div>
+                    </div>
+
+                    <h4>Financial Details</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">GSTIN</label>
+                            <input type="text" class="form-control" name="gstin" placeholder="e.g., 27XXXXX1234X1Z5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">PAN No</label>
+                            <input type="text" class="form-control" name="panNo" placeholder="e.g., ABCDE1234F">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="maintenanceEnabled" id="maintenanceCheckbox">
+                                Maintenance Fees Applicable
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-row maintenance-details hidden" id="maintenanceDetails">
+                        <div class="form-group">
+                            <label class="form-label">Maintenance Amount</label>
+                            <input type="number" class="form-control" name="maintenanceAmount" placeholder="Enter amount">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Maintenance Period</label>
+                            <select class="form-control" name="maintenancePeriod">
+                                <option value="month">Per Month</option>
+                                <option value="year">Per Year</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h4>Bank Details</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Bank Name</label>
+                            <input type="text" class="form-control" name="bankName">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Account No</label>
+                            <input type="text" class="form-control" name="accountNo">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">IFSC Code</label>
+                            <input type="text" class="form-control" name="ifscCode">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Rent Free Period</label>
+                            <input type="number" class="form-control" name="rentFreePeriodAmount" placeholder="Enter number">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Unit</label>
+                            <select class="form-control" name="rentFreePeriodUnit">
+                                <option value="days">Days</option>
+                                <option value="months">Months</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Bill Tracking -->
+                <div class="tab-content" id="bills">
+                    <h3>Bill Tracking</h3>
+                    <div class="bills-section" id="billsSection">
+                        <!-- Bills will be populated by JavaScript -->
+                    </div>
+                    <div class="custom-bills">
+                        <h4>Custom Bills</h4>
+                        <div id="customBillsList"></div>
+                        <button type="button" class="btn btn--secondary" id="addCustomBillBtn">Add Custom Bill</button>
+                    </div>
+                </div>
+
+                <!-- Section 4: Documents -->
+                <div class="tab-content" id="documents">
+                    <h3>Document Management</h3>
+                    <div class="document-upload">
+                        <input type="file" class="form-control" id="documentInput" multiple accept=".pdf,.doc,.docx,.jpg,.png">
+                        <button type="button" class="btn btn--secondary" id="uploadDocBtn">Add Document</button>
+                    </div>
+                    <div class="document-list" id="documentList">
+                        <!-- Documents will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn--outline" id="cancelBtn">Cancel</button>
+                <button class="btn btn--primary" id="savePropertyBtn">Save Property</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal hidden" id="paymentModal">
+        <div class="modal-overlay" id="paymentModalOverlay"></div>
+        <div class="modal-content payment-modal-content">
+            <div class="modal-header">
+                <h2>Receive Payment</h2>
+                <button class="modal-close" id="paymentModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Base Amount</label>
+                            <input type="number" class="form-control" id="baseAmount" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">GST (18%)</label>
+                            <input type="number" class="form-control" id="gstAmount" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Total Amount</label>
+                            <input type="number" class="form-control" id="totalAmount" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Payment Date *</label>
+                            <input type="date" class="form-control" id="paymentDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Payment Mode *</label>
+                            <select class="form-control" id="paymentMode" required>
+                                <option value="">Select Mode</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Cheque">Cheque</option>
+                                <option value="Online">Online</option>
+                                <option value="UPI">UPI</option>
+                                <option value="NEFT">NEFT</option>
+                                <option value="RTGS">RTGS</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Receipt Number</label>
+                            <input type="text" class="form-control" id="receiptNumber">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" id="paymentNotes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--outline" id="paymentCancelBtn">Cancel</button>
+                <button class="btn btn--primary" id="submitPaymentBtn">Submit Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
