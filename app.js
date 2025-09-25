@@ -1,0 +1,3092 @@
+// Property Management System JavaScript
+
+// Global Data Storage
+let properties = [];
+let currentPropertyId = null;
+let currentPaymentId = null;
+let nextId = 1;
+let nextReceiptId = 1;
+
+// Static Data
+const billTypes = [
+    { name: "Property Tax", key: "propertyTax" },
+    { name: "Light Bill", key: "lightBill" },
+    { name: "Gas Bill", key: "gasBill" },
+    { name: "Internet Bill", key: "internetBill" }
+];
+
+const propertyTypes = [
+    "Residential",
+    "Commercial",
+    "Industrial"
+];
+
+const agreementTypes = [
+    "Notary",
+    "Registry"
+];
+
+const paymentModes = ["Cash", "Cheque", "Online", "UPI", "NEFT", "RTGS", "Bank Transfer"];
+const gstRate = 18;
+
+// Initialize sample data from provided JSON
+const sampleData = {
+    properties: [
+        {
+            id: 1,
+            name: "Sunrise Apartments A-101",
+            address: "Sector 15, Gandhinagar",
+            type: "2BHK Apartment",
+            rentPerSqft: 25,
+            monthlyRent: 18000,
+            projectName: "Sunrise Complex",
+            officerNo: "101",
+            floorNo: "1st Floor",
+            furniture: "Semi-Furnished",
+            carpetArea: "850 sqft",
+            superBuiltupArea: "1200 sqft",
+            balconyArea: "100 sqft",
+            terraceArea: "0 sqft",
+            isRental: true,
+            rentAmount: 18000,
+            rentPeriod: "month",
+            gstIncludedInRent: true,
+            gstPercentage: 18,
+            rentPayableDate: 7,
+            agreementStartDate: "2024-01-15",
+            agreementTenureAmount: 24,
+            agreementTenureUnit: "months",
+            securityDeposit: 36000,
+            escalationPercentage: 5,
+            escalationDays: 365,
+            lessorName: "Rajesh Patel",
+            lessorAddress: "123 Main Street, Ahmedabad",
+            lessorContact: "9876543210",
+            lessorEmail: "rajesh@example.com",
+            lesseeName: "Priya Sharma",
+            lesseeAddress: "456 Garden Road, Gandhinagar",
+            lesseeContact: "9123456789",
+            lesseeEmail: "priya@example.com",
+            gstin: "27XXXXX1234X1Z5",
+            panNo: "ABCDE1234F",
+            agreementType: "Notary",
+            bankName: "HDFC Bank",
+            accountNo: "12345678901",
+            ifscCode: "HDFC0001234",
+            maintenanceEnabled: true,
+            maintenance: {
+                amount: 2000,
+                period: "month"
+            },
+            rentFreePeriodAmount: 15,
+            rentFreePeriodUnit: "days",
+            status: "Active",
+            paymentHistory: [
+                {
+                    id: 1,
+                    date: "2025-01-01",
+                    dueDate: "2025-01-05",
+                    base: 18000,
+                    gst: 3240,
+                    total: 21240,
+                    status: "Paid",
+                    paymentDate: "2025-01-03",
+                    paymentMode: "Online",
+                    receiptNo: "RCP001"
+                },
+                {
+                    id: 2,
+                    date: "2025-02-01",
+                    dueDate: "2025-02-05",
+                    base: 18000,
+                    gst: 3240,
+                    total: 21240,
+                    status: "Paid",
+                    paymentDate: "2025-02-07",
+                    paymentMode: "UPI",
+                    receiptNo: "RCP002"
+                },
+                {
+                    id: 3,
+                    date: "2025-03-01",
+                    dueDate: "2025-03-05",
+                    base: 18000,
+                    gst: 3240,
+                    total: 21240,
+                    status: "Overdue"
+                }
+            ],
+            bills: {
+                propertyTax: { checked: true, billNo: "PT2024001", dueDate: "2024-03-31", period: "yearly" },
+                lightBill: { checked: true, billNo: "EB240301", dueDate: "2024-03-15", period: "monthly" },
+                gasBill: { checked: true, billNo: "GB240215", dueDate: "2024-03-10", period: "monthly" },
+                internetBill: { checked: true, billNo: "INT240220", dueDate: "2024-03-20", period: "monthly" }
+            },
+            documents: [
+                { name: "Rent Agreement.pdf", uploadDate: "2024-01-15" },
+                { name: "Property Papers.pdf", uploadDate: "2024-01-15" }
+            ]
+        },
+        {
+            id: 2,
+            name: "Green Valley B-205",
+            address: "Sector 22, Ahmedabad",
+            type: "3BHK Apartment",
+            monthlyRent: 25000,
+            isRental: true,
+            rentAmount: 25000,
+            rentPeriod: "month",
+            status: "Active",
+            lesseeName: "Amit Kumar",
+            lesseeContact: "9876543211",
+            paymentHistory: [
+                {
+                    id: 1,
+                    date: "2025-01-01",
+                    dueDate: "2025-01-10",
+                    base: 25000,
+                    gst: 4500,
+                    total: 29500,
+                    status: "Paid",
+                    paymentDate: "2025-01-09",
+                    paymentMode: "Cheque",
+                    receiptNo: "RCP003"
+                },
+                {
+                    id: 2,
+                    date: "2025-02-01",
+                    dueDate: "2025-02-10",
+                    base: 25000,
+                    gst: 4500,
+                    total: 29500,
+                    status: "Pending"
+                }
+            ]
+        },
+        {
+            id: 3,
+            name: "Premium Office Space",
+            projectName: "Business Park Tower",
+            address: "456 Corporate Avenue, Business District",
+            type: "Commercial",
+            carpetArea: "1200 sqft",
+            superBuiltupArea: "1500 sqft",
+            balconyArea: "0 sqft",
+            terraceArea: "200 sqft",
+            isRental: true,
+            rentAmount: 45000,
+            rentPeriod: "month",
+            gstIncludedInRent: true,
+            gstPercentage: 18,
+            rentPayableDate: 7,
+            agreementStartDate: "2025-01-15", // Today's date
+            agreementTenureAmount: 36, // 3 years in months
+            agreementTenureUnit: "months",
+            securityDeposit: 135000, // 3 months rent
+            escalationPercentage: 8,
+            escalationDays: 365,
+            rentFreePeriodAmount: 30,
+            rentFreePeriodUnit: "days",
+            lesseeName: "TechCorp Solutions",
+            lesseePhone: "+91 98765 43211",
+            lesseeEmail: "contact@techcorp.com",
+            lesseeAddress: "789 Tech Street, IT Hub",
+            gstin: "27XXXXX5678X9Y0",
+            panNo: "TECHC1234G",
+            agreementType: "Registry",
+            bankName: "ICICI Bank",
+            accountNo: "98765432109",
+            ifscCode: "ICIC0009876",
+            maintenanceEnabled: true,
+            maintenance: {
+                amount: 5000,
+                period: "month"
+            },
+            status: "Active",
+            paymentHistory: [
+                {
+                    id: 4,
+                    date: "2025-01-15",
+                    dueDate: "2025-02-15",
+                    base: 38136, // GST included calculation
+                    gst: 6864,
+                    total: 45000,
+                    status: "Pending"
+                }
+            ],
+            bills: {
+                propertyTax: { 
+                    checked: true, 
+                    billNo: "PT2025001", 
+                    dueDate: "2025-03-31", 
+                    period: "yearly",
+                    documents: [
+                        {
+                            name: "Commercial Property Tax 2025.pdf",
+                            uploadDate: "2025-01-15",
+                            size: 320000,
+                            type: "application/pdf"
+                        }
+                    ]
+                },
+                lightBill: { 
+                    checked: true, 
+                    billNo: "EB250115", 
+                    dueDate: "2025-02-15", 
+                    period: "monthly",
+                    documents: [
+                        {
+                            name: "Electricity Bill Jan 2025.pdf",
+                            uploadDate: "2025-01-15",
+                            size: 145000,
+                            type: "application/pdf"
+                        },
+                        {
+                            name: "Electricity Bill Feb 2025.pdf",
+                            uploadDate: "2025-02-15",
+                            size: 138000,
+                            type: "application/pdf"
+                        }
+                    ]
+                },
+                gasBill: { checked: false },
+                internetBill: { 
+                    checked: true, 
+                    billNo: "INT250120", 
+                    dueDate: "2025-02-20", 
+                    period: "monthly",
+                    documents: [
+                        {
+                            name: "Internet Bill February 2025.pdf",
+                            uploadDate: "2025-02-20",
+                            size: 75000,
+                            type: "application/pdf"
+                        },
+                        {
+                            name: "Broadband Service Agreement.pdf",
+                            uploadDate: "2025-01-20",
+                            size: 280000,
+                            type: "application/pdf"
+                        }
+                    ]
+                }
+            },
+            documents: [
+                { name: "Commercial Lease Agreement.pdf", uploadDate: "2025-01-15" },
+                { name: "Property Registration.pdf", uploadDate: "2025-01-15" }
+            ]
+        },
+        {
+            id: 4,
+            name: "Residential Villa",
+            projectName: "Garden Heights",
+            address: "789 Garden Road, Suburb Area",
+            type: "Residential",
+            carpetArea: "1500 sqft",
+            superBuiltupArea: "2000 sqft",
+            balconyArea: "200 sqft",
+            terraceArea: "300 sqft",
+            isRental: true,
+            rentAmount: 15000,
+            rentPeriod: "month",
+            gstIncludedInRent: false, // No GST for residential
+            gstPercentage: 0,
+            rentPayableDate: 7,
+            agreementStartDate: "2024-10-14", // October 14th start date
+            agreementTenureAmount: 2,
+            agreementTenureUnit: "years",
+            securityDeposit: 45000, // 3 months rent
+            escalationPercentage: 5,
+            escalationDays: 365,
+            rentFreePeriodAmount: 15,
+            rentFreePeriodUnit: "days",
+            lesseeName: "Mr. Sharma Family",
+            lesseePhone: "+91 98765 43212",
+            lesseeEmail: "sharma.family@email.com",
+            lesseeAddress: "456 Family Street, Residential Area",
+            gstin: "N/A", // Residential property
+            panNo: "SHARM1234A",
+            agreementType: "Notary",
+            bankName: "SBI Bank",
+            accountNo: "123456789012",
+            ifscCode: "SBIN0001234",
+            maintenanceEnabled: true,
+            maintenance: {
+                amount: 3000,
+                period: "month"
+            },
+            status: "Active",
+            paymentHistory: [],
+            bills: {
+                propertyTax: { checked: true, billNo: "PT2024004", dueDate: "2025-03-31", period: "yearly" },
+                lightBill: { checked: true, billNo: "EB241014", dueDate: "2024-11-15", period: "monthly" },
+                gasBill: { checked: true, billNo: "GB241020", dueDate: "2024-11-20", period: "monthly" },
+                internetBill: { checked: false }
+            },
+            documents: [
+                { name: "Residential Lease Agreement.pdf", uploadDate: "2024-10-14" },
+                { name: "Property Registration.pdf", uploadDate: "2024-10-14" }
+            ]
+        },
+        
+        // Sample property with 15k rent, 2 years, 7th payable, 18/7/2025 start, 5% escalation
+        {
+            id: 5,
+            name: "Modern Apartment",
+            projectName: "Skyline Towers",
+            address: "123 Skyline Avenue, City Center",
+            type: "Residential",
+            carpetArea: "1000 sqft",
+            superBuiltupArea: "1300 sqft",
+            balconyArea: "150 sqft",
+            terraceArea: "0 sqft",
+            isRental: true,
+            rentAmount: 15000,
+            rentPeriod: "month",
+            gstIncludedInRent: false, // Residential - no GST
+            gstPercentage: 0,
+            rentPayableDate: 7, // 7th of every month
+            agreementStartDate: "2025-09-26", // 26/9/2025 start date
+            agreementTenureAmount: 2, // 2 years
+            agreementTenureUnit: "years",
+            securityDeposit: 45000, // 3 months rent
+            escalationPercentage: 5, // 5% annual escalation
+            escalationDays: 365,
+            rentFreePeriodAmount: 0,
+            rentFreePeriodUnit: "days",
+            lesseeName: "Mr. Kumar",
+            lesseePhone: "+91 98765 12345",
+            lesseeEmail: "kumar.tenant@email.com",
+            lesseeAddress: "789 Tenant Street, City Area",
+            gstin: "N/A", // Residential property
+            panNo: "KUMAR1234B",
+            agreementType: "Notary",
+            bankName: "HDFC Bank",
+            accountNo: "987654321098",
+            ifscCode: "HDFC0000987",
+            maintenanceEnabled: true,
+            maintenance: {
+                amount: 2000,
+                period: "month"
+            },
+            status: "Active",
+            paymentHistory: [], // Empty for dynamic generation
+            bills: {
+                propertyTax: { 
+                    checked: true, 
+                    billNo: "PT2025005", 
+                    dueDate: "2026-03-31", 
+                    period: "yearly",
+                    documents: [
+                        {
+                            name: "Property Tax Receipt 2025.pdf",
+                            uploadDate: "2025-09-26",
+                            size: 245760,
+                            type: "application/pdf"
+                        },
+                        {
+                            name: "Property Registration Certificate.pdf",
+                            uploadDate: "2025-09-26",
+                            size: 512000,
+                            type: "application/pdf"
+                        }
+                    ]
+                },
+                lightBill: { 
+                    checked: true, 
+                    billNo: "EB250926", 
+                    dueDate: "2025-09-15", 
+                    period: "monthly",
+                    documents: [
+                        {
+                            name: "Electricity Bill Sep 2025.pdf",
+                            uploadDate: "2025-09-15",
+                            size: 128000,
+                            type: "application/pdf"
+                        }
+                    ]
+                },
+                gasBill: { 
+                    checked: true, 
+                    billNo: "GB250930", 
+                    dueDate: "2025-09-30", 
+                    period: "monthly",
+                    documents: [
+                        {
+                            name: "Gas Bill September 2025.pdf",
+                            uploadDate: "2025-09-30",
+                            size: 89000,
+                            type: "application/pdf"
+                        },
+                        {
+                            name: "Gas Connection Certificate.jpg",
+                            uploadDate: "2025-09-30",
+                            size: 156000,
+                            type: "image/jpeg"
+                        }
+                    ]
+                },
+                internetBill: { 
+                    checked: true, 
+                    billNo: "IN251005", 
+                    dueDate: "2025-10-05", 
+                    period: "monthly",
+                    documents: [
+                        {
+                            name: "Internet Bill October 2025.pdf",
+                            uploadDate: "2025-10-05",
+                            size: 67000,
+                            type: "application/pdf"
+                        },
+                        {
+                            name: "Broadband Installation Receipt.pdf",
+                            uploadDate: "2025-10-05",
+                            size: 98000,
+                            type: "application/pdf"
+                        },
+                        {
+                            name: "Router Warranty Card.pdf",
+                            uploadDate: "2025-10-05",
+                            size: 45000,
+                            type: "application/pdf"
+                        }
+                    ]
+                }
+            },
+            documents: [
+                { name: "2-Year Lease Agreement.pdf", uploadDate: "2025-09-26" },
+                { name: "Property Registration.pdf", uploadDate: "2025-09-26" }
+            ]
+        }
+    ]
+};
+
+// DOM Elements
+const mainDashboard = document.getElementById('mainDashboard');
+const paymentDashboard = document.getElementById('paymentDashboard');
+const addPropertyBtn = document.getElementById('addPropertyBtn');
+const propertyModal = document.getElementById('propertyModal');
+const paymentModal = document.getElementById('paymentModal');
+const modalOverlay = document.getElementById('modalOverlay');
+const paymentModalOverlay = document.getElementById('paymentModalOverlay');
+const modalClose = document.getElementById('modalClose');
+const paymentModalClose = document.getElementById('paymentModalClose');
+const cancelBtn = document.getElementById('cancelBtn');
+const paymentCancelBtn = document.getElementById('paymentCancelBtn');
+const savePropertyBtn = document.getElementById('savePropertyBtn');
+const submitPaymentBtn = document.getElementById('submitPaymentBtn');
+const searchInput = document.getElementById('searchInput');
+const typeFilter = document.getElementById('typeFilter');
+const propertiesTableBody = document.getElementById('propertiesTableBody');
+const paymentTableBody = document.getElementById('paymentTableBody');
+const billTrackingTableBody = document.getElementById('billTrackingTableBody');
+const modalTitle = document.getElementById('modalTitle');
+const propertyTypeSelect = document.getElementById('propertyTypeSelect');
+const agreementTypeSelect = document.getElementById('agreementTypeSelect');
+const isRentalCheckbox = document.getElementById('isRentalCheckbox');
+const billsSection = document.getElementById('billsSection');
+const addCustomBillBtn = document.getElementById('addCustomBillBtn');
+const customBillsList = document.getElementById('customBillsList');
+const documentInput = document.getElementById('documentInput');
+const uploadDocBtn = document.getElementById('uploadDocBtn');
+const documentList = document.getElementById('documentList');
+const backToPropertiesBtn = document.getElementById('backToPropertiesBtn');
+const billButtons = document.getElementById('billButtons');
+const individualBillSections = document.getElementById('individualBillSections');
+
+// Initialize Application
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+    setupEventListeners();
+    populateSelectOptions();
+    renderPropertiesTable();
+    updateDashboardSummary();
+});
+
+function initializeApp() {
+    properties = sampleData.properties;
+    nextId = 5;
+    nextReceiptId = 8;
+}
+
+function setupEventListeners() {
+    // Modal controls
+    addPropertyBtn.addEventListener('click', () => openPropertyModal());
+    modalClose.addEventListener('click', closePropertyModal);
+    paymentModalClose.addEventListener('click', closePaymentModal);
+    modalOverlay.addEventListener('click', closePropertyModal);
+    paymentModalOverlay.addEventListener('click', closePaymentModal);
+    cancelBtn.addEventListener('click', closePropertyModal);
+    paymentCancelBtn.addEventListener('click', closePaymentModal);
+    savePropertyBtn.addEventListener('click', saveProperty);
+    submitPaymentBtn.addEventListener('click', submitPayment);
+
+    // Navigation
+    backToPropertiesBtn.addEventListener('click', showMainDashboard);
+
+    // Bill tracking will be handled dynamically
+
+    // Tab navigation
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const tabName = e.target.dataset.tab;
+            switchTab(tabName);
+        });
+    });
+
+    // Search and filter
+    searchInput.addEventListener('input', filterProperties);
+    typeFilter.addEventListener('change', filterProperties);
+
+    // Rental checkbox
+    isRentalCheckbox.addEventListener('change', toggleRentalFields);
+
+    // Maintenance checkbox
+    const maintenanceCheckbox = document.getElementById('maintenanceCheckbox');
+    if (maintenanceCheckbox) {
+        maintenanceCheckbox.addEventListener('change', toggleMaintenanceFields);
+    }
+
+    // Auto-calculate rent per sqft
+    document.addEventListener('input', function(e) {
+        if (e.target.name === 'carpetArea' || e.target.name === 'rentAmount') {
+            calculateRentPerSqft();
+        }
+    });
+
+    // Custom bills
+    addCustomBillBtn.addEventListener('click', addCustomBill);
+
+    // Document upload
+    uploadDocBtn.addEventListener('click', addDocument);
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (!propertyModal.classList.contains('hidden')) {
+                closePropertyModal();
+            }
+            if (!paymentModal.classList.contains('hidden')) {
+                closePaymentModal();
+            }
+        }
+    });
+
+    // Close payment dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.payment-actions')) {
+            document.querySelectorAll('.payment-dropdown').forEach(dropdown => {
+                dropdown.classList.add('hidden');
+            });
+        }
+    });
+}
+
+function populateSelectOptions() {
+    // Property types
+    propertyTypes.forEach(type => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type;
+        propertyTypeSelect.appendChild(option);
+        
+        // Also add to filter
+        const filterOption = document.createElement('option');
+        filterOption.value = type;
+        filterOption.textContent = type;
+        typeFilter.appendChild(filterOption);
+    });
+
+    // Agreement types
+    agreementTypes.forEach(type => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type;
+        agreementTypeSelect.appendChild(option);
+    });
+
+    // Payment modes
+    const paymentModeSelect = document.getElementById('paymentMode');
+    paymentModes.forEach(mode => {
+        const option = document.createElement('option');
+        option.value = mode;
+        option.textContent = mode;
+        paymentModeSelect.appendChild(option);
+    });
+}
+
+function showMainDashboard() {
+    mainDashboard.classList.remove('hidden');
+    paymentDashboard.classList.add('hidden');
+    currentPropertyId = null;
+}
+
+function showPaymentDashboard(propertyId) {
+    const property = properties.find(p => p.id === propertyId);
+    if (!property) return;
+
+    currentPropertyId = propertyId;
+    
+    // Update property info
+    document.getElementById('paymentPropertyName').textContent = property.name || 'Unnamed Property';
+    document.getElementById('paymentPropertyAddress').textContent = property.address || 'No address';
+    
+    // Show payment dashboard
+    mainDashboard.classList.add('hidden');
+    paymentDashboard.classList.remove('hidden');
+    
+    // Render payment data
+    renderPaymentTable();
+    renderBillButtons();
+    updatePaymentSummary();
+    
+    // Ensure payment history table is visible when entering payment dashboard
+    const paymentHistoryTable = document.querySelector('#paymentDashboard .table-container');
+    if (paymentHistoryTable) {
+        paymentHistoryTable.style.display = 'block';
+    }
+    
+    // Hide any open bill sections
+    const billSections = document.querySelectorAll('#individualBillSections .table-container');
+    billSections.forEach(section => {
+        section.classList.add('hidden');
+    });
+}
+
+function renderBillButtons() {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills || !billButtons) return;
+
+    billButtons.innerHTML = '';
+
+    // Create buttons for standard bills
+    billTypes.forEach(bill => {
+        const billData = property.bills[bill.key];
+        if (billData && billData.checked) {
+            const button = document.createElement('button');
+            button.className = 'btn btn--outline bill-button';
+            button.textContent = bill.name;
+            button.onclick = () => toggleIndividualBill(bill.key);
+            billButtons.appendChild(button);
+        }
+    });
+
+    // Create buttons for custom bills
+    if (property.bills.customBills && property.bills.customBills.length > 0) {
+        property.bills.customBills.forEach((customBill, index) => {
+            const button = document.createElement('button');
+            button.className = 'btn btn--outline bill-button';
+            button.textContent = customBill.name;
+            button.onclick = () => toggleIndividualBill(`custom-${index}`);
+            billButtons.appendChild(button);
+        });
+    }
+}
+
+function toggleIndividualBill(billKey) {
+    const billSection = document.getElementById(`bill-section-${billKey}`);
+    // Find the payment history table container specifically
+    const paymentHistoryTable = document.querySelector('#paymentDashboard .table-container');
+    
+    if (!billSection) {
+        // Create the bill section if it doesn't exist
+        createIndividualBillSection(billKey);
+        // Hide payment history table
+        if (paymentHistoryTable) {
+            paymentHistoryTable.style.display = 'none';
+        }
+        return;
+    }
+    
+    if (billSection.classList.contains('hidden')) {
+        billSection.classList.remove('hidden');
+        // Hide payment history table
+        if (paymentHistoryTable) {
+            paymentHistoryTable.style.display = 'none';
+        }
+    } else {
+        billSection.classList.add('hidden');
+        // Show payment history table
+        if (paymentHistoryTable) {
+            paymentHistoryTable.style.display = 'block';
+        }
+    }
+}
+
+function createIndividualBillSection(billKey) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills || !individualBillSections) return;
+
+    let billData;
+    let billName;
+    let isCustom = false;
+
+    if (billKey.startsWith('custom-')) {
+        const index = parseInt(billKey.replace('custom-', ''));
+        billData = property.bills.customBills[index];
+        billName = billData.name;
+        isCustom = true;
+    } else {
+        billData = property.bills[billKey];
+        const billType = billTypes.find(b => b.key === billKey);
+        billName = billType ? billType.name : billKey;
+    }
+
+    if (!billData) return;
+
+    // Determine status
+    let status = 'Active';
+    let statusClass = 'payment-status--paid';
+    
+    if (billData.paid) {
+        status = 'Paid';
+        statusClass = 'payment-status--paid';
+    } else if (billData.dueDate) {
+        const dueDate = new Date(billData.dueDate);
+        const today = new Date();
+        if (dueDate < today) {
+            status = 'Overdue';
+            statusClass = 'payment-status--overdue';
+        } else if (dueDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+            status = 'Due Soon';
+            statusClass = 'payment-status--pending';
+        }
+    }
+
+    const billSection = document.createElement('div');
+    billSection.className = 'table-container';
+    billSection.id = `bill-section-${billKey}`;
+    
+    const paidDateDisplay = billData.paid && billData.paidDate ? 
+        `<div class="bill-info-item">
+            <label>Paid Date:</label>
+            <span>${formatDate(billData.paidDate)}</span>
+        </div>` : '';
+
+    const actionButtons = billData.paid ? 
+        `<div class="bill-actions">
+            <div class="bill-dropdown">
+                <button class="btn btn--outline bill-dropdown-toggle" onclick="toggleBillDropdown('${billKey}')">⋯</button>
+                <div class="bill-dropdown-menu" id="bill-dropdown-${billKey}">
+                    <button class="dropdown-item" onclick="viewBillDetails('${billKey}')">View Receipt</button>
+                    <button class="dropdown-item" onclick="editBillDetails('${billKey}')">Edit Bill</button>
+                    <button class="dropdown-item" onclick="document.getElementById('bill-document-${billKey}').click()">📄 Upload Document</button>
+                    <button class="dropdown-item" onclick="viewBillDocuments('${billKey}')">View Documents</button>
+                </div>
+                <input type="file" id="bill-document-${billKey}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display: none;">
+            </div>
+            <span class="paid-badge">✓ Paid</span>
+        </div>` :
+        `<div class="bill-actions">
+            <div class="bill-dropdown">
+                <button class="btn btn--outline bill-dropdown-toggle" onclick="toggleBillDropdown('${billKey}')">⋯</button>
+                <div class="bill-dropdown-menu" id="bill-dropdown-${billKey}">
+                    <button class="dropdown-item" onclick="viewBillDetails('${billKey}')">View Details</button>
+                    <button class="dropdown-item" onclick="editBillDetails('${billKey}')">Edit Bill</button>
+                    <button class="dropdown-item" onclick="document.getElementById('bill-document-${billKey}').click()">📄 Upload Document</button>
+                    <button class="dropdown-item" onclick="viewBillDocuments('${billKey}')">View Documents</button>
+                </div>
+                <input type="file" id="bill-document-${billKey}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display: none;">
+            </div>
+            <button class="btn btn--success" onclick="markBillPaid('${billKey}')">Mark as Paid</button>
+        </div>`;
+
+    // Generate serial number based on bill type and index
+    const serialNumber = generateSerialNumber(billKey, billData);
+
+    billSection.innerHTML = `
+        <div class="table-header">
+            <h3>${billName} Details</h3>
+            <button class="btn btn--outline" onclick="closeIndividualBill('${billKey}')">Close</button>
+        </div>
+        <table class="individual-bill-table">
+            <thead>
+                <tr>
+                    <th>Serial No</th>
+                    <th>Bill Number</th>
+                    <th>Due Date</th>
+                    <th>Period</th>
+                    <th>Status</th>
+                    ${billData.paid ? '<th>Paid Date</th>' : ''}
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="serial-number">${serialNumber}</td>
+                    <td>${billData.billNo || 'N/A'}</td>
+                    <td>${billData.dueDate ? formatDate(billData.dueDate) : 'Not set'}</td>
+                    <td>${billData.period || 'monthly'}</td>
+                    <td><span class="payment-status ${statusClass}">${status}</span></td>
+                    ${billData.paid && billData.paidDate ? `<td>${formatDate(billData.paidDate)}</td>` : ''}
+                    <td class="bill-actions">
+                        ${actionButtons}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+
+    individualBillSections.appendChild(billSection);
+}
+
+function generateSerialNumber(billKey, billData) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills) return 'N/A';
+    
+    if (billKey.startsWith('custom-')) {
+        // For custom bills, use the index + 1 (each custom bill gets its own number)
+        const customIndex = parseInt(billKey.replace('custom-', ''));
+        return (customIndex + 1).toString();
+    } else {
+        // For standard bills, each bill type gets its own serial number starting from 1
+        // Since we're only showing one bill per type in the current implementation,
+        // each standard bill type will always be serial number 1
+        return '1';
+    }
+}
+
+function closeIndividualBill(billKey) {
+    const billSection = document.getElementById(`bill-section-${billKey}`);
+    
+    if (billSection) {
+        // Remove the bill section from DOM
+        billSection.remove();
+        
+        // Find and show the payment history table container (the one that contains the payment table)
+        const paymentHistoryContainer = document.querySelector('#paymentDashboard .table-container');
+        if (paymentHistoryContainer) {
+            paymentHistoryContainer.style.display = 'block';
+        }
+        
+        // Also ensure payment table body is visible
+        const paymentTableBody = document.getElementById('paymentTableBody');
+        if (paymentTableBody) {
+            paymentTableBody.style.display = '';
+        }
+    }
+}
+
+function openPropertyModal(propertyId = null) {
+    currentPropertyId = propertyId;
+    
+    if (propertyId) {
+        modalTitle.textContent = 'Edit Property';
+        loadPropertyData(propertyId);
+    } else {
+        modalTitle.textContent = 'Add Property';
+        resetPropertyForm();
+    }
+    
+    propertyModal.classList.remove('hidden');
+    switchTab('information');
+    setupBillsSection();
+    renderDocuments();
+    document.body.style.overflow = 'hidden';
+}
+
+function closePropertyModal() {
+    propertyModal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    resetPropertyForm();
+    currentPropertyId = null;
+}
+
+function openPaymentModal(paymentId) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property) return;
+    
+    let payment = null;
+    let baseAmount = 0;
+    let gstAmount = 0;
+    let totalAmount = 0;
+    
+    // Check if it's an existing payment history record
+    if (property.paymentHistory) {
+        payment = property.paymentHistory.find(p => p.id == paymentId);
+        if (payment) {
+            // Recalculate GST amounts using current GST settings
+            if (property.gstIncludedInRent) {
+                // GST is included in total, calculate base amount
+                const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
+                baseAmount = Math.round(payment.total / (1 + gstPercentage));
+                gstAmount = payment.total - baseAmount;
+                totalAmount = payment.total;
+            } else {
+                // GST is not included - no GST at all
+                baseAmount = payment.base;
+                gstAmount = 0;
+                totalAmount = payment.base;
+            }
+        }
+    }
+    
+    // If not found in payment history, check if it's a schedule payment
+    if (!payment && paymentId.startsWith('schedule-')) {
+        const scheduleIndex = parseInt(paymentId.replace('schedule-', ''));
+        const schedule = generatePaymentSchedule(property);
+        if (schedule[scheduleIndex]) {
+            const schedulePayment = schedule[scheduleIndex];
+            const rentAmount = schedulePayment.amount;
+            
+            // Calculate GST and total based on whether GST is included in rent
+            if (property.gstIncludedInRent) {
+                // GST is included in rent amount, so calculate base amount
+                const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
+                baseAmount = Math.round(rentAmount / (1 + gstPercentage)); // Remove GST from total
+                gstAmount = rentAmount - baseAmount;
+                totalAmount = rentAmount;
+            } else {
+                // GST is not included - no GST at all
+                baseAmount = rentAmount;
+                gstAmount = 0;
+                totalAmount = rentAmount;
+            }
+        }
+    }
+    
+    if (baseAmount === 0) return;
+    
+    currentPaymentId = paymentId;
+    
+    // Update GST label dynamically
+    const gstInput = document.getElementById('gstAmount');
+    const gstLabel = gstInput ? gstInput.previousElementSibling : null;
+    if (gstLabel && gstLabel.classList.contains('form-label')) {
+        if (property.gstIncludedInRent) {
+            gstLabel.textContent = `GST (${property.gstPercentage || 18}%)`;
+        } else {
+            gstLabel.textContent = 'GST (0%)';
+        }
+    }
+    
+    // Populate payment form
+    document.getElementById('baseAmount').value = baseAmount;
+    document.getElementById('gstAmount').value = gstAmount;
+    document.getElementById('totalAmount').value = totalAmount;
+    document.getElementById('paymentDate').value = getCurrentDate();
+    document.getElementById('paymentMode').value = '';
+    document.getElementById('receiptNumber').value = `RCP${String(nextReceiptId).padStart(3, '0')}`;
+    document.getElementById('paymentNotes').value = '';
+    
+    paymentModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePaymentModal() {
+    paymentModal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    currentPaymentId = null;
+}
+
+function switchTab(tabName) {
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Add active class to clicked tab button
+    const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    // Hide all tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    const activeContent = document.getElementById(tabName);
+    if (activeContent) {
+        activeContent.classList.add('active');
+    }
+}
+
+function resetPropertyForm() {
+    const form = document.getElementById('propertyForm');
+    form.reset();
+    
+    // Reset all form elements in modal
+    document.querySelectorAll('.modal input, .modal select, .modal textarea').forEach(input => {
+        if (input.type === 'checkbox') {
+            input.checked = false;
+        } else {
+            input.value = '';
+        }
+    });
+
+    // Reset custom bills and documents
+    customBillsList.innerHTML = '';
+    documentList.innerHTML = '';
+    
+    // Hide GST percentage field initially
+    const gstPercentageGroup = document.getElementById('gstPercentageGroup');
+    if (gstPercentageGroup) {
+        gstPercentageGroup.style.display = 'none';
+    }
+    
+    // Reset rental fields visibility
+    toggleRentalFields();
+    
+    // Reset maintenance fields visibility
+    toggleMaintenanceFields();
+}
+
+function loadPropertyData(propertyId) {
+    const property = properties.find(p => p.id === propertyId);
+    if (!property) return;
+
+    // Load basic property information
+    Object.keys(property).forEach(key => {
+        const input = document.querySelector(`[name="${key}"]`);
+        if (input) {
+            if (input.type === 'checkbox') {
+                input.checked = property[key];
+            } else {
+                input.value = property[key] || '';
+            }
+        }
+    });
+
+    // Load maintenance data
+    if (property.maintenance) {
+        document.querySelector('[name="maintenanceAmount"]').value = property.maintenance.amount || '';
+        document.querySelector('[name="maintenancePeriod"]').value = property.maintenance.period || 'month';
+    }
+
+    // Load GST data and show/hide percentage field
+    const gstCheckbox = document.querySelector('[name="gstIncludedInRent"]');
+    if (gstCheckbox) {
+        gstCheckbox.checked = property.gstIncludedInRent || false;
+    }
+    
+    if (property.gstIncludedInRent) {
+        const gstPercentageGroup = document.getElementById('gstPercentageGroup');
+        if (gstPercentageGroup) {
+            gstPercentageGroup.style.display = 'block';
+        }
+        // Load GST percentage value
+        const gstPercentageInput = document.querySelector('[name="gstPercentage"]');
+        if (gstPercentageInput && property.gstPercentage) {
+            gstPercentageInput.value = property.gstPercentage;
+        }
+    } else {
+        const gstPercentageGroup = document.getElementById('gstPercentageGroup');
+        if (gstPercentageGroup) {
+            gstPercentageGroup.style.display = 'none';
+        }
+    }
+
+    // Load bills
+    setupBillsSection(property.bills);
+    
+    // Load custom bills
+    if (property.bills && property.bills.customBills) {
+        property.bills.customBills.forEach(bill => {
+            addCustomBill(bill);
+        });
+    }
+
+    // Toggle rental fields visibility
+    toggleRentalFields();
+    
+    // Toggle maintenance fields visibility
+    toggleMaintenanceFields();
+    
+    // Calculate rent per sqft for loaded data
+    calculateRentPerSqft();
+}
+
+function saveProperty() {
+    const formData = new FormData(document.getElementById('propertyForm'));
+    const propertyData = {};
+
+
+    // Collect form data
+    for (let [key, value] of formData.entries()) {
+        if (key === 'isRental' || key === 'maintenanceEnabled') {
+            propertyData[key] = true;
+        } else {
+            propertyData[key] = value;
+        }
+    }
+
+    // Handle checkbox fields that aren't in FormData when unchecked
+    if (!formData.has('isRental')) {
+        propertyData.isRental = false;
+    }
+    if (!formData.has('maintenanceEnabled')) {
+        propertyData.maintenanceEnabled = false;
+    }
+    
+    // Handle GST checkbox - explicitly check the DOM element
+    const gstCheckbox = document.querySelector('[name="gstIncludedInRent"]');
+    if (gstCheckbox) {
+        propertyData.gstIncludedInRent = gstCheckbox.checked;
+    } else {
+        propertyData.gstIncludedInRent = false;
+    }
+
+    // Handle maintenance data
+    if (propertyData.maintenanceEnabled) {
+        propertyData.maintenance = {
+            amount: propertyData.maintenanceAmount || 0,
+            period: propertyData.maintenancePeriod || 'month'
+        };
+    } else {
+        propertyData.maintenance = null;
+    }
+
+    // Handle GST percentage - explicitly get value from DOM since hidden fields might not be in FormData
+    const gstPercentageInput = document.querySelector('[name="gstPercentage"]');
+    
+    if (propertyData.gstIncludedInRent) {
+        if (gstPercentageInput && gstPercentageInput.value) {
+            propertyData.gstPercentage = parseFloat(gstPercentageInput.value);
+        } else {
+            propertyData.gstPercentage = 18; // Default to 18% if GST is enabled but no percentage specified
+        }
+    } else {
+        // If GST is not included, don't set gstPercentage
+        delete propertyData.gstPercentage;
+    }
+
+    // Set monthly rent based on rent amount
+    if (propertyData.rentAmount) {
+        propertyData.monthlyRent = propertyData.rentPeriod === 'year' ? 
+            Math.round(propertyData.rentAmount / 12) : 
+            propertyData.rentAmount;
+    }
+
+    // Set status
+    propertyData.status = propertyData.isRental ? 'Active' : 'Vacant';
+
+    // Collect bills data
+    propertyData.bills = collectBillsData();
+
+    // Collect documents data
+    propertyData.documents = collectDocumentsData();
+
+    // Initialize payment history if rental property
+    if (propertyData.isRental && !currentPropertyId) {
+        propertyData.paymentHistory = generateInitialPaymentHistory(propertyData.rentAmount);
+    }
+
+    // Validate required fields
+    if (!propertyData.name || !propertyData.address) {
+        showNotification('Please fill in all required fields', 'error');
+        return;
+    }
+
+    if (currentPropertyId) {
+        // Update existing property
+        const index = properties.findIndex(p => p.id === currentPropertyId);
+        if (index !== -1) {
+            const oldProperty = properties[index];
+            properties[index] = { ...properties[index], ...propertyData };
+            
+            // Recalculate existing payment history if GST percentage changed
+            if (oldProperty.gstPercentage !== propertyData.gstPercentage && 
+                propertyData.gstPercentage && propertyData.paymentHistory) {
+                recalculatePaymentHistory(properties[index]);
+            }
+        }
+        showNotification('Property updated successfully');
+    } else {
+        // Add new property
+        propertyData.id = nextId++;
+        properties.push(propertyData);
+        showNotification('Property added successfully');
+    }
+
+    closePropertyModal();
+    renderPropertiesTable();
+    updateDashboardSummary();
+}
+
+function generateInitialPaymentHistory(baseAmount) {
+    const history = [];
+    const base = parseInt(baseAmount);
+    const gst = Math.round(base * gstRate / 100);
+    const total = base + gst;
+    
+    // Generate 3 months of payment history (2 paid, 1 pending)
+    for (let i = 0; i < 3; i++) {
+        const date = new Date(2025, i, 1);
+        const dueDate = new Date(2025, i, 5);
+        
+        history.push({
+            id: i + 1,
+            date: date.toISOString().split('T')[0],
+            dueDate: dueDate.toISOString().split('T')[0],
+            base: base,
+            gst: gst,
+            total: total,
+            status: i < 2 ? 'Paid' : 'Pending',
+            paymentDate: i < 2 ? new Date(2025, i, 3 + i * 2).toISOString().split('T')[0] : null,
+            paymentMode: i < 2 ? (i === 0 ? 'Online' : 'UPI') : null,
+            receiptNo: i < 2 ? `RCP${String(nextReceiptId++).padStart(3, '0')}` : null
+        });
+    }
+    
+    return history;
+}
+
+function submitPayment() {
+    const paymentDate = document.getElementById('paymentDate').value;
+    const paymentMode = document.getElementById('paymentMode').value;
+    const receiptNumber = document.getElementById('receiptNumber').value;
+    const notes = document.getElementById('paymentNotes').value;
+    const baseAmount = parseFloat(document.getElementById('baseAmount').value);
+    const gstAmount = parseFloat(document.getElementById('gstAmount').value);
+    const totalAmount = parseFloat(document.getElementById('totalAmount').value);
+    
+    if (!paymentDate || !paymentMode || !baseAmount) {
+        showNotification('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property) return;
+    
+    let payment = null;
+    let isNewPayment = false;
+    
+    // Check if it's an existing payment history record
+    if (property.paymentHistory) {
+        payment = property.paymentHistory.find(p => p.id == currentPaymentId);
+    }
+    
+    // If not found in payment history and it's a schedule payment, create new payment record
+    if (!payment && currentPaymentId.startsWith('schedule-')) {
+        const scheduleIndex = parseInt(currentPaymentId.replace('schedule-', ''));
+        const schedule = generatePaymentSchedule(property);
+        if (schedule[scheduleIndex]) {
+            const schedulePayment = schedule[scheduleIndex];
+            
+            // Initialize payment history if it doesn't exist
+            if (!property.paymentHistory) {
+                property.paymentHistory = [];
+            }
+            
+            // Create new payment record
+            payment = {
+                id: Date.now(), // Use timestamp as unique ID
+                date: paymentDate,
+                dueDate: schedulePayment.dueDate,
+                base: baseAmount,
+                gst: gstAmount,
+                total: totalAmount,
+                status: 'Paid',
+                paymentDate: paymentDate,
+                paymentMode: paymentMode,
+                receiptNo: receiptNumber,
+                notes: notes
+            };
+            
+            property.paymentHistory.push(payment);
+            isNewPayment = true;
+        }
+    }
+    
+    if (!payment) return;
+    
+    // Update payment
+    payment.status = 'Paid';
+    payment.paymentDate = paymentDate;
+    payment.paymentMode = paymentMode;
+    payment.receiptNo = receiptNumber;
+    payment.notes = notes;
+    
+    // Increment receipt number for next payment
+    nextReceiptId++;
+    
+    closePaymentModal();
+    renderPaymentTable();
+    updatePaymentSummary();
+    showNotification('Payment recorded successfully');
+}
+
+function collectBillsData() {
+    const bills = {};
+    
+    // Standard bills
+    billTypes.forEach(bill => {
+        const checkbox = document.querySelector(`#bill-${bill.key}`);
+        const billNo = document.querySelector(`[name="bill-${bill.key}-no"]`);
+        const dueDate = document.querySelector(`[name="bill-${bill.key}-date"]`);
+        const period = document.querySelector(`[name="bill-${bill.key}-period"]`);
+        
+        bills[bill.key] = {
+            checked: checkbox ? checkbox.checked : false,
+            billNo: billNo ? billNo.value : '',
+            dueDate: dueDate ? dueDate.value : '',
+            period: period ? period.value : 'monthly'
+        };
+    });
+
+    // Custom bills
+    bills.customBills = [];
+    document.querySelectorAll('.custom-bill-item').forEach(item => {
+        const name = item.querySelector('[name="custom-bill-name"]').value;
+        const billNo = item.querySelector('[name="custom-bill-no"]').value;
+        const dueDate = item.querySelector('[name="custom-bill-date"]').value;
+        const period = item.querySelector('[name="custom-bill-period"]').value;
+        
+        if (name) {
+            bills.customBills.push({ name, billNo, dueDate, period });
+        }
+    });
+
+    return bills;
+}
+
+function collectDocumentsData() {
+    const documents = [];
+    document.querySelectorAll('.document-item').forEach(item => {
+        const name = item.querySelector('.document-name').textContent;
+        const uploadDate = item.querySelector('.document-date').textContent.replace('Uploaded: ', '');
+        documents.push({ name, uploadDate });
+    });
+    return documents;
+}
+
+function renderPropertiesTable() {
+    const tbody = propertiesTableBody;
+    tbody.innerHTML = '';
+
+    if (properties.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-state">
+                    <h3>No properties found</h3>
+                    <p>Click "Add Property" to get started</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    properties.forEach((property, index) => {
+        const row = document.createElement('tr');
+        
+        const rentDisplay = property.isRental && property.rentAmount 
+            ? `₹${property.rentAmount}/${property.rentPeriod || 'month'}`
+            : 'N/A';
+            
+        const status = property.isRental ? 'Active' : 'Vacant';
+        const statusClass = property.isRental ? 'property-status--active' : 'property-status--vacant';
+
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>
+                <div>
+                    <strong>${property.name || 'Unnamed Property'}</strong>
+                    ${property.projectName ? `<br><small>${property.projectName}</small>` : ''}
+                </div>
+            </td>
+            <td>${property.address || 'No address'}</td>
+            <td>${property.type || 'Not specified'}</td>
+            <td>${rentDisplay}</td>
+            <td><span class="property-status ${statusClass}">${status}</span></td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn btn--sm btn--primary" onclick="viewProperty(${property.id})">View</button>
+                    <button class="btn btn--sm btn--outline" onclick="showPaymentDashboard(${property.id})">Payments</button>
+                    <button class="btn btn--sm btn--outline" onclick="deleteProperty(${property.id})">Delete</button>
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function renderPaymentSchedule() {
+    const property = properties.find(p => p.id === currentPropertyId);
+    const paymentScheduleBody = document.getElementById('paymentScheduleBody');
+    
+    if (!property || !paymentScheduleBody) return;
+
+    paymentScheduleBody.innerHTML = '';
+
+    // Check if property has agreement start date and rent amount
+    if (!property.agreementStartDate || !property.rentAmount) {
+        paymentScheduleBody.innerHTML = '<tr><td colspan="6" class="empty-state"><h3>No agreement data available</h3></td></tr>';
+        return;
+    }
+
+    // Generate payment schedule based on agreement start date and tenure
+    const schedule = generatePaymentSchedule(property);
+    
+    if (schedule.length === 0) {
+        paymentScheduleBody.innerHTML = '<tr><td colspan="6" class="empty-state"><h3>No payment schedule available</h3></td></tr>';
+        return;
+    }
+
+    schedule.forEach((payment, index) => {
+        const row = document.createElement('tr');
+        
+        const statusClass = getPaymentStatusClass(payment.dueDate, payment.paid);
+        const statusText = payment.paid ? 'Paid' : getPaymentStatusText(payment.dueDate);
+        
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${formatDate(payment.dueDate)}</td>
+            <td class="payment-amount">₹${payment.amount.toLocaleString()}</td>
+            <td>${payment.period}</td>
+            <td><span class="payment-status ${statusClass}">${statusText}</span></td>
+            <td>${payment.notes || ''}</td>
+        `;
+        
+        paymentScheduleBody.appendChild(row);
+    });
+}
+
+function generatePaymentSchedule(property) {
+    const schedule = [];
+    const startDate = new Date(property.agreementStartDate);
+    const rentAmount = property.rentAmount || 0;
+    const rentPeriod = property.rentPeriod || 'month';
+    
+    // Use agreement tenure from property data
+    const agreementTenureAmount = parseInt(property.agreementTenureAmount || property.agreementTenure || 12);
+    const agreementTenureUnit = property.agreementTenureUnit || 'months';
+    
+    // Convert to months for calculation
+    const tenureMonths = agreementTenureUnit === 'years' ? agreementTenureAmount * 12 : agreementTenureAmount;
+    
+    // Determine if we need to skip the first month
+    const rentPayableDay = parseInt(property.rentPayableDate || 7);
+    const skipFirstMonth = startDate.getDate() > rentPayableDay;
+    
+    // Generate payments for the entire agreement tenure
+    for (let i = 0; i < tenureMonths; i++) {
+        // Calculate the correct month for this payment
+        let targetMonth = startDate.getMonth();
+        let targetYear = startDate.getFullYear();
+        
+        if (skipFirstMonth) {
+            // Skip first month, so add 1 + payment number
+            targetMonth += (i + 1);
+        } else {
+            // Don't skip, so just add payment number
+            targetMonth += i;
+        }
+        
+        // Handle year overflow
+        if (targetMonth > 11) {
+            targetYear += Math.floor(targetMonth / 12);
+            targetMonth = targetMonth % 12;
+        }
+        
+        const dueDate = new Date(targetYear, targetMonth, rentPayableDay);
+        
+        // Check if this payment is already paid (from payment history)
+        const isPaid = property.paymentHistory && property.paymentHistory.some(p => {
+            const paymentDueDate = new Date(p.dueDate);
+            // Compare dates by date string (YYYY-MM-DD) to avoid timezone issues
+            const paymentDateStr = paymentDueDate.toISOString().split('T')[0];
+            const dueDateStr = dueDate.toISOString().split('T')[0];
+            return paymentDateStr === dueDateStr && p.status === 'Paid';
+        });
+        
+        // Generate period description based on original tenure unit
+        let periodDescription;
+        if (agreementTenureUnit === 'years') {
+            const yearNumber = Math.floor(i / 12) + 1;
+            const monthInYear = (i % 12) + 1;
+            periodDescription = `Year ${yearNumber}, Month ${monthInYear}`;
+        } else {
+            periodDescription = `Month ${i + 1}`;
+        }
+        
+        // Calculate escalated rent for this payment period
+        const escalatedRent = calculateEscalatedRent(rentAmount, dueDate, property);
+        
+        // Add escalation information to notes
+        let notes = '';
+        if (i === 0) {
+            notes = 'First Payment';
+        } else if (i === tenureMonths - 1) {
+            notes = 'Final Payment';
+        }
+        
+        // Add escalation note if rent has increased
+        if (escalatedRent > rentAmount && property.escalationPercentage > 0) {
+            const escalationCycles = Math.floor(((new Date(dueDate) - new Date(property.agreementStartDate)) / (1000 * 60 * 60 * 24)) / (property.escalationDays || 365));
+            if (escalationCycles > 0) {
+                notes += notes ? ` | Escalated (Year ${escalationCycles})` : `Escalated (Year ${escalationCycles})`;
+            }
+        }
+        
+        schedule.push({
+            dueDate: dueDate.toISOString().split('T')[0],
+            amount: escalatedRent,
+            period: periodDescription,
+            paid: isPaid,
+            notes: notes
+        });
+    }
+    
+    // Sort schedule: unpaid/upcoming payments first, then paid payments
+    schedule.sort((a, b) => {
+        // If one is paid and the other is not, unpaid comes first
+        if (a.paid !== b.paid) {
+            return a.paid ? 1 : -1; // unpaid payments (false) come before paid (true)
+        }
+        
+        // If both have the same payment status, sort by due date (earliest first)
+        return new Date(a.dueDate) - new Date(b.dueDate);
+    });
+    
+    return schedule;
+}
+
+function getPaymentStatusClass(dueDate, isPaid) {
+    if (isPaid) {
+        return 'payment-status--paid';
+    }
+    
+    const due = new Date(dueDate);
+    const today = new Date();
+    const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+        return 'payment-status--overdue';
+    } else if (diffDays <= 7) {
+        return 'payment-status--pending';
+    } else {
+        return 'payment-status--active';
+    }
+}
+
+function getPaymentStatusText(dueDate) {
+    const due = new Date(dueDate);
+    const today = new Date();
+    const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+        return 'Overdue';
+    } else if (diffDays <= 7) {
+        return 'Due Soon';
+    } else {
+        return 'Pending';
+    }
+}
+
+function renderPaymentTable() {
+    const property = properties.find(p => p.id === currentPropertyId);
+    const paymentTableBody = document.getElementById('paymentTableBody');
+    const paymentTableHeader = document.querySelector('#paymentDashboard .payment-table th:nth-child(5)');
+    
+    if (!property || !paymentTableBody) return;
+
+    // Update GST header with dynamic percentage
+    if (paymentTableHeader) {
+        if (property.gstIncludedInRent) {
+            paymentTableHeader.textContent = `GST (${property.gstPercentage || 18}%)`;
+        } else {
+            paymentTableHeader.textContent = 'GST (0%)';
+        }
+    }
+
+    paymentTableBody.innerHTML = '';
+
+    // Check if property has agreement start date and rent amount
+    if (!property.agreementStartDate || !property.rentAmount) {
+        paymentTableBody.innerHTML = '<tr><td colspan="8" class="empty-state"><h3>No agreement data available</h3></td></tr>';
+        return;
+    }
+
+    // Generate payment schedule based on agreement start date and tenure
+    const schedule = generatePaymentSchedule(property);
+    
+    if (schedule.length === 0) {
+        paymentTableBody.innerHTML = '<tr><td colspan="8" class="empty-state"><h3>No payment schedule available</h3></td></tr>';
+        return;
+    }
+
+    schedule.forEach((payment, index) => {
+        const row = document.createElement('tr');
+        
+        const statusClass = getPaymentStatusClass(payment.dueDate, payment.paid);
+        const statusText = payment.paid ? 'Paid' : getPaymentStatusText(payment.dueDate);
+        
+        // Calculate GST and total based on whether GST is included in rent
+        const rentAmount = payment.amount;
+        let baseAmount, gstAmount, totalAmount;
+        
+        if (property.gstIncludedInRent) {
+            // GST is included in rent amount, so calculate base amount
+            const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
+            baseAmount = Math.round(rentAmount / (1 + gstPercentage)); // Remove GST from total
+            gstAmount = rentAmount - baseAmount;
+            totalAmount = rentAmount;
+        } else {
+            // GST is not included - no GST at all
+            baseAmount = rentAmount;
+            gstAmount = 0;
+            totalAmount = rentAmount;
+        }
+        
+        // Find corresponding payment history record for actions
+        const paymentHistory = property.paymentHistory?.find(p => {
+            const historyDate = new Date(p.dueDate);
+            const scheduleDate = new Date(payment.dueDate);
+            return historyDate.getTime() === scheduleDate.getTime();
+        });
+        
+        const paymentId = paymentHistory?.id || `schedule-${index}`;
+        
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${payment.paid && paymentHistory?.date ? formatDate(paymentHistory.date) : '-'}</td>
+            <td>${formatDate(payment.dueDate)}</td>
+            <td class="payment-amount">₹${baseAmount.toLocaleString()}</td>
+            <td class="payment-amount">₹${gstAmount.toLocaleString()}</td>
+            <td class="payment-amount">₹${totalAmount.toLocaleString()}</td>
+            <td><span class="payment-status ${statusClass}">${statusText}</span></td>
+            <td>
+                <div class="payment-actions">
+                    <button class="payment-action-btn" onclick="togglePaymentDropdown('${paymentId}')">
+                        ⋯
+                    </button>
+                    <div class="payment-dropdown hidden" id="dropdown-${paymentId}">
+                        ${!payment.paid ? 
+                            `<button class="dropdown-item" onclick="openPaymentModal('${paymentId}'); hidePaymentDropdown('${paymentId}')">
+                                📝 Receive Payment
+                            </button>` : 
+                            `<button class="dropdown-item" onclick="viewPaymentReceipt('${paymentId}'); hidePaymentDropdown('${paymentId}')">
+                                📋 View Receipt
+                            </button>`
+                        }
+                        <button class="dropdown-item" onclick="generatePaymentInvoice('${paymentId}'); hidePaymentDropdown('${paymentId}')">
+                            📄 Generate Invoice
+                        </button>
+                        ${payment.paid ? 
+                            `<button class="dropdown-item" onclick="showPaymentDetails('${paymentId}'); hidePaymentDropdown('${paymentId}')">
+                                ℹ️ Payment Details
+                            </button>` : ''
+                        }
+                    </div>
+                </div>
+            </td>
+        `;
+        
+        paymentTableBody.appendChild(row);
+    });
+}
+
+
+function updatePaymentSummary() {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property) return;
+
+    // Use the same payment schedule logic as the payment table
+    let payments = [];
+    
+    if (property.paymentHistory && property.paymentHistory.length > 0) {
+        // Use existing payment history
+        payments = property.paymentHistory.map(p => ({
+            ...p,
+            status: p.status || (p.paid ? 'Paid' : 'Pending'),
+            dueDate: p.dueDate
+        }));
+    } else if (property.agreementStartDate && property.rentAmount) {
+        // Generate payment schedule and check against payment history
+        const schedule = generatePaymentSchedule(property);
+        payments = schedule.map(p => {
+            const rentAmount = p.amount;
+            let baseAmount, gstAmount, totalAmount;
+            
+            if (property.gstIncludedInRent && property.gstPercentage > 0) {
+                // GST is included in rent amount, so calculate base amount
+                const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                baseAmount = Math.round(rentAmount / (1 + gstPercentage));
+                gstAmount = rentAmount - baseAmount;
+                totalAmount = rentAmount;
+            } else {
+                // GST is not included - no GST at all
+                baseAmount = rentAmount;
+                gstAmount = 0;
+                totalAmount = rentAmount;
+            }
+            
+            // Check if this payment has been paid in payment history
+            let paymentStatus = 'Pending';
+            if (property.paymentHistory && property.paymentHistory.length > 0) {
+                const paidPayment = property.paymentHistory.find(ph => {
+                    const phDueDate = new Date(ph.dueDate);
+                    const scheduleDueDate = new Date(p.dueDate);
+                    const phDateStr = phDueDate.toISOString().split('T')[0];
+                    const scheduleDateStr = scheduleDueDate.toISOString().split('T')[0];
+                    return phDateStr === scheduleDateStr && ph.status === 'Paid';
+                });
+                
+                if (paidPayment) {
+                    paymentStatus = 'Paid';
+                    // Use actual payment amounts from payment history
+                    baseAmount = paidPayment.base || baseAmount;
+                    gstAmount = paidPayment.gst || gstAmount;
+                    totalAmount = paidPayment.total || totalAmount;
+                }
+            }
+            
+            return {
+                total: totalAmount,
+                base: baseAmount,
+                gst: gstAmount,
+                status: paymentStatus,
+                dueDate: p.dueDate
+            };
+        });
+    } else {
+        // No payment data available
+        payments = [];
+    }
+
+    const totalCollected = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + p.total, 0);
+    const pendingAmount = payments.filter(p => p.status === 'Pending').reduce((sum, p) => sum + p.total, 0);
+    const overdueAmount = payments.filter(p => p.status === 'Pending' && new Date(p.dueDate) < new Date()).reduce((sum, p) => sum + p.total, 0);
+    const gstCollected = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + (p.gst || 0), 0);
+
+    document.getElementById('totalCollected').textContent = `₹${totalCollected.toLocaleString()}`;
+    document.getElementById('pendingAmount').textContent = `₹${pendingAmount.toLocaleString()}`;
+    document.getElementById('overdueAmount').textContent = `₹${overdueAmount.toLocaleString()}`;
+    document.getElementById('gstCollected').textContent = `₹${gstCollected.toLocaleString()}`;
+}
+
+function viewProperty(propertyId) {
+    openPropertyModal(propertyId);
+}
+
+function deleteProperty(propertyId) {
+    if (confirm('Are you sure you want to delete this property?')) {
+        properties = properties.filter(p => p.id !== propertyId);
+        renderPropertiesTable();
+        updateDashboardSummary();
+        showNotification('Property deleted successfully');
+    }
+}
+
+function filterProperties() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const typeFilter = document.getElementById('typeFilter').value;
+    
+    const filteredProperties = properties.filter(property => {
+        const matchesSearch = !searchTerm || 
+            (property.name && property.name.toLowerCase().includes(searchTerm)) ||
+            (property.address && property.address.toLowerCase().includes(searchTerm)) ||
+            (property.projectName && property.projectName.toLowerCase().includes(searchTerm));
+            
+        const matchesType = !typeFilter || property.type === typeFilter;
+        
+        return matchesSearch && matchesType;
+    });
+
+    // Temporarily replace properties for rendering
+    const originalProperties = properties;
+    properties = filteredProperties;
+    renderPropertiesTable();
+    properties = originalProperties;
+}
+
+function updateDashboardSummary() {
+    const totalProperties = properties.length;
+    const activeRentals = properties.filter(p => p.isRental).length;
+    const monthlyRevenue = properties
+        .filter(p => p.isRental && p.rentAmount)
+        .reduce((sum, p) => {
+            const monthlyRent = p.rentPeriod === 'year' ? p.rentAmount / 12 : p.rentAmount;
+            return sum + monthlyRent;
+        }, 0);
+
+    // Calculate pending bills (unpaid/overdue only)
+    const pendingBills = properties.reduce((count, property) => {
+        if (property.bills) {
+            billTypes.forEach(bill => {
+                const billData = property.bills[bill.key];
+                if (billData && billData.checked && !billData.paid) {
+                    // Check if bill is overdue (past due date)
+                    const today = new Date();
+                    const dueDate = billData.dueDate ? new Date(billData.dueDate) : null;
+                    
+                    if (!dueDate || dueDate < today) {
+                        count++; // Bill is unpaid and overdue (or no due date set)
+                    }
+                }
+            });
+            // Check custom bills
+            if (property.bills.customBills) {
+                property.bills.customBills.forEach(customBill => {
+                    if (!customBill.paid) {
+                        const today = new Date();
+                        const dueDate = customBill.dueDate ? new Date(customBill.dueDate) : null;
+                        
+                        if (!dueDate || dueDate < today) {
+                            count++; // Custom bill is unpaid and overdue
+                        }
+                    }
+                });
+            }
+        }
+        return count;
+    }, 0);
+
+    document.getElementById('totalProperties').textContent = totalProperties;
+    document.getElementById('activeRentals').textContent = activeRentals;
+    document.getElementById('pendingBills').textContent = pendingBills;
+    document.getElementById('monthlyRevenue').textContent = `₹${Math.round(monthlyRevenue).toLocaleString()}`;
+}
+
+function toggleRentalFields() {
+    const isRental = isRentalCheckbox.checked;
+    const rentalTab = document.querySelector('[data-tab="rental"]');
+    
+    if (isRental) {
+        rentalTab.style.opacity = '1';
+        rentalTab.style.pointerEvents = 'auto';
+    } else {
+        rentalTab.style.opacity = '0.5';
+        rentalTab.style.pointerEvents = 'none';
+    }
+}
+
+function toggleMaintenanceFields() {
+    const maintenanceCheckbox = document.getElementById('maintenanceCheckbox');
+    const maintenanceDetails = document.getElementById('maintenanceDetails');
+    
+    if (maintenanceCheckbox && maintenanceDetails) {
+        if (maintenanceCheckbox.checked) {
+            maintenanceDetails.classList.remove('hidden');
+        } else {
+            maintenanceDetails.classList.add('hidden');
+        }
+    }
+}
+
+function toggleGstPercentage() {
+    const gstCheckbox = document.querySelector('[name="gstIncludedInRent"]');
+    const gstPercentageGroup = document.getElementById('gstPercentageGroup');
+    
+    if (gstCheckbox && gstPercentageGroup) {
+        if (gstCheckbox.checked) {
+            gstPercentageGroup.style.display = 'block';
+        } else {
+            gstPercentageGroup.style.display = 'none';
+        }
+    }
+}
+
+function recalculatePaymentHistory(property) {
+    if (!property.paymentHistory) return;
+    
+    property.paymentHistory.forEach(payment => {
+        if (property.gstIncludedInRent && property.gstPercentage) {
+            // GST is included in total, calculate base amount
+            const gstPercentage = parseFloat(property.gstPercentage) / 100;
+            payment.base = Math.round(payment.total / (1 + gstPercentage));
+            payment.gst = payment.total - payment.base;
+        } else {
+            // GST is not included - no GST at all
+            payment.gst = 0;
+            payment.total = payment.base;
+        }
+    });
+}
+
+function calculateEscalatedRent(baseRent, paymentDate, property) {
+    const agreementStartDate = new Date(property.agreementStartDate);
+    const escalationPercentage = parseFloat(property.escalationPercentage || 0) / 100;
+    const escalationDays = parseInt(property.escalationDays || 365);
+    
+    // If no escalation, return base rent
+    if (escalationPercentage === 0) {
+        return baseRent;
+    }
+    
+    const currentDate = new Date(paymentDate);
+    const daysSinceStart = Math.floor((currentDate - agreementStartDate) / (1000 * 60 * 60 * 24));
+    
+    // Calculate how many escalation cycles have passed
+    const escalationCycles = Math.floor(daysSinceStart / escalationDays);
+    
+    if (escalationCycles === 0) {
+        return baseRent; // No escalation yet
+    }
+    
+    // Calculate the new rate after escalations
+    const escalatedRate = baseRent * Math.pow(1 + escalationPercentage, escalationCycles);
+    
+    // Calculate the next escalation date
+    const nextEscalationDate = new Date(agreementStartDate);
+    nextEscalationDate.setDate(nextEscalationDate.getDate() + (escalationCycles * escalationDays));
+    
+    // Calculate the previous escalation date
+    const previousEscalationDate = new Date(agreementStartDate);
+    previousEscalationDate.setDate(previousEscalationDate.getDate() + ((escalationCycles - 1) * escalationDays));
+    
+    // Check if escalation happens during this payment month
+    const paymentStartDate = new Date(paymentDate);
+    const paymentEndDate = new Date(paymentDate);
+    paymentEndDate.setMonth(paymentEndDate.getMonth() + 1);
+    
+    if (nextEscalationDate >= paymentStartDate && nextEscalationDate < paymentEndDate) {
+        // Pro-rated calculation needed
+        const daysInMonth = Math.floor((paymentEndDate - paymentStartDate) / (1000 * 60 * 60 * 24));
+        const daysAtOldRate = Math.floor((nextEscalationDate - paymentStartDate) / (1000 * 60 * 60 * 24));
+        const daysAtNewRate = daysInMonth - daysAtOldRate;
+        
+        const oldRate = baseRent * Math.pow(1 + escalationPercentage, escalationCycles - 1);
+        const newRate = escalatedRate;
+        
+        const oldRateAmount = (daysAtOldRate / daysInMonth) * oldRate;
+        const newRateAmount = (daysAtNewRate / daysInMonth) * newRate;
+        
+        return Math.round(oldRateAmount + newRateAmount);
+    }
+    
+    // No pro-rata needed, use the escalated rate
+    return Math.round(escalatedRate);
+}
+
+function calculateRentPerSqft() {
+    const carpetAreaInput = document.querySelector('[name="carpetArea"]');
+    const rentAmountInput = document.querySelector('[name="rentAmount"]');
+    const rentPerSqftInput = document.getElementById('rentPerSqft');
+    
+    if (!carpetAreaInput || !rentAmountInput || !rentPerSqftInput) return;
+    
+    const carpetArea = carpetAreaInput.value;
+    const rentAmount = rentAmountInput.value;
+    
+    if (carpetArea && rentAmount) {
+        // Extract numeric value from carpet area (e.g., "850 sqft" -> 850)
+        const carpetAreaNumber = parseFloat(carpetArea.replace(/[^\d.]/g, ''));
+        const rentAmountNumber = parseFloat(rentAmount);
+        
+        if (carpetAreaNumber > 0 && rentAmountNumber > 0) {
+            const rentPerSqft = rentAmountNumber / carpetAreaNumber;
+            rentPerSqftInput.value = rentPerSqft.toFixed(2);
+        } else {
+            rentPerSqftInput.value = '';
+        }
+    } else {
+        rentPerSqftInput.value = '';
+    }
+}
+
+function setupBillsSection(existingBills = null) {
+    billsSection.innerHTML = '';
+    
+    billTypes.forEach(bill => {
+        const billItem = document.createElement('div');
+        billItem.className = 'bill-item';
+        
+        const existingBill = existingBills && existingBills[bill.key];
+        const isChecked = existingBill ? existingBill.checked : false;
+        
+        billItem.innerHTML = `
+            <div class="bill-header">
+                <label>
+                    <input type="checkbox" id="bill-${bill.key}" ${isChecked ? 'checked' : ''}>
+                    ${bill.name}
+                </label>
+            </div>
+            <div class="bill-details ${isChecked ? '' : 'hidden'}">
+                <div class="form-group">
+                    <label class="form-label">Bill No.</label>
+                    <input type="text" class="form-control" name="bill-${bill.key}-no" 
+                           value="${existingBill ? existingBill.billNo || '' : ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Due Date</label>
+                    <input type="date" class="form-control" name="bill-${bill.key}-date"
+                           value="${existingBill ? existingBill.dueDate || '' : ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Period</label>
+                    <select class="form-control" name="bill-${bill.key}-period">
+                        <option value="monthly" ${existingBill && existingBill.period === 'monthly' ? 'selected' : ''}>Monthly</option>
+                        <option value="quarterly" ${existingBill && existingBill.period === 'quarterly' ? 'selected' : ''}>Quarterly</option>
+                        <option value="yearly" ${existingBill && existingBill.period === 'yearly' ? 'selected' : ''}>Yearly</option>
+                    </select>
+                </div>
+            </div>
+        `;
+        
+        billsSection.appendChild(billItem);
+        
+        // Add event listener for checkbox
+        const checkbox = billItem.querySelector(`#bill-${bill.key}`);
+        const details = billItem.querySelector('.bill-details');
+        
+        checkbox.addEventListener('change', () => {
+            details.classList.toggle('hidden', !checkbox.checked);
+        });
+    });
+}
+
+function addCustomBill(existingBill = null) {
+    const customBillItem = document.createElement('div');
+    customBillItem.className = 'custom-bill-item';
+    
+    customBillItem.innerHTML = `
+        <div class="custom-bill-header">
+            <h5>Custom Bill</h5>
+            <button type="button" class="remove-bill-btn">Remove</button>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Bill Name</label>
+                <input type="text" class="form-control" name="custom-bill-name" 
+                       value="${existingBill ? existingBill.name || '' : ''}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Bill No.</label>
+                <input type="text" class="form-control" name="custom-bill-no"
+                       value="${existingBill ? existingBill.billNo || '' : ''}">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Due Date</label>
+                <input type="date" class="form-control" name="custom-bill-date"
+                       value="${existingBill ? existingBill.dueDate || '' : ''}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Period</label>
+                <select class="form-control" name="custom-bill-period">
+                    <option value="monthly" ${existingBill && existingBill.period === 'monthly' ? 'selected' : ''}>Monthly</option>
+                    <option value="quarterly" ${existingBill && existingBill.period === 'quarterly' ? 'selected' : ''}>Quarterly</option>
+                    <option value="yearly" ${existingBill && existingBill.period === 'yearly' ? 'selected' : ''}>Yearly</option>
+                </select>
+            </div>
+        </div>
+    `;
+    
+    customBillsList.appendChild(customBillItem);
+    
+    // Add remove functionality
+    const removeBtn = customBillItem.querySelector('.remove-bill-btn');
+    removeBtn.addEventListener('click', () => {
+        customBillItem.remove();
+    });
+}
+
+function addDocument() {
+    const files = documentInput.files;
+    if (files.length === 0) {
+        showNotification('Please select files to upload', 'warning');
+        return;
+    }
+    
+    Array.from(files).forEach(file => {
+        const documentItem = document.createElement('div');
+        documentItem.className = 'document-item';
+        
+        const currentDate = new Date().toISOString().split('T')[0];
+        
+        documentItem.innerHTML = `
+            <div class="document-info">
+                <div class="document-name">${file.name}</div>
+                <div class="document-date">Uploaded: ${currentDate}</div>
+            </div>
+            <button type="button" class="btn btn--sm btn--outline remove-doc-btn">Remove</button>
+        `;
+        
+        documentList.appendChild(documentItem);
+        
+        // Add remove functionality
+        const removeBtn = documentItem.querySelector('.remove-doc-btn');
+        removeBtn.addEventListener('click', () => {
+            documentItem.remove();
+        });
+    });
+    
+    // Clear file input
+    documentInput.value = '';
+    showNotification(`${files.length} document(s) added`);
+}
+
+function renderDocuments() {
+    documentList.innerHTML = '';
+    
+    if (currentPropertyId) {
+        const property = properties.find(p => p.id === currentPropertyId);
+        if (property && property.documents) {
+            property.documents.forEach(doc => {
+                const documentItem = document.createElement('div');
+                documentItem.className = 'document-item';
+                
+                documentItem.innerHTML = `
+                    <div class="document-info">
+                        <div class="document-name">${doc.name}</div>
+                        <div class="document-date">Uploaded: ${doc.uploadDate}</div>
+                    </div>
+                    <button type="button" class="btn btn--sm btn--outline remove-doc-btn">Remove</button>
+                `;
+                
+                documentList.appendChild(documentItem);
+                
+                // Add remove functionality
+                const removeBtn = documentItem.querySelector('.remove-doc-btn');
+                removeBtn.addEventListener('click', () => {
+                    documentItem.remove();
+                });
+            });
+        }
+    }
+}
+
+function generateInvoice() {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.paymentHistory) return;
+
+    const paidPayments = property.paymentHistory.filter(p => p.status === 'Paid');
+    if (paidPayments.length === 0) {
+        showNotification('No paid payments to generate invoice', 'warning');
+        return;
+    }
+
+    const latestPayment = paidPayments[paidPayments.length - 1];
+    
+    // Create invoice window
+    const invoiceWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    const invoiceHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Invoice - ${property.name}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .invoice-header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px; }
+                .company-info h1 { color: #1e3a8a; margin: 0; }
+                .invoice-details { text-align: right; }
+                .invoice-number { font-size: 24px; font-weight: bold; color: #1e3a8a; }
+                .property-details, .payment-details { margin: 20px 0; }
+                .details-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                .details-table th, .details-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                .details-table th { background-color: #1e3a8a; color: white; }
+                .total-row { font-weight: bold; background-color: #f5f5f5; }
+                .footer { margin-top: 40px; text-align: center; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class="invoice-header">
+                <div class="company-info">
+                    <h1>Balar Builders</h1>
+                    <p>Business Address, City, State</p>
+                    <p>GST No: 27XXXXX1234X1Z5</p>
+                </div>
+                <div class="invoice-details">
+                    <div class="invoice-number">INV-${String(latestPayment.id).padStart(4, '0')}</div>
+                    <p>Date: ${formatDate(latestPayment.paymentDate || latestPayment.date)}</p>
+                </div>
+            </div>
+            
+            <div class="property-details">
+                <h3>Property Details</h3>
+                <p><strong>Property:</strong> ${property.name}</p>
+                <p><strong>Address:</strong> ${property.address}</p>
+                <p><strong>Type:</strong> ${property.type}</p>
+                ${property.lesseeName ? `<p><strong>Lessee:</strong> ${property.lesseeName}</p>` : ''}
+            </div>
+            
+            <div class="payment-details">
+                <h3>Payment Details</h3>
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Period</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Monthly Rent</td>
+                            <td>${formatDate(latestPayment.date)}</td>
+                            <td>₹${latestPayment.base.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <td>GST (18%)</td>
+                            <td>-</td>
+                            <td>₹${latestPayment.gst.toLocaleString()}</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td colspan="2"><strong>Total Amount</strong></td>
+                            <td><strong>₹${latestPayment.total.toLocaleString()}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <p><strong>Payment Mode:</strong> ${latestPayment.paymentMode}</p>
+                <p><strong>Receipt No:</strong> ${latestPayment.receiptNo}</p>
+                <p><strong>Payment Date:</strong> ${formatDate(latestPayment.paymentDate)}</p>
+            </div>
+            
+            <div class="footer">
+                <p>Thank you for your payment!</p>
+                <p>This is a computer generated invoice.</p>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    invoiceWindow.document.write(invoiceHTML);
+    invoiceWindow.document.close();
+    
+    showNotification('Invoice generated successfully');
+}
+
+// New functions for payment dropdown functionality
+function togglePaymentDropdown(paymentId) {
+    // Hide all other dropdowns first
+    document.querySelectorAll('.payment-dropdown').forEach(dropdown => {
+        if (dropdown.id !== `dropdown-${paymentId}`) {
+            dropdown.classList.add('hidden');
+        }
+    });
+    
+    // Toggle current dropdown
+    const dropdown = document.getElementById(`dropdown-${paymentId}`);
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+    }
+}
+
+function hidePaymentDropdown(paymentId) {
+    const dropdown = document.getElementById(`dropdown-${paymentId}`);
+    if (dropdown) {
+        dropdown.classList.add('hidden');
+    }
+}
+
+function generatePaymentInvoice(paymentId) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property) return;
+    
+    let payment = null;
+    let baseAmount = 0;
+    let gstAmount = 0;
+    let totalAmount = 0;
+    let dueDate = '';
+    
+    // Check if it's an existing payment history record
+    if (property.paymentHistory) {
+        payment = property.paymentHistory.find(p => p.id == paymentId);
+        if (payment) {
+            // Recalculate GST amounts using current GST settings
+            if (property.gstIncludedInRent) {
+                // GST is included in total, calculate base amount
+                const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
+                baseAmount = Math.round(payment.total / (1 + gstPercentage));
+                gstAmount = payment.total - baseAmount;
+                totalAmount = payment.total;
+            } else {
+                // GST is not included - no GST at all
+                baseAmount = payment.base;
+                gstAmount = 0;
+                totalAmount = payment.base;
+            }
+            
+            dueDate = payment.dueDate;
+        }
+    }
+    
+    // If not found in payment history, check if it's a schedule payment
+    if (!payment && paymentId.startsWith('schedule-')) {
+        const scheduleIndex = parseInt(paymentId.replace('schedule-', ''));
+        const schedule = generatePaymentSchedule(property);
+        if (schedule[scheduleIndex]) {
+            const schedulePayment = schedule[scheduleIndex];
+            const rentAmount = schedulePayment.amount;
+            
+            // Calculate GST and total based on whether GST is included in rent
+            if (property.gstIncludedInRent) {
+                // GST is included in rent amount, so calculate base amount
+                const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
+                baseAmount = Math.round(rentAmount / (1 + gstPercentage)); // Remove GST from total
+                gstAmount = rentAmount - baseAmount;
+                totalAmount = rentAmount;
+            } else {
+                // GST is not included - no GST at all
+                baseAmount = rentAmount;
+                gstAmount = 0;
+                totalAmount = rentAmount;
+            }
+            
+            dueDate = schedulePayment.dueDate;
+        }
+    }
+    
+    if (baseAmount === 0) return;
+    
+    // Create invoice for specific payment (even if not paid yet - this could be for pending payments)
+    const invoiceWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    const invoiceHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Invoice - ${property.name}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .invoice-header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px; }
+                .company-info h1 { color: #1e3a8a; margin: 0; }
+                .invoice-details { text-align: right; }
+                .invoice-number { font-size: 24px; font-weight: bold; color: #1e3a8a; }
+                .property-details, .payment-details { margin: 20px 0; }
+                .details-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                .details-table th, .details-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                .details-table th { background-color: #1e3a8a; color: white; }
+                .total-row { font-weight: bold; background-color: #f5f5f5; }
+                .footer { margin-top: 40px; text-align: center; color: #666; }
+                .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+                .status-pending { background-color: #fff3cd; color: #856404; }
+                .status-paid { background-color: #d4edda; color: #155724; }
+            </style>
+        </head>
+        <body>
+            <div class="invoice-header">
+                <div class="company-info">
+                    <h1>Balar Builders</h1>
+                    <p>Business Address, City, State</p>
+                    <p>GST No: 27XXXXX1234X1Z5</p>
+                </div>
+                <div class="invoice-details">
+                    <div class="invoice-number">INV-${String(paymentId).padStart(4, '0')}</div>
+                    <p>Date: ${getCurrentDate()}</p>
+                    <p>Due Date: ${formatDate(dueDate)}</p>
+                    <span class="status-badge status-${payment ? payment.status.toLowerCase() : 'pending'}">${payment ? payment.status : 'Pending'}</span>
+                </div>
+            </div>
+            
+            <div class="property-details">
+                <h3>Property Details</h3>
+                <p><strong>Property:</strong> ${property.name}</p>
+                <p><strong>Address:</strong> ${property.address}</p>
+                <p><strong>Type:</strong> ${property.type}</p>
+                ${property.lesseeName ? `<p><strong>Lessee:</strong> ${property.lesseeName}</p>` : ''}
+            </div>
+            
+            <div class="payment-details">
+                <h3>Payment Details</h3>
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Period</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Monthly Rent</td>
+                            <td>${formatDate(dueDate)}</td>
+                            <td>₹${baseAmount.toLocaleString()}</td>
+                        </tr>
+                               <tr>
+                                   <td>GST (${property.gstIncludedInRent ? (property.gstPercentage || 18) : 0}%)</td>
+                                   <td>-</td>
+                                   <td>₹${gstAmount.toLocaleString()}</td>
+                               </tr>
+                        <tr class="total-row">
+                            <td colspan="2"><strong>Total Amount</strong></td>
+                            <td><strong>₹${totalAmount.toLocaleString()}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                ${payment && payment.status === 'Paid' ? `
+                    <p><strong>Payment Mode:</strong> ${payment.paymentMode || 'N/A'}</p>
+                    <p><strong>Receipt No:</strong> ${payment.receiptNo || 'N/A'}</p>
+                    <p><strong>Payment Date:</strong> ${payment.paymentDate ? formatDate(payment.paymentDate) : 'N/A'}</p>
+                ` : `
+                    <p><strong>Status:</strong> <span class="status-badge status-pending">Pending Payment</span></p>
+                    <p><strong>Please make payment by:</strong> ${formatDate(dueDate)}</p>
+                `}
+            </div>
+            
+            <div class="footer">
+                <p>${payment && payment.status === 'Paid' ? 'Thank you for your payment!' : 'Please make payment by the due date.'}</p>
+                <p>This is a computer generated invoice.</p>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    invoiceWindow.document.write(invoiceHTML);
+    invoiceWindow.document.close();
+    
+    showNotification('Invoice generated successfully');
+}
+
+function viewPaymentReceipt(paymentId) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.paymentHistory) return;
+    
+    const payment = property.paymentHistory.find(p => p.id === paymentId);
+    if (!payment || payment.status !== 'Paid') return;
+    
+    // Create receipt window
+    const receiptWindow = window.open('', '_blank', 'width=600,height=700');
+    
+    const receiptHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Receipt - ${property.name}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .receipt-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px; }
+                .company-info h1 { color: #1e3a8a; margin: 0; }
+                .receipt-details { margin: 20px 0; }
+                .details-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                .details-table th, .details-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                .details-table th { background-color: #1e3a8a; color: white; }
+                .total-row { font-weight: bold; background-color: #f5f5f5; }
+                .footer { margin-top: 40px; text-align: center; color: #666; }
+                .receipt-number { font-size: 20px; font-weight: bold; color: #1e3a8a; margin: 10px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="receipt-header">
+                <div class="company-info">
+                    <h1>Balar Builders</h1>
+                    <p>Business Address, City, State</p>
+                    <p>GST No: 27XXXXX1234X1Z5</p>
+                </div>
+                <div class="receipt-number">RECEIPT NO: ${payment.receiptNo || 'N/A'}</div>
+                <p>Date: ${formatDate(payment.paymentDate || payment.date)}</p>
+            </div>
+            
+            <div class="receipt-details">
+                <h3>Payment Receipt</h3>
+                <p><strong>Property:</strong> ${property.name}</p>
+                <p><strong>Address:</strong> ${property.address}</p>
+                ${property.lesseeName ? `<p><strong>Lessee:</strong> ${property.lesseeName}</p>` : ''}
+                <p><strong>Payment Mode:</strong> ${payment.paymentMode || 'N/A'}</p>
+                
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Monthly Rent</td>
+                            <td>₹${payment.base.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <td>GST (18%)</td>
+                            <td>₹${payment.gst.toLocaleString()}</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Total Amount Paid</strong></td>
+                            <td><strong>₹${payment.total.toLocaleString()}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <p><strong>Payment Date:</strong> ${formatDate(payment.paymentDate)}</p>
+                <p><strong>Period:</strong> ${formatDate(payment.date)}</p>
+                ${payment.notes ? `<p><strong>Notes:</strong> ${payment.notes}</p>` : ''}
+            </div>
+            
+            <div class="footer">
+                <p>Thank you for your payment!</p>
+                <p>This is a computer generated receipt.</p>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    receiptWindow.document.write(receiptHTML);
+    receiptWindow.document.close();
+    
+    showNotification('Receipt generated successfully');
+}
+
+// Bill dropdown functions
+function toggleBillDropdown(billKey) {
+    // Hide all other bill dropdowns first
+    document.querySelectorAll('.payment-dropdown').forEach(dropdown => {
+        if (dropdown.id !== `bill-dropdown-${billKey}`) {
+            dropdown.classList.add('hidden');
+        }
+    });
+    
+    // Toggle current dropdown
+    const dropdown = document.getElementById(`bill-dropdown-${billKey}`);
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+    }
+}
+
+function hideBillDropdown(billKey) {
+    const dropdown = document.getElementById(`bill-dropdown-${billKey}`);
+    if (dropdown) {
+        dropdown.classList.add('hidden');
+    }
+}
+
+function viewBillDetails(billKey) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills) return;
+    
+    let billData;
+    let billName;
+    
+    if (billKey.startsWith('custom-')) {
+        const index = parseInt(billKey.replace('custom-', ''));
+        billData = property.bills.customBills[index];
+        billName = billData.name;
+    } else {
+        billData = property.bills[billKey];
+        const billType = billTypes.find(b => b.key === billKey);
+        billName = billType ? billType.name : billKey;
+    }
+    
+    if (!billData) return;
+    
+    if (billData.paid) {
+        // Show receipt for paid bills
+        showBillReceipt(billKey, billData, billName, property);
+    } else {
+        // Show basic details for unpaid bills
+        const details = `
+Bill Details:
+• Bill Type: ${billName}
+• Bill Number: ${billData.billNo || 'N/A'}
+• Due Date: ${billData.dueDate ? formatDate(billData.dueDate) : 'Not set'}
+• Period: ${billData.period || 'monthly'}
+• Status: Pending
+${billData.notes ? `• Notes: ${billData.notes}` : ''}
+        `;
+        
+        alert(details);
+    }
+}
+
+function showBillReceipt(billKey, billData, billName, property) {
+    // Create a receipt modal
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content receipt-modal">
+            <div class="modal-header">
+                <h3>Payment Receipt</h3>
+                <button class="btn btn--outline" onclick="this.closest('.modal').remove()">Close</button>
+            </div>
+            <div class="modal-body">
+                <div class="receipt-content">
+                    <div class="receipt-header">
+                        <h2>PAYMENT RECEIPT</h2>
+                        <p class="receipt-date">Date: ${formatDate(billData.paidDate)}</p>
+                    </div>
+                    
+                    <div class="receipt-details">
+                        <div class="receipt-section">
+                            <h4>Property Information</h4>
+                            <p><strong>Property:</strong> ${property.name}</p>
+                            <p><strong>Address:</strong> ${property.address}</p>
+                            <p><strong>Project:</strong> ${property.projectName || 'N/A'}</p>
+                        </div>
+                        
+                        <div class="receipt-section">
+                            <h4>Bill Information</h4>
+                            <p><strong>Bill Type:</strong> ${billName}</p>
+                            <p><strong>Bill Number:</strong> ${billData.billNo || 'N/A'}</p>
+                            <p><strong>Due Date:</strong> ${billData.dueDate ? formatDate(billData.dueDate) : 'Not set'}</p>
+                            <p><strong>Period:</strong> ${billData.period || 'monthly'}</p>
+                        </div>
+                        
+                        <div class="receipt-section">
+                            <h4>Payment Information</h4>
+                            <p><strong>Payment Date:</strong> ${formatDate(billData.paidDate)}</p>
+                            <p><strong>Payment Mode:</strong> ${billData.paymentMode || 'Cash'}</p>
+                            <p><strong>Receipt Number:</strong> ${billData.receiptNo || 'N/A'}</p>
+                            <p><strong>Status:</strong> <span class="status-paid">✓ PAID</span></p>
+                        </div>
+                        
+                        <div class="receipt-section">
+                            <h4>Amount Details</h4>
+                            <div class="amount-breakdown">
+                                <div class="amount-row">
+                                    <span>Bill Amount:</span>
+                                    <span>₹${(billData.amount || 0).toLocaleString()}</span>
+                                </div>
+                                <div class="amount-row total">
+                                    <span><strong>Total Paid:</strong></span>
+                                    <span><strong>₹${(billData.amount || 0).toLocaleString()}</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${billData.notes ? `
+                        <div class="receipt-section">
+                            <h4>Notes</h4>
+                            <p>${billData.notes}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="receipt-footer">
+                        <p class="receipt-thank-you">Thank you for your payment!</p>
+                        <p class="receipt-print">Print this receipt for your records</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function editBillDetails(billKey) {
+    // This would open a modal to edit bill details
+    showNotification('Edit bill functionality will be implemented', 'info');
+}
+
+function markBillPaid(billKey) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills) return;
+    
+    let billData;
+    let billName;
+    
+    if (billKey.startsWith('custom-')) {
+        const index = parseInt(billKey.replace('custom-', ''));
+        billData = property.bills.customBills[index];
+        billName = billData.name;
+    } else {
+        billData = property.bills[billKey];
+        const billType = billTypes.find(b => b.key === billKey);
+        billName = billType ? billType.name : billKey;
+    }
+    
+    if (!billData) return;
+    
+    if (confirm(`Mark ${billName} as paid?`)) {
+        billData.paid = true;
+        billData.paidDate = new Date().toISOString().split('T')[0];
+        
+        // Add default payment details for receipt
+        billData.paymentMode = billData.paymentMode || 'Cash';
+        billData.receiptNo = billData.receiptNo || `RCP-${Date.now()}`;
+        billData.amount = billData.amount || 1000; // Default amount if not set
+        billData.notes = billData.notes || 'Payment received';
+        
+        // Update the bill section if it's currently open
+        updateBillSection(billKey);
+        showNotification(`${billName} marked as paid`);
+    }
+}
+
+function updateBillSection(billKey) {
+    const billSection = document.getElementById(`bill-section-${billKey}`);
+    if (billSection && !billSection.classList.contains('hidden')) {
+        // Recreate the bill section with updated data
+        billSection.remove();
+        createIndividualBillSection(billKey);
+    }
+}
+
+function renderBillDocuments(billKey, billData) {
+    if (!billData.documents || billData.documents.length === 0) {
+        return '<p class="no-documents">No documents uploaded yet.</p>';
+    }
+    
+    return billData.documents.map((doc, index) => `
+        <div class="bill-document-item">
+            <div class="document-info">
+                <span class="document-name">${doc.name}</span>
+                <span class="document-date">Uploaded: ${formatDate(doc.uploadDate)}</span>
+            </div>
+            <div class="document-actions">
+                <button class="btn btn--small btn--primary" onclick="viewBillDocument('${billKey}', ${index})">View</button>
+                <button class="btn btn--small btn--info" onclick="downloadBillDocument('${billKey}', ${index})">Download</button>
+                <button class="btn btn--small btn--danger" onclick="deleteBillDocumentFromView('${billKey}', ${index})">Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function uploadBillDocument(billKey) {
+    const fileInput = document.getElementById(`bill-document-${billKey}`);
+    const files = fileInput.files;
+    
+    if (files.length === 0) {
+        showNotification('Please select a file to upload', 'error');
+        return;
+    }
+    
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills) return;
+    
+    let billData;
+    if (property.bills[billKey]) {
+        billData = property.bills[billKey];
+    } else if (property.bills.customBills) {
+        const customBill = property.bills.customBills.find(b => b.id === billKey);
+        if (customBill) {
+            billData = customBill;
+        }
+    }
+    
+    if (!billData) return;
+    
+    // Initialize documents array if it doesn't exist
+    if (!billData.documents) {
+        billData.documents = [];
+    }
+    
+    // Process each file
+    Array.from(files).forEach(file => {
+        const document = {
+            name: file.name,
+            uploadDate: new Date().toISOString().split('T')[0],
+            size: file.size,
+            type: file.type
+        };
+        
+        billData.documents.push(document);
+    });
+    
+    // Clear the file input
+    fileInput.value = '';
+    
+    showNotification(`Uploaded ${files.length} document(s) successfully`);
+}
+
+function viewBillDocuments(billKey) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills) return;
+    
+    let billData;
+    if (property.bills[billKey]) {
+        billData = property.bills[billKey];
+    } else if (property.bills.customBills) {
+        const customBill = property.bills.customBills.find(b => b.id === billKey);
+        if (customBill) {
+            billData = customBill;
+        }
+    }
+    
+    if (!billData) return;
+    
+    const billType = billTypes.find(b => b.key === billKey);
+    const billName = billType ? billType.name : billKey;
+    
+    // Create a modal to show all documents for this bill
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>${billName} Documents</h3>
+                <button class="btn btn--outline" onclick="this.closest('.modal').remove()">Close</button>
+            </div>
+            <div class="modal-body">
+                <div class="document-upload-area" style="margin-bottom: 20px;">
+                    <input type="file" id="modal-bill-document-${billKey}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" multiple>
+                    <button class="btn btn--primary" onclick="uploadBillDocumentFromModal('${billKey}')">Upload Document</button>
+                </div>
+                <div class="bill-documents-list" id="modal-bill-documents-${billKey}">
+                    ${renderBillDocuments(billKey, billData)}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function uploadBillDocumentFromModal(billKey) {
+    const fileInput = document.getElementById(`modal-bill-document-${billKey}`);
+    const files = fileInput.files;
+    
+    if (files.length === 0) {
+        showNotification('Please select a file to upload', 'error');
+        return;
+    }
+    
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills) return;
+    
+    let billData;
+    if (property.bills[billKey]) {
+        billData = property.bills[billKey];
+    } else if (property.bills.customBills) {
+        const customBill = property.bills.customBills.find(b => b.id === billKey);
+        if (customBill) {
+            billData = customBill;
+        }
+    }
+    
+    if (!billData) return;
+    
+    // Initialize documents array if it doesn't exist
+    if (!billData.documents) {
+        billData.documents = [];
+    }
+    
+    // Process each file
+    Array.from(files).forEach(file => {
+        const document = {
+            name: file.name,
+            uploadDate: new Date().toISOString().split('T')[0],
+            size: file.size,
+            type: file.type
+        };
+        
+        billData.documents.push(document);
+    });
+    
+    // Update the documents list display in the modal
+    const documentsList = document.getElementById(`modal-bill-documents-${billKey}`);
+    if (documentsList) {
+        documentsList.innerHTML = renderBillDocuments(billKey, billData);
+    }
+    
+    // Clear the file input
+    fileInput.value = '';
+    
+    showNotification(`Uploaded ${files.length} document(s) successfully`);
+}
+
+function viewBillDocument(billKey, documentIndex) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills) return;
+    
+    let billData;
+    if (property.bills[billKey]) {
+        billData = property.bills[billKey];
+    } else if (property.bills.customBills) {
+        const customBill = property.bills.customBills.find(b => b.id === billKey);
+        if (customBill) {
+            billData = customBill;
+        }
+    }
+    
+    if (!billData || !billData.documents || !billData.documents[documentIndex]) {
+        showNotification('Document not found', 'error');
+        return;
+    }
+    
+    const document = billData.documents[documentIndex];
+    
+    // Create a simple document viewer modal
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>${document.name}</h3>
+                <button class="btn btn--outline" onclick="this.closest('.modal').remove()">Close</button>
+            </div>
+            <div class="modal-body">
+                <div class="document-viewer">
+                    <div class="document-info">
+                        <p><strong>File Name:</strong> ${document.name}</p>
+                        <p><strong>Upload Date:</strong> ${formatDate(document.uploadDate)}</p>
+                        <p><strong>File Size:</strong> ${(document.size / 1024).toFixed(2)} KB</p>
+                        <p><strong>File Type:</strong> ${document.type}</p>
+                    </div>
+                    <div class="document-preview">
+                        <p class="document-placeholder">
+                            📄 Document Preview<br>
+                            <small>File: ${document.name}</small><br>
+                            <small>Click "Download" to view the actual document</small>
+                        </p>
+                        <button class="btn btn--primary" onclick="downloadBillDocument('${billKey}', ${documentIndex})">Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function downloadBillDocument(billKey, documentIndex) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills) return;
+    
+    let billData;
+    if (property.bills[billKey]) {
+        billData = property.bills[billKey];
+    } else if (property.bills.customBills) {
+        const customBill = property.bills.customBills.find(b => b.id === billKey);
+        if (customBill) {
+            billData = customBill;
+        }
+    }
+    
+    if (!billData || !billData.documents || !billData.documents[documentIndex]) {
+        showNotification('Document not found', 'error');
+        return;
+    }
+    
+    const document = billData.documents[documentIndex];
+    
+    // Since we don't have actual file storage, we'll create a simple download
+    // In a real application, this would download the actual file
+    showNotification('Download functionality would be implemented here. In a real app, this would download the actual file.', 'info');
+}
+
+function deleteBillDocument(billKey, documentIndex) {
+    if (!confirm('Are you sure you want to delete this document?')) {
+        return;
+    }
+    
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills) return;
+    
+    let billData;
+    if (property.bills[billKey]) {
+        billData = property.bills[billKey];
+    } else if (property.bills.customBills) {
+        const customBill = property.bills.customBills.find(b => b.id === billKey);
+        if (customBill) {
+            billData = customBill;
+        }
+    }
+    
+    if (!billData || !billData.documents || !billData.documents[documentIndex]) {
+        showNotification('Document not found', 'error');
+        return;
+    }
+    
+    // Remove the document
+    billData.documents.splice(documentIndex, 1);
+    
+    // Update the documents list display
+    const documentsList = document.getElementById(`bill-documents-${billKey}`);
+    if (documentsList) {
+        documentsList.innerHTML = renderBillDocuments(billKey, billData);
+    }
+    
+    showNotification('Document deleted successfully');
+}
+
+function deleteBillDocumentFromView(billKey, documentIndex) {
+    if (!confirm('Are you sure you want to delete this document?')) {
+        return;
+    }
+    
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills) return;
+    
+    let billData;
+    if (property.bills[billKey]) {
+        billData = property.bills[billKey];
+    } else if (property.bills.customBills) {
+        const customBill = property.bills.customBills.find(b => b.id === billKey);
+        if (customBill) {
+            billData = customBill;
+        }
+    }
+    
+    if (!billData || !billData.documents || !billData.documents[documentIndex]) {
+        showNotification('Document not found', 'error');
+        return;
+    }
+    
+    // Remove the document
+    billData.documents.splice(documentIndex, 1);
+    
+    // Update the documents list display in the modal
+    const modalDocumentsList = document.getElementById(`modal-bill-documents-${billKey}`);
+    if (modalDocumentsList) {
+        modalDocumentsList.innerHTML = renderBillDocuments(billKey, billData);
+    }
+    
+    showNotification('Document deleted successfully');
+}
+
+function toggleBillDropdown(billKey) {
+    // Close all other dropdowns first
+    document.querySelectorAll('.bill-dropdown-menu').forEach(menu => {
+        if (menu.id !== `bill-dropdown-${billKey}`) {
+            menu.style.display = 'none';
+        }
+    });
+    
+    // Toggle current dropdown
+    const dropdown = document.getElementById(`bill-dropdown-${billKey}`);
+    if (dropdown) {
+        if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+            dropdown.style.display = 'block';
+        } else {
+            dropdown.style.display = 'none';
+        }
+    }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.bill-dropdown')) {
+        document.querySelectorAll('.bill-dropdown-menu').forEach(menu => {
+            menu.style.display = 'none';
+        });
+    }
+});
+
+function showPaymentDetails(paymentId) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.paymentHistory) return;
+    
+    const payment = property.paymentHistory.find(p => p.id === paymentId);
+    if (!payment) return;
+    
+    // Create a simple alert with payment details (could be enhanced to show in a modal)
+    const details = `
+Payment Details:
+• Amount: ₹${payment.total.toLocaleString()}
+• Base Rent: ₹${payment.base.toLocaleString()}
+• GST (18%): ₹${payment.gst.toLocaleString()}
+• Payment Date: ${formatDate(payment.paymentDate || payment.date)}
+• Payment Mode: ${payment.paymentMode || 'N/A'}
+• Receipt No: ${payment.receiptNo || 'N/A'}
+• Status: ${payment.status}
+${payment.notes ? `• Notes: ${payment.notes}` : ''}
+    `;
+    
+    alert(details);
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN');
+}
+
+function getCurrentDate() {
+    return new Date().toISOString().split('T')[0];
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Global functions for button onclick handlers
+window.viewProperty = viewProperty;
+window.deleteProperty = deleteProperty;
+window.showPaymentDashboard = showPaymentDashboard;
+window.openPaymentModal = openPaymentModal;
