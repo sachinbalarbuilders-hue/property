@@ -1557,15 +1557,6 @@ select.form-control {
   border: 1px dashed rgba(33, 128, 141, 0.3);
 }
 
-.no-bills-message a {
-  color: var(--color-primary) !important;
-  text-decoration: underline !important;
-  font-weight: var(--font-weight-medium);
-}
-
-.no-bills-message a:hover {
-  color: var(--color-primary-hover) !important;
-}
 
 .individual-bill-sections {
   margin-bottom: var(--space-32);

@@ -721,10 +721,7 @@ function renderBillButtons() {
         noBillsMessage.className = 'no-bills-message';
         noBillsMessage.innerHTML = `
             <p style="color: var(--color-text-secondary); font-style: italic; margin: 0;">
-                No bill types configured for this property. 
-                <a href="#" onclick="showPropertyModal(${property.id})" style="color: var(--color-primary); text-decoration: underline;">
-                    Configure bills in property settings
-                </a>
+                No bill types configured for this property.
             </p>
         `;
         billButtons.appendChild(noBillsMessage);
