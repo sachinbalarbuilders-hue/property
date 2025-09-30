@@ -1500,16 +1500,46 @@ select.form-control {
 }
 
 /* Bill Buttons and Individual Bill Sections */
+.bill-buttons-section {
+  margin-top: var(--space-16);
+}
+
+.bill-buttons-section h4 {
+  margin: 0 0 var(--space-8) 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .bill-buttons {
   display: flex;
   gap: var(--space-8);
   flex-wrap: wrap;
+  margin-bottom: var(--space-16);
+  padding: var(--space-12);
+  background: rgba(33, 128, 141, 0.05);
+  border-radius: var(--radius-base);
+  border: 1px solid rgba(33, 128, 141, 0.1);
 }
 
 .bill-button {
   margin: 0;
   font-size: var(--font-size-sm);
   padding: var(--space-6) var(--space-12);
+  background: var(--color-primary) !important;
+  color: var(--color-white) !important;
+  border: 1px solid var(--color-primary) !important;
+  font-weight: var(--font-weight-medium);
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.bill-button:hover {
+  background: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(33, 128, 141, 0.3);
 }
 
 .individual-bill-sections {
