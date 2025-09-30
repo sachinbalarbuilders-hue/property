@@ -697,7 +697,7 @@ function renderBillButtons() {
         const billData = property.bills[bill.key];
         if (billData && billData.checked) {
             const button = document.createElement('button');
-            button.className = 'btn btn--outline bill-button';
+            button.className = 'btn bill-button';
             button.textContent = bill.name;
             button.onclick = () => toggleIndividualBill(bill.key);
             billButtons.appendChild(button);
@@ -708,11 +708,26 @@ function renderBillButtons() {
     if (property.bills.customBills && property.bills.customBills.length > 0) {
         property.bills.customBills.forEach((customBill, index) => {
             const button = document.createElement('button');
-            button.className = 'btn btn--outline bill-button';
+            button.className = 'btn bill-button';
             button.textContent = customBill.name;
             button.onclick = () => toggleIndividualBill(`custom-${index}`);
             billButtons.appendChild(button);
         });
+    }
+
+    // Show message if no bill types are available
+    if (billButtons.children.length === 0) {
+        const noBillsMessage = document.createElement('div');
+        noBillsMessage.className = 'no-bills-message';
+        noBillsMessage.innerHTML = `
+            <p style="color: var(--color-text-secondary); font-style: italic; margin: 0;">
+                No bill types configured for this property. 
+                <a href="#" onclick="showPropertyModal(${property.id})" style="color: var(--color-primary); text-decoration: underline;">
+                    Configure bills in property settings
+                </a>
+            </p>
+        `;
+        billButtons.appendChild(noBillsMessage);
     }
 }
 
