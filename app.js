@@ -2795,13 +2795,34 @@ function generatePaymentInvoice(paymentId) {
 
 function viewPaymentReceipt(paymentId) {
     const property = properties.find(p => p.id === currentPropertyId);
-    if (!property || !property.paymentHistory) return;
+    if (!property || !property.paymentHistory) {
+        showNotification('No payment history found', 'error');
+        return;
+    }
     
-    const payment = property.paymentHistory.find(p => p.id === paymentId);
-    if (!payment || payment.status !== 'Paid') return;
+    const payment = property.paymentHistory.find(p => p.id == paymentId);
+    if (!payment) {
+        console.log('Payment not found. PaymentId:', paymentId, 'Available payments:', property.paymentHistory);
+        showNotification('Payment not found', 'error');
+        return;
+    }
+    
+    console.log('Found payment:', payment);
+    
+    // Check if payment is paid (handle different status field names)
+    const isPaid = payment.status === 'Paid' || payment.paid === true || payment.paymentDate;
+    if (!isPaid) {
+        showNotification('Payment is not completed yet', 'error');
+        return;
+    }
     
     // Create receipt window
     const receiptWindow = window.open('', '_blank', 'width=600,height=700');
+    
+    if (!receiptWindow) {
+        showNotification('Unable to open receipt window. Please check popup blockers.', 'error');
+        return;
+    }
     
     const receiptHTML = `
         <!DOCTYPE html>
@@ -2829,7 +2850,7 @@ function viewPaymentReceipt(paymentId) {
                     <p>GST No: 27XXXXX1234X1Z5</p>
                 </div>
                 <div class="receipt-number">RECEIPT NO: ${payment.receiptNo || 'N/A'}</div>
-                <p>Date: ${formatDate(payment.paymentDate || payment.date)}</p>
+                <p>Date: ${formatDate(payment.paymentDate || payment.date || new Date())}</p>
             </div>
             
             <div class="receipt-details">
@@ -2849,21 +2870,21 @@ function viewPaymentReceipt(paymentId) {
                     <tbody>
                         <tr>
                             <td>Monthly Rent</td>
-                            <td>₹${payment.base.toLocaleString()}</td>
+                            <td>₹${(payment.base || payment.amount || 0).toLocaleString()}</td>
                         </tr>
                         <tr>
                             <td>GST (18%)</td>
-                            <td>₹${payment.gst.toLocaleString()}</td>
+                            <td>₹${(payment.gst || 0).toLocaleString()}</td>
                         </tr>
                         <tr class="total-row">
                             <td><strong>Total Amount Paid</strong></td>
-                            <td><strong>₹${payment.total.toLocaleString()}</strong></td>
+                            <td><strong>₹${(payment.total || payment.amount || 0).toLocaleString()}</strong></td>
                         </tr>
                     </tbody>
                 </table>
                 
-                <p><strong>Payment Date:</strong> ${formatDate(payment.paymentDate)}</p>
-                <p><strong>Period:</strong> ${formatDate(payment.date)}</p>
+                <p><strong>Payment Date:</strong> ${formatDate(payment.paymentDate || payment.date || new Date())}</p>
+                <p><strong>Period:</strong> ${formatDate(payment.date || payment.dueDate || new Date())}</p>
                 ${payment.notes ? `<p><strong>Notes:</strong> ${payment.notes}</p>` : ''}
             </div>
             
