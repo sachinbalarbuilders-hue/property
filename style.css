@@ -1267,6 +1267,120 @@ select.form-control {
   background: var(--color-surface);
 }
 
+/* Receive Payment Modal Specific Styles */
+#receive-payment-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+#receive-payment-modal .modal-content {
+  position: relative;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  width: 90vw;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-card-border);
+  margin: var(--space-20);
+}
+
+#receive-payment-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-20);
+  border-bottom: 1px solid var(--color-card-border-inner);
+  background: #1e3a8a;
+  color: var(--color-white);
+}
+
+#receive-payment-modal .modal-header h3 {
+  margin: 0;
+  color: var(--color-white);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+#receive-payment-modal .modal-close {
+  background: none;
+  border: none;
+  color: var(--color-white);
+  font-size: var(--font-size-2xl);
+  cursor: pointer;
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  transition: background var(--duration-fast) var(--ease-standard);
+  line-height: 1;
+}
+
+#receive-payment-modal .modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+#receive-payment-modal .modal-body {
+  padding: var(--space-24);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+#receive-payment-modal .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-12);
+  padding: var(--space-20);
+  border-top: 1px solid var(--color-card-border-inner);
+  background: var(--color-surface);
+}
+
+#receive-payment-modal .form-group {
+  margin-bottom: var(--space-20);
+}
+
+#receive-payment-modal .form-label {
+  display: block;
+  margin-bottom: var(--space-8);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+#receive-payment-modal .form-control {
+  width: 100%;
+  padding: var(--space-12);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+#receive-payment-modal .form-control:focus {
+  outline: none;
+  border-color: #1e3a8a;
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+#receive-payment-modal textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+}
+
+#receive-payment-modal .form-text {
+  display: block;
+  margin-top: var(--space-4);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
 /* Hide/Show Views */
 .hidden {
   display: none !important;

@@ -117,10 +117,10 @@ const sampleData = {
                 }
             ],
             bills: {
-                propertyTax: { checked: true, billNo: "PT2024001", dueDate: "2024-03-31", period: "yearly" },
-                lightBill: { checked: true, billNo: "EB240301", dueDate: "2024-03-15", period: "monthly" },
-                gasBill: { checked: true, billNo: "GB240215", dueDate: "2024-03-10", period: "monthly" },
-                internetBill: { checked: true, billNo: "INT240220", dueDate: "2024-03-20", period: "monthly" }
+                propertyTax: { checked: true, billNo: "PT2024001", trackingDay: "365" },
+                lightBill: { checked: true, billNo: "EB240301", trackingDay: "90" },
+                gasBill: { checked: true, billNo: "GB240215", trackingDay: "60" },
+                internetBill: { checked: true, billNo: "INT240220", trackingDay: "30" }
             },
             documents: [
                 { name: "Rent Agreement.pdf", uploadDate: "2024-01-15" },
@@ -218,8 +218,7 @@ const sampleData = {
                 propertyTax: { 
                     checked: true, 
                     billNo: "PT2025001", 
-                    dueDate: "2025-03-31", 
-                    period: "yearly",
+                    trackingDay: "365",
                     documents: [
                         {
                             name: "Commercial Property Tax 2025.pdf",
@@ -232,8 +231,7 @@ const sampleData = {
                 lightBill: { 
                     checked: true, 
                     billNo: "EB250115", 
-                    dueDate: "2025-02-15", 
-                    period: "monthly",
+                    trackingDay: "90",
                     documents: [
                         {
                             name: "Electricity Bill Jan 2025.pdf",
@@ -253,8 +251,7 @@ const sampleData = {
                 internetBill: { 
                     checked: true, 
                     billNo: "INT250120", 
-                    dueDate: "2025-02-20", 
-                    period: "monthly",
+                    trackingDay: "60",
                     documents: [
                         {
                             name: "Internet Bill February 2025.pdf",
@@ -494,8 +491,40 @@ const backToPropertiesBtn = document.getElementById('backToPropertiesBtn');
 const billButtons = document.getElementById('billButtons');
 const individualBillSections = document.getElementById('individualBillSections');
 
+// Data persistence functions
+function saveData() {
+    try {
+        localStorage.setItem('propertyManagementData', JSON.stringify({
+            properties: properties,
+            nextId: nextId,
+            nextReceiptId: nextReceiptId
+        }));
+    } catch (error) {
+        console.error('Error saving data:', error);
+    }
+}
+
+function loadData() {
+    try {
+        const savedData = localStorage.getItem('propertyManagementData');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            properties = data.properties || [];
+            nextId = data.nextId || 1;
+            nextReceiptId = data.nextReceiptId || 1;
+        }
+    } catch (error) {
+        console.error('Error loading data:', error);
+        // Reset to default data if loading fails
+        properties = [];
+        nextId = 1;
+        nextReceiptId = 1;
+    }
+}
+
 // Initialize Application
 document.addEventListener('DOMContentLoaded', function() {
+    loadData();
     initializeApp();
     setupEventListeners();
     populateSelectOptions();
@@ -504,8 +533,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
-    properties = sampleData.properties;
-    nextId = 5;
+    // Only use sample data if no data is loaded from localStorage
+    if (properties.length === 0) {
+        properties = sampleData.properties;
+        nextId = 5;
+    }
     nextReceiptId = 8;
 }
 
@@ -696,6 +728,11 @@ function toggleIndividualBill(billKey) {
         if (paymentHistoryTable) {
             paymentHistoryTable.style.display = 'none';
         }
+        // Hide payment summary when viewing individual bills
+        const paymentSummary = document.querySelector('.payment-summary');
+        if (paymentSummary) {
+            paymentSummary.style.display = 'none';
+        }
         return;
     }
     
@@ -705,11 +742,114 @@ function toggleIndividualBill(billKey) {
         if (paymentHistoryTable) {
             paymentHistoryTable.style.display = 'none';
         }
+        // Hide payment summary when viewing individual bills
+        const paymentSummary = document.querySelector('.payment-summary');
+        if (paymentSummary) {
+            paymentSummary.style.display = 'none';
+        }
     } else {
         billSection.classList.add('hidden');
         // Show payment history table
         if (paymentHistoryTable) {
             paymentHistoryTable.style.display = 'block';
+        }
+        // Show payment summary when closing individual bills
+        const paymentSummary = document.querySelector('.payment-summary');
+        if (paymentSummary) {
+            paymentSummary.style.display = 'block';
+        }
+    }
+}
+
+function getAllBillsForType(property, billKey) {
+    const bills = [];
+    
+    // Add the main bill
+    if (property.bills[billKey]) {
+        bills.push({ key: billKey, data: property.bills[billKey], isMain: true });
+    }
+    
+    // Add additional period bills
+    let period = 2;
+    while (property.bills[`${billKey}_period_${period}`]) {
+        bills.push({ 
+            key: `${billKey}_period_${period}`, 
+            data: property.bills[`${billKey}_period_${period}`], 
+            isMain: false,
+            period: period
+        });
+        period++;
+    }
+    
+    return bills;
+}
+
+function generateNextPeriodOnPayment(property, billKey, billData) {
+    if (!billData.trackingDay) return;
+    
+    const trackingDays = parseInt(billData.trackingDay);
+    const today = new Date();
+    
+    // Calculate when the current period should end
+    const lastDueDate = billData.lastDueDate ? new Date(billData.lastDueDate) : today;
+    const periodEndDate = new Date(lastDueDate.getTime() + (trackingDays * 24 * 60 * 60 * 1000));
+    
+    // Only generate next period if the current period has actually ended
+    if (today >= periodEndDate) {
+        // Find the next available period number
+        let nextPeriod = 2;
+        while (property.bills[`${billKey}_period_${nextPeriod}`]) {
+            nextPeriod++;
+        }
+        
+        const nextPeriodKey = `${billKey}_period_${nextPeriod}`;
+        
+        // Calculate the start date for the next period (after current period ends)
+        const nextPeriodStartDate = new Date(periodEndDate.getTime() + (trackingDays * 24 * 60 * 60 * 1000));
+        
+        // Create the next period bill
+        property.bills[nextPeriodKey] = {
+            checked: true,
+            billNo: billData.billNo, // Keep the same bill number
+            trackingDay: billData.trackingDay,
+            lastDueDate: nextPeriodStartDate.toISOString().split('T')[0],
+            creationDate: today.toISOString().split('T')[0], // Created today
+            paid: false
+        };
+    }
+}
+
+function generateAdditionalBillsIfNeeded(property, billKey, billData) {
+    if (!billData.trackingDay) return;
+    
+    const trackingDays = parseInt(billData.trackingDay);
+    const today = new Date();
+    const lastDueDate = billData.lastDueDate ? new Date(billData.lastDueDate) : today;
+    const nextDueDate = new Date(lastDueDate.getTime() + (trackingDays * 24 * 60 * 60 * 1000));
+    const daysOverdue = Math.floor((today - nextDueDate) / (24 * 60 * 60 * 1000));
+    
+    // If bill is overdue, generate additional bills for each overdue period
+    if (daysOverdue > 0) {
+        const overduePeriods = Math.floor(daysOverdue / trackingDays);
+        
+        for (let i = 1; i <= overduePeriods; i++) {
+            const additionalBillKey = `${billKey}_period_${i + 1}`;
+            
+            // Check if this additional bill already exists
+            if (!property.bills[additionalBillKey]) {
+                // Calculate when this period was created (when the previous period went overdue)
+                const periodCreationDate = new Date(lastDueDate.getTime() + (i * trackingDays * 24 * 60 * 60 * 1000));
+                
+                // Create new bill for this period with same bill number
+                property.bills[additionalBillKey] = {
+                    checked: true,
+                    billNo: billData.billNo, // Keep the same bill number
+                    trackingDay: billData.trackingDay,
+                    lastDueDate: periodCreationDate.toISOString().split('T')[0],
+                    creationDate: periodCreationDate.toISOString().split('T')[0], // Store creation date
+                    paid: false
+                };
+            }
         }
     }
 }
@@ -735,6 +875,16 @@ function createIndividualBillSection(billKey) {
 
     if (!billData) return;
 
+    // Check if we need to generate additional bills for overdue periods
+    if (!isCustom && billData.trackingDay && !billData.paid) {
+        generateAdditionalBillsIfNeeded(property, billKey, billData);
+    }
+    
+    // Check if we need to generate next period for paid bills whose period has ended
+    if (!isCustom && billData.trackingDay && billData.paid) {
+        generateNextPeriodOnPayment(property, billKey, billData);
+    }
+
     // Determine status
     let status = 'Active';
     let statusClass = 'payment-status--paid';
@@ -742,15 +892,39 @@ function createIndividualBillSection(billKey) {
     if (billData.paid) {
         status = 'Paid';
         statusClass = 'payment-status--paid';
-    } else if (billData.dueDate) {
-        const dueDate = new Date(billData.dueDate);
+    } else {
+        // Check due date logic
         const today = new Date();
-        if (dueDate < today) {
-            status = 'Overdue';
-            statusClass = 'payment-status--overdue';
-        } else if (dueDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) {
-            status = 'Due Soon';
-            statusClass = 'payment-status--pending';
+        let dueDate = null;
+        
+        if (billData.trackingDay) {
+            // For any bill with tracking day - use tracking day for status
+            const trackingDays = parseInt(billData.trackingDay);
+            // Calculate next due date based on tracking days
+            const lastDueDate = billData.lastDueDate ? new Date(billData.lastDueDate) : today;
+            dueDate = new Date(lastDueDate.getTime() + (trackingDays * 24 * 60 * 60 * 1000));
+            
+            // Calculate remaining days
+            const daysRemaining = Math.floor((dueDate - today) / (24 * 60 * 60 * 1000));
+            
+            // If the due date has passed, mark as overdue
+            if (daysRemaining <= 0) {
+                status = 'Overdue';
+                statusClass = 'payment-status--overdue';
+            } else if (daysRemaining <= 7) {
+                status = 'Due Soon';
+                statusClass = 'payment-status--pending';
+            }
+        }
+        
+        if (dueDate) {
+            if (dueDate < today) {
+                status = 'Overdue';
+                statusClass = 'payment-status--overdue';
+            } else if (dueDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+                status = 'Due Soon';
+                statusClass = 'payment-status--pending';
+            }
         }
     }
 
@@ -758,39 +932,23 @@ function createIndividualBillSection(billKey) {
     billSection.className = 'table-container';
     billSection.id = `bill-section-${billKey}`;
     
+    // Get all bills for this type (including additional periods)
+    const allBillsForType = getAllBillsForType(property, billKey);
+    
     const paidDateDisplay = billData.paid && billData.paidDate ? 
         `<div class="bill-info-item">
             <label>Paid Date:</label>
             <span>${formatDate(billData.paidDate)}</span>
         </div>` : '';
 
-    const actionButtons = billData.paid ? 
-        `<div class="bill-actions">
-            <div class="bill-dropdown">
-                <button class="btn btn--outline bill-dropdown-toggle" onclick="toggleBillDropdown('${billKey}')">⋯</button>
-                <div class="bill-dropdown-menu" id="bill-dropdown-${billKey}">
-                    <button class="dropdown-item" onclick="viewBillDetails('${billKey}')">View Receipt</button>
-                    <button class="dropdown-item" onclick="editBillDetails('${billKey}')">Edit Bill</button>
-                    <button class="dropdown-item" onclick="document.getElementById('bill-document-${billKey}').click()">📄 Upload Document</button>
-                    <button class="dropdown-item" onclick="viewBillDocuments('${billKey}')">View Documents</button>
-                </div>
-                <input type="file" id="bill-document-${billKey}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display: none;">
+    const actionButtons = `<div class="bill-actions">
+        <div class="bill-dropdown">
+            <button class="btn btn--outline bill-dropdown-toggle" onclick="toggleBillDropdown('${billKey}')">⋯</button>
+            <div class="bill-dropdown-menu" id="bill-dropdown-${billKey}">
+                <button class="dropdown-item" onclick="receiveBillPayment('${billKey}')">💰 Receive Payment</button>
             </div>
-            <span class="paid-badge">✓ Paid</span>
-        </div>` :
-        `<div class="bill-actions">
-            <div class="bill-dropdown">
-                <button class="btn btn--outline bill-dropdown-toggle" onclick="toggleBillDropdown('${billKey}')">⋯</button>
-                <div class="bill-dropdown-menu" id="bill-dropdown-${billKey}">
-                    <button class="dropdown-item" onclick="viewBillDetails('${billKey}')">View Details</button>
-                    <button class="dropdown-item" onclick="editBillDetails('${billKey}')">Edit Bill</button>
-                    <button class="dropdown-item" onclick="document.getElementById('bill-document-${billKey}').click()">📄 Upload Document</button>
-                    <button class="dropdown-item" onclick="viewBillDocuments('${billKey}')">View Documents</button>
-                </div>
-                <input type="file" id="bill-document-${billKey}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display: none;">
-            </div>
-            <button class="btn btn--success" onclick="markBillPaid('${billKey}')">Mark as Paid</button>
-        </div>`;
+        </div>
+    </div>`;
 
     // Generate serial number based on bill type and index
     const serialNumber = generateSerialNumber(billKey, billData);
@@ -804,26 +962,110 @@ function createIndividualBillSection(billKey) {
             <thead>
                 <tr>
                     <th>Serial No</th>
+                    <th>Date</th>
                     <th>Bill Number</th>
-                    <th>Due Date</th>
-                    <th>Period</th>
+                    <th>Due Days</th>
                     <th>Status</th>
+                    ${billData.paid ? '<th>Amount</th>' : ''}
                     ${billData.paid ? '<th>Paid Date</th>' : ''}
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td class="serial-number">${serialNumber}</td>
-                    <td>${billData.billNo || 'N/A'}</td>
-                    <td>${billData.dueDate ? formatDate(billData.dueDate) : 'Not set'}</td>
-                    <td>${billData.period || 'monthly'}</td>
-                    <td><span class="payment-status ${statusClass}">${status}</span></td>
-                    ${billData.paid && billData.paidDate ? `<td>${formatDate(billData.paidDate)}</td>` : ''}
-                    <td class="bill-actions">
-                        ${actionButtons}
-                    </td>
-                </tr>
+                ${allBillsForType.map((bill, index) => {
+                    const currentBillData = bill.data;
+                    const currentBillKey = bill.key;
+                    
+                    // Calculate status for this bill
+                    let currentStatus = 'Active';
+                    let currentStatusClass = 'payment-status--paid';
+                    
+                    if (currentBillData.paid) {
+                        currentStatus = 'Paid';
+                        currentStatusClass = 'payment-status--paid';
+                    } else {
+                        const today = new Date();
+                        let dueDate = null;
+                        
+                        if (currentBillData.trackingDay) {
+                            const trackingDays = parseInt(currentBillData.trackingDay);
+                            const lastDueDate = currentBillData.lastDueDate ? new Date(currentBillData.lastDueDate) : today;
+                            dueDate = new Date(lastDueDate.getTime() + (trackingDays * 24 * 60 * 60 * 1000));
+                            
+                            const daysRemaining = Math.floor((dueDate - today) / (24 * 60 * 60 * 1000));
+                            
+                            if (daysRemaining <= 0) {
+                                currentStatus = 'Overdue';
+                                currentStatusClass = 'payment-status--overdue';
+                            } else if (daysRemaining <= 7) {
+                                currentStatus = 'Due Soon';
+                                currentStatusClass = 'payment-status--pending';
+                            }
+                        }
+                    }
+                    
+                    // Calculate days display
+                    const daysDisplay = currentBillData.trackingDay ? (() => {
+                        // If bill is paid, show the status at the time of payment
+                        if (currentBillData.paid && currentBillData.paidDate) {
+                            const paidDate = new Date(currentBillData.paidDate);
+                            const trackingDays = parseInt(currentBillData.trackingDay);
+                            const lastDueDate = currentBillData.lastDueDate ? new Date(currentBillData.lastDueDate) : paidDate;
+                            const nextDueDate = new Date(lastDueDate.getTime() + (trackingDays * 24 * 60 * 60 * 1000));
+                            const daysDifference = Math.floor((nextDueDate - paidDate) / (24 * 60 * 60 * 1000));
+                            
+                            if (daysDifference <= 0) {
+                                return `-${Math.abs(daysDifference)}`;
+                            } else {
+                                return daysDifference.toString();
+                            }
+                        } else {
+                            // For unpaid bills, calculate current status
+                            const trackingDays = parseInt(currentBillData.trackingDay);
+                            const today = new Date();
+                            const lastDueDate = currentBillData.lastDueDate ? new Date(currentBillData.lastDueDate) : today;
+                            const nextDueDate = new Date(lastDueDate.getTime() + (trackingDays * 24 * 60 * 60 * 1000));
+                            const daysDifference = Math.floor((nextDueDate - today) / (24 * 60 * 60 * 1000));
+                            
+                            if (daysDifference <= 0) {
+                                return `-${Math.abs(daysDifference)}`;
+                            } else {
+                                return daysDifference.toString();
+                            }
+                        }
+                    })() : 'Not set';
+                    
+                    const periodLabel = bill.isMain ? '' : ` (Period ${bill.period})`;
+                    const serialNum = (index + 1).toString();
+                    
+                    // Use creation date if available, otherwise use today's date
+                    const displayDate = currentBillData.creationDate || new Date().toISOString().split('T')[0];
+                    
+                    return `
+                        <tr>
+                            <td class="serial-number">${serialNum}</td>
+                            <td>${displayDate}</td>
+                            <td>${currentBillData.billNo || 'N/A'}${periodLabel}</td>
+                            <td>${daysDisplay}</td>
+                            <td>
+                                <span class="payment-status ${currentStatusClass}">${currentStatus}</span>
+                                <button class="btn btn--sm btn--outline" onclick="viewBillDocuments('${currentBillKey}')" style="margin-left: 10px;">📄 View Documents</button>
+                            </td>
+                            ${currentBillData.paid && currentBillData.amount ? `<td class="payment-amount">₹${currentBillData.amount.toLocaleString()}</td>` : ''}
+                            ${currentBillData.paid && currentBillData.paidDate ? `<td>${formatDate(currentBillData.paidDate)}</td>` : ''}
+                            <td class="bill-actions">
+                                <div class="bill-actions">
+                                    <div class="bill-dropdown">
+                                        <button class="btn btn--outline bill-dropdown-toggle" onclick="toggleBillDropdown('${currentBillKey}')">⋯</button>
+                                        <div class="bill-dropdown-menu" id="bill-dropdown-${currentBillKey}">
+                                            <button class="dropdown-item" onclick="receiveBillPayment('${currentBillKey}')">💰 Receive Payment</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('')}
             </tbody>
         </table>
     `;
@@ -864,6 +1106,12 @@ function closeIndividualBill(billKey) {
         const paymentTableBody = document.getElementById('paymentTableBody');
         if (paymentTableBody) {
             paymentTableBody.style.display = '';
+        }
+        
+        // Show payment summary when closing individual bills
+        const paymentSummary = document.querySelector('.payment-summary');
+        if (paymentSummary) {
+            paymentSummary.style.display = 'block';
         }
     }
 }
@@ -1202,6 +1450,7 @@ function saveProperty() {
     }
 
     closePropertyModal();
+    saveData(); // Save data to localStorage
     renderPropertiesTable();
     updateDashboardSummary();
 }
@@ -1237,8 +1486,11 @@ function generateInitialPaymentHistory(baseAmount) {
 function submitPayment() {
     const paymentDate = document.getElementById('paymentDate').value;
     const paymentMode = document.getElementById('paymentMode').value;
-    const receiptNumber = document.getElementById('receiptNumber').value;
+    const receiptNumberInput = document.getElementById('receiptNumber').value;
     const notes = document.getElementById('paymentNotes').value;
+    
+    // Generate unique receipt number if not provided
+    const receiptNumber = receiptNumberInput || `RENT${String(nextReceiptId).padStart(4, '0')}`;
     const baseAmount = parseFloat(document.getElementById('baseAmount').value);
     const gstAmount = parseFloat(document.getElementById('gstAmount').value);
     const totalAmount = parseFloat(document.getElementById('totalAmount').value);
@@ -1306,6 +1558,7 @@ function submitPayment() {
     closePaymentModal();
     renderPaymentTable();
     updatePaymentSummary();
+    saveData(); // Save data to localStorage
     showNotification('Payment recorded successfully');
 }
 
@@ -1316,14 +1569,12 @@ function collectBillsData() {
     billTypes.forEach(bill => {
         const checkbox = document.querySelector(`#bill-${bill.key}`);
         const billNo = document.querySelector(`[name="bill-${bill.key}-no"]`);
-        const dueDate = document.querySelector(`[name="bill-${bill.key}-date"]`);
-        const period = document.querySelector(`[name="bill-${bill.key}-period"]`);
+        const trackingDay = document.querySelector(`[name="bill-${bill.key}-tracking-day"]`);
         
         bills[bill.key] = {
             checked: checkbox ? checkbox.checked : false,
             billNo: billNo ? billNo.value : '',
-            dueDate: dueDate ? dueDate.value : '',
-            period: period ? period.value : 'monthly'
+            trackingDay: trackingDay ? trackingDay.value : ''
         };
     });
 
@@ -1332,11 +1583,32 @@ function collectBillsData() {
     document.querySelectorAll('.custom-bill-item').forEach(item => {
         const name = item.querySelector('[name="custom-bill-name"]').value;
         const billNo = item.querySelector('[name="custom-bill-no"]').value;
-        const dueDate = item.querySelector('[name="custom-bill-date"]').value;
+        const dueValue = item.querySelector('[name="custom-bill-value"]').value;
         const period = item.querySelector('[name="custom-bill-period"]').value;
+        const trackingDay = item.querySelector('[name="custom-bill-tracking-day"]').value;
+        
+        // Calculate due date from value and period
+        let dueDate = '';
+        if (dueValue && period) {
+            const value = parseInt(dueValue);
+            const today = new Date();
+            let calculatedDueDate;
+            
+            if (period === 'days') {
+                calculatedDueDate = new Date(today.getTime() + (value * 24 * 60 * 60 * 1000));
+            } else if (period === 'months') {
+                calculatedDueDate = new Date(today.getFullYear(), today.getMonth() + value, today.getDate());
+            } else if (period === 'years') {
+                calculatedDueDate = new Date(today.getFullYear() + value, today.getMonth(), today.getDate());
+            }
+            
+            if (calculatedDueDate) {
+                dueDate = calculatedDueDate.toISOString().split('T')[0];
+            }
+        }
         
         if (name) {
-            bills.customBills.push({ name, billNo, dueDate, period });
+            bills.customBills.push({ name, billNo, dueDate, dueValue, period, trackingDay });
         }
     });
 
@@ -1595,9 +1867,14 @@ function renderPaymentTable() {
 
     paymentTableBody.innerHTML = '';
 
-    // Check if property has agreement start date and rent amount
+    // Check if property is rental and has agreement data
+    if (!property.isRental) {
+        paymentTableBody.innerHTML = '<tr><td colspan="8" class="empty-state"><h3>This property is not set as rental</h3><p>Payment tracking is only available for rental properties.</p></td></tr>';
+        return;
+    }
+    
     if (!property.agreementStartDate || !property.rentAmount) {
-        paymentTableBody.innerHTML = '<tr><td colspan="8" class="empty-state"><h3>No agreement data available</h3></td></tr>';
+        paymentTableBody.innerHTML = '<tr><td colspan="8" class="empty-state"><h3>No agreement data available</h3><p>Please set agreement start date and rent amount in property details.</p></td></tr>';
         return;
     }
 
@@ -1766,6 +2043,7 @@ function viewProperty(propertyId) {
 function deleteProperty(propertyId) {
     if (confirm('Are you sure you want to delete this property?')) {
         properties = properties.filter(p => p.id !== propertyId);
+        saveData(); // Save data to localStorage
         renderPropertiesTable();
         updateDashboardSummary();
         showNotification('Property deleted successfully');
@@ -1812,7 +2090,24 @@ function updateDashboardSummary() {
                 if (billData && billData.checked && !billData.paid) {
                     // Check if bill is overdue (past due date)
                     const today = new Date();
-                    const dueDate = billData.dueDate ? new Date(billData.dueDate) : null;
+                    let dueDate = null;
+                    
+                    // If we have a stored due date, use it
+                    if (billData.dueDate) {
+                        dueDate = new Date(billData.dueDate);
+                    } else if (billData.dueValue && billData.period) {
+                        // Calculate due date from value and period
+                        const value = parseInt(billData.dueValue);
+                        const periodType = billData.period;
+                        
+                        if (periodType === 'days') {
+                            dueDate = new Date(today.getTime() + (value * 24 * 60 * 60 * 1000));
+                        } else if (periodType === 'months') {
+                            dueDate = new Date(today.getFullYear(), today.getMonth() + value, today.getDate());
+                        } else if (periodType === 'years') {
+                            dueDate = new Date(today.getFullYear() + value, today.getMonth(), today.getDate());
+                        }
+                    }
                     
                     if (!dueDate || dueDate < today) {
                         count++; // Bill is unpaid and overdue (or no due date set)
@@ -1824,7 +2119,24 @@ function updateDashboardSummary() {
                 property.bills.customBills.forEach(customBill => {
                     if (!customBill.paid) {
                         const today = new Date();
-                        const dueDate = customBill.dueDate ? new Date(customBill.dueDate) : null;
+                        let dueDate = null;
+                        
+                        // If we have a stored due date, use it
+                        if (customBill.dueDate) {
+                            dueDate = new Date(customBill.dueDate);
+                        } else if (customBill.dueValue && customBill.period) {
+                            // Calculate due date from value and period
+                            const value = parseInt(customBill.dueValue);
+                            const periodType = customBill.period;
+                            
+                            if (periodType === 'days') {
+                                dueDate = new Date(today.getTime() + (value * 24 * 60 * 60 * 1000));
+                            } else if (periodType === 'months') {
+                                dueDate = new Date(today.getFullYear(), today.getMonth() + value, today.getDate());
+                            } else if (periodType === 'years') {
+                                dueDate = new Date(today.getFullYear() + value, today.getMonth(), today.getDate());
+                            }
+                        }
                         
                         if (!dueDate || dueDate < today) {
                             count++; // Custom bill is unpaid and overdue
@@ -2003,17 +2315,10 @@ function setupBillsSection(existingBills = null) {
                            value="${existingBill ? existingBill.billNo || '' : ''}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Due Date</label>
-                    <input type="date" class="form-control" name="bill-${bill.key}-date"
-                           value="${existingBill ? existingBill.dueDate || '' : ''}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Period</label>
-                    <select class="form-control" name="bill-${bill.key}-period">
-                        <option value="monthly" ${existingBill && existingBill.period === 'monthly' ? 'selected' : ''}>Monthly</option>
-                        <option value="quarterly" ${existingBill && existingBill.period === 'quarterly' ? 'selected' : ''}>Quarterly</option>
-                        <option value="yearly" ${existingBill && existingBill.period === 'yearly' ? 'selected' : ''}>Yearly</option>
-                    </select>
+                    <label class="form-label">Days to Track</label>
+                    <input type="number" class="form-control" name="bill-${bill.key}-tracking-day" 
+                           placeholder="Enter days" min="1" max="365"
+                           value="${existingBill ? existingBill.trackingDay || '' : ''}">
                 </div>
             </div>
         `;
@@ -2053,17 +2358,29 @@ function addCustomBill(existingBill = null) {
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Due Date</label>
-                <input type="date" class="form-control" name="custom-bill-date"
-                       value="${existingBill ? existingBill.dueDate || '' : ''}">
+                <label class="form-label">Due in</label>
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1; margin-right: 10px;">
+                        <input type="number" class="form-control" name="custom-bill-value" 
+                               placeholder="Enter number" min="1" max="999"
+                               value="${existingBill ? existingBill.dueValue || '' : ''}">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <select class="form-control" name="custom-bill-period">
+                            <option value="days" ${existingBill && existingBill.period === 'days' ? 'selected' : ''}>Days</option>
+                            <option value="months" ${existingBill && existingBill.period === 'months' ? 'selected' : ''}>Months</option>
+                            <option value="years" ${existingBill && existingBill.period === 'years' ? 'selected' : ''}>Years</option>
+                        </select>
+                    </div>
+                </div>
             </div>
+        </div>
+        <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Period</label>
-                <select class="form-control" name="custom-bill-period">
-                    <option value="monthly" ${existingBill && existingBill.period === 'monthly' ? 'selected' : ''}>Monthly</option>
-                    <option value="quarterly" ${existingBill && existingBill.period === 'quarterly' ? 'selected' : ''}>Quarterly</option>
-                    <option value="yearly" ${existingBill && existingBill.period === 'yearly' ? 'selected' : ''}>Yearly</option>
-                </select>
+                <label class="form-label">Days to Track</label>
+                <input type="number" class="form-control" name="custom-bill-tracking-day" 
+                       placeholder="Enter days" min="1" max="365"
+                       value="${existingBill ? existingBill.trackingDay || '' : ''}">
             </div>
         </div>
     `;
@@ -2084,11 +2401,35 @@ function addDocument() {
         return;
     }
     
+    // Get current property
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property) {
+        showNotification('No property selected', 'error');
+        return;
+    }
+    
+    // Initialize documents array if it doesn't exist
+    if (!property.documents) {
+        property.documents = [];
+    }
+    
     Array.from(files).forEach(file => {
+        const currentDate = new Date().toISOString().split('T')[0];
+        
+        // Create document object
+        const document = {
+            name: file.name,
+            uploadDate: currentDate,
+            size: file.size,
+            type: file.type
+        };
+        
+        // Add to property documents
+        property.documents.push(document);
+        
+        // Create DOM element
         const documentItem = document.createElement('div');
         documentItem.className = 'document-item';
-        
-        const currentDate = new Date().toISOString().split('T')[0];
         
         documentItem.innerHTML = `
             <div class="document-info">
@@ -2103,6 +2444,11 @@ function addDocument() {
         // Add remove functionality
         const removeBtn = documentItem.querySelector('.remove-doc-btn');
         removeBtn.addEventListener('click', () => {
+            // Remove from property documents
+            const docIndex = property.documents.findIndex(doc => doc.name === file.name && doc.uploadDate === currentDate);
+            if (docIndex > -1) {
+                property.documents.splice(docIndex, 1);
+            }
             documentItem.remove();
         });
     });
@@ -2135,6 +2481,11 @@ function renderDocuments() {
                 // Add remove functionality
                 const removeBtn = documentItem.querySelector('.remove-doc-btn');
                 removeBtn.addEventListener('click', () => {
+                    // Remove from property documents
+                    const docIndex = property.documents.findIndex(d => d.name === doc.name && d.uploadDate === doc.uploadDate);
+                    if (docIndex > -1) {
+                        property.documents.splice(docIndex, 1);
+                    }
                     documentItem.remove();
                 });
             });
@@ -2538,43 +2889,6 @@ function hideBillDropdown(billKey) {
     }
 }
 
-function viewBillDetails(billKey) {
-    const property = properties.find(p => p.id === currentPropertyId);
-    if (!property || !property.bills) return;
-    
-    let billData;
-    let billName;
-    
-    if (billKey.startsWith('custom-')) {
-        const index = parseInt(billKey.replace('custom-', ''));
-        billData = property.bills.customBills[index];
-        billName = billData.name;
-    } else {
-        billData = property.bills[billKey];
-        const billType = billTypes.find(b => b.key === billKey);
-        billName = billType ? billType.name : billKey;
-    }
-    
-    if (!billData) return;
-    
-    if (billData.paid) {
-        // Show receipt for paid bills
-        showBillReceipt(billKey, billData, billName, property);
-    } else {
-        // Show basic details for unpaid bills
-        const details = `
-Bill Details:
-• Bill Type: ${billName}
-• Bill Number: ${billData.billNo || 'N/A'}
-• Due Date: ${billData.dueDate ? formatDate(billData.dueDate) : 'Not set'}
-• Period: ${billData.period || 'monthly'}
-• Status: Pending
-${billData.notes ? `• Notes: ${billData.notes}` : ''}
-        `;
-        
-        alert(details);
-    }
-}
 
 function showBillReceipt(billKey, billData, billName, property) {
     // Create a receipt modal
@@ -2651,12 +2965,8 @@ function showBillReceipt(billKey, billData, billName, property) {
     document.body.appendChild(modal);
 }
 
-function editBillDetails(billKey) {
-    // This would open a modal to edit bill details
-    showNotification('Edit bill functionality will be implemented', 'info');
-}
 
-function markBillPaid(billKey) {
+function receiveBillPayment(billKey) {
     const property = properties.find(p => p.id === currentPropertyId);
     if (!property || !property.bills) return;
     
@@ -2675,20 +2985,149 @@ function markBillPaid(billKey) {
     
     if (!billData) return;
     
-    if (confirm(`Mark ${billName} as paid?`)) {
-        billData.paid = true;
-        billData.paidDate = new Date().toISOString().split('T')[0];
-        
-        // Add default payment details for receipt
-        billData.paymentMode = billData.paymentMode || 'Cash';
-        billData.receiptNo = billData.receiptNo || `RCP-${Date.now()}`;
-        billData.amount = billData.amount || 1000; // Default amount if not set
-        billData.notes = billData.notes || 'Payment received';
-        
-        // Update the bill section if it's currently open
-        updateBillSection(billKey);
-        showNotification(`${billName} marked as paid`);
+    // Show enhanced receive payment dialog
+    showReceivePaymentDialog(billKey, billName, billData);
+}
+
+function showReceivePaymentDialog(billKey, billName, billData) {
+    const currentAmount = billData.amount ? billData.amount : '';
+    const currentRemarks = billData.notes || '';
+    
+    const dialogHTML = `
+        <div class="modal-overlay" id="receive-payment-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Receive Payment - ${billName}</h3>
+                    <button class="modal-close" onclick="closeReceivePaymentDialog()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Payment Amount *</label>
+                        <input type="number" class="form-control" id="payment-amount" 
+                               placeholder="Enter amount" min="0" step="0.01" 
+                               value="${currentAmount}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Remarks</label>
+                        <textarea class="form-control" id="payment-remarks" 
+                                  placeholder="Enter remarks (optional)" rows="3">${currentRemarks}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Attach Document</label>
+                        <input type="file" class="form-control" id="payment-document" 
+                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" multiple>
+                        <small class="form-text">Upload receipt or related documents</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn--outline" onclick="closeReceivePaymentDialog()">Cancel</button>
+                    <button class="btn btn--success" onclick="processReceivePayment('${billKey}')">Receive Payment</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('receive-payment-modal');
+    if (existingModal) {
+        existingModal.remove();
     }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', dialogHTML);
+    
+    // Focus on amount input
+    setTimeout(() => {
+        document.getElementById('payment-amount').focus();
+    }, 100);
+}
+
+function closeReceivePaymentDialog() {
+    const modal = document.getElementById('receive-payment-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function processReceivePayment(billKey) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills) return;
+    
+    let billData;
+    let billName;
+    
+    if (billKey.startsWith('custom-')) {
+        const index = parseInt(billKey.replace('custom-', ''));
+        billData = property.bills.customBills[index];
+        billName = billData.name;
+    } else {
+        billData = property.bills[billKey];
+        const billType = billTypes.find(b => b.key === billKey);
+        billName = billType ? billType.name : billKey;
+    }
+    
+    if (!billData) return;
+    
+    // Get form values
+    const amountInput = document.getElementById('payment-amount');
+    const remarksInput = document.getElementById('payment-remarks');
+    const documentInput = document.getElementById('payment-document');
+    
+    const amount = amountInput.value.trim();
+    const remarks = remarksInput.value.trim();
+    const files = documentInput.files;
+    
+    // Validate amount
+    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+        showNotification('Please enter a valid amount', 'error');
+        amountInput.focus();
+        return;
+    }
+    
+    const paymentAmount = parseFloat(amount);
+    
+    // Process payment
+    billData.paid = true;
+    billData.paidDate = new Date().toISOString().split('T')[0];
+    billData.paymentMode = billData.paymentMode || 'Cash';
+    billData.receiptNo = billData.receiptNo || `RCP-${Date.now()}`;
+    billData.amount = paymentAmount;
+    billData.notes = remarks || 'Payment received';
+    
+    // Generate next period when payment is made (regardless of early or overdue)
+    if (!billKey.startsWith('custom-')) {
+        generateNextPeriodOnPayment(property, billKey, billData);
+    }
+    
+    // Handle document upload if files are selected
+    if (files && files.length > 0) {
+        if (!billData.documents) {
+            billData.documents = [];
+        }
+        
+        Array.from(files).forEach(file => {
+            const currentDate = new Date().toISOString().split('T')[0];
+            const document = {
+                name: file.name,
+                uploadDate: currentDate,
+                size: file.size,
+                type: file.type
+            };
+            billData.documents.push(document);
+        });
+    }
+    
+    // Close dialog
+    closeReceivePaymentDialog();
+    
+    // Update the bill section if it's currently open
+    updateBillSection(billKey);
+    
+    // Save data to localStorage
+    saveData();
+    
+    const successText = billData.paid ? 'updated' : 'received';
+    showNotification(`Payment of ₹${paymentAmount.toLocaleString()} ${successText} for ${billName}`);
 }
 
 function updateBillSection(billKey) {
@@ -2764,6 +3203,9 @@ function uploadBillDocument(billKey) {
     // Clear the file input
     fileInput.value = '';
     
+    // Update the bill section to show the new documents
+    updateBillSection(billKey);
+    
     showNotification(`Uploaded ${files.length} document(s) successfully`);
 }
 
@@ -2796,10 +3238,6 @@ function viewBillDocuments(billKey) {
                 <button class="btn btn--outline" onclick="this.closest('.modal').remove()">Close</button>
             </div>
             <div class="modal-body">
-                <div class="document-upload-area" style="margin-bottom: 20px;">
-                    <input type="file" id="modal-bill-document-${billKey}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" multiple>
-                    <button class="btn btn--primary" onclick="uploadBillDocumentFromModal('${billKey}')">Upload Document</button>
-                </div>
                 <div class="bill-documents-list" id="modal-bill-documents-${billKey}">
                     ${renderBillDocuments(billKey, billData)}
                 </div>
@@ -2859,6 +3297,9 @@ function uploadBillDocumentFromModal(billKey) {
     
     // Clear the file input
     fileInput.value = '';
+    
+    // Update the bill section to show the new documents
+    updateBillSection(billKey);
     
     showNotification(`Uploaded ${files.length} document(s) successfully`);
 }
