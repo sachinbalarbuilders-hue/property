@@ -6,6 +6,7 @@ let currentPropertyId = null;
 let currentPaymentId = null;
 let nextId = 1;
 let nextReceiptId = 1;
+let nextInvoiceId = 1;
 
 // Static Data
 const billTypes = [
@@ -497,7 +498,8 @@ function saveData() {
         localStorage.setItem('propertyManagementData', JSON.stringify({
             properties: properties,
             nextId: nextId,
-            nextReceiptId: nextReceiptId
+            nextReceiptId: nextReceiptId,
+            nextInvoiceId: nextInvoiceId
         }));
     } catch (error) {
         console.error('Error saving data:', error);
@@ -512,6 +514,7 @@ function loadData() {
             properties = data.properties || [];
             nextId = data.nextId || 1;
             nextReceiptId = data.nextReceiptId || 1;
+            nextInvoiceId = data.nextInvoiceId || 1;
         }
     } catch (error) {
         console.error('Error loading data:', error);
@@ -519,6 +522,7 @@ function loadData() {
         properties = [];
         nextId = 1;
         nextReceiptId = 1;
+        nextInvoiceId = 1;
     }
 }
 
@@ -539,6 +543,7 @@ function initializeApp() {
         nextId = 5;
     }
     nextReceiptId = 8;
+    nextInvoiceId = 1;
 }
 
 function setupEventListeners() {
@@ -708,6 +713,7 @@ function refreshPaymentDashboardIfOpen(propertyId) {
         }
     }
 }
+
 
 function renderBillButtons() {
     const property = properties.find(p => p.id === currentPropertyId);
@@ -1395,6 +1401,7 @@ function saveProperty() {
             propertyData[key] = value;
         }
     }
+    
 
     // Handle checkbox fields that aren't in FormData when unchecked
     if (!formData.has('isRental')) {
@@ -1436,12 +1443,19 @@ function saveProperty() {
         delete propertyData.gstPercentage;
     }
 
-    // Set monthly rent based on rent amount
+    // Convert rent amount to number for proper comparison and calculation
     if (propertyData.rentAmount) {
+        propertyData.rentAmount = parseFloat(propertyData.rentAmount);
         propertyData.monthlyRent = propertyData.rentPeriod === 'year' ? 
             Math.round(propertyData.rentAmount / 12) : 
             propertyData.rentAmount;
     }
+    
+    // Convert rent payable date to number
+    if (propertyData.rentPayableDate) {
+        propertyData.rentPayableDate = parseInt(propertyData.rentPayableDate);
+    }
+    
 
     // Set status
     propertyData.status = propertyData.isRental ? 'Active' : 'Vacant';
@@ -1468,6 +1482,8 @@ function saveProperty() {
         const index = properties.findIndex(p => p.id === currentPropertyId);
         if (index !== -1) {
             const oldProperty = properties[index];
+            
+            
             properties[index] = { ...properties[index], ...propertyData };
             
             // Recalculate existing payment history if GST percentage changed
@@ -1584,7 +1600,8 @@ function submitPayment() {
                 paymentDate: paymentDate,
                 paymentMode: paymentMode,
                 receiptNo: receiptNumber,
-                notes: notes
+                notes: notes,
+                invoiceNo: nextInvoiceId++
             };
             
             property.paymentHistory.push(payment);
@@ -1600,6 +1617,11 @@ function submitPayment() {
     payment.paymentMode = paymentMode;
     payment.receiptNo = receiptNumber;
     payment.notes = notes;
+    
+    // Assign invoice number if not already assigned
+    if (!payment.invoiceNo) {
+        payment.invoiceNo = nextInvoiceId++;
+    }
     
     // Increment receipt number for next payment
     nextReceiptId++;
@@ -1803,7 +1825,14 @@ function generatePaymentSchedule(property) {
             targetMonth = targetMonth % 12;
         }
         
-        const dueDate = new Date(targetYear, targetMonth, rentPayableDay);
+        // Create due date using string format to avoid timezone issues (IST safe)
+        const monthStr = String(targetMonth + 1).padStart(2, '0');
+        const dayStr = String(rentPayableDay).padStart(2, '0');
+        const dateStr = `${targetYear}-${monthStr}-${dayStr}`;
+        
+        // Create date without time component to avoid timezone conversion
+        const dueDate = new Date(dateStr);
+        
         
         // Check if this payment is already paid (from payment history)
         const isPaid = property.paymentHistory && property.paymentHistory.some(p => {
@@ -2728,7 +2757,50 @@ function generatePaymentInvoice(paymentId) {
     if (baseAmount === 0) return;
     
     // Create invoice for specific payment (even if not paid yet - this could be for pending payments)
-    const invoiceWindow = window.open('', '_blank', 'width=800,height=600');
+    const invoiceWindow = window.open('', '_blank', 'width=600,height=700');
+    
+    // Function to convert number to words (Indian format)
+    function numberToWords(amount) {
+        const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+        const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+        const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+        
+        function convertHundreds(num) {
+            let result = '';
+            if (num > 99) {
+                result += ones[Math.floor(num / 100)] + ' Hundred ';
+                num %= 100;
+            }
+            if (num > 19) {
+                result += tens[Math.floor(num / 10)] + ' ';
+                num %= 10;
+            } else if (num > 9) {
+                result += teens[num - 10] + ' ';
+                return result;
+            }
+            if (num > 0) {
+                result += ones[num] + ' ';
+            }
+            return result;
+        }
+        
+        if (amount === 0) return 'Zero';
+        
+        let result = '';
+        let crores = Math.floor(amount / 10000000);
+        let lakhs = Math.floor((amount % 10000000) / 100000);
+        let thousands = Math.floor((amount % 100000) / 1000);
+        let hundreds = amount % 1000;
+        
+        if (crores > 0) result += convertHundreds(crores) + 'Crore ';
+        if (lakhs > 0) result += convertHundreds(lakhs) + 'Lakh ';
+        if (thousands > 0) result += convertHundreds(thousands) + 'Thousand ';
+        if (hundreds > 0) result += convertHundreds(hundreds);
+        
+        return result.trim() + ' Only';
+    }
+
+    const amountInWords = numberToWords(Math.floor(totalAmount));
     
     const invoiceHTML = `
         <!DOCTYPE html>
@@ -2736,86 +2808,228 @@ function generatePaymentInvoice(paymentId) {
         <head>
             <title>Invoice - ${property.name}</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .invoice-header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px; }
-                .company-info h1 { color: #1e3a8a; margin: 0; }
-                .invoice-details { text-align: right; }
-                .invoice-number { font-size: 24px; font-weight: bold; color: #1e3a8a; }
-                .property-details, .payment-details { margin: 20px 0; }
-                .details-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                .details-table th, .details-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-                .details-table th { background-color: #1e3a8a; color: white; }
-                .total-row { font-weight: bold; background-color: #f5f5f5; }
-                .footer { margin-top: 40px; text-align: center; color: #666; }
-                .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 0; 
+                    padding: 20px;
+                    font-size: 12px;
+                    line-height: 1.4;
+                }
+                .header-section {
+                    text-align: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 2px solid #000;
+                }
+                .company-name {
+                    font-size: 20px;
+                    font-weight: bold;
+                    margin: 0 0 5px 0;
+                    text-transform: uppercase;
+                    color: #000;
+                    letter-spacing: 1px;
+                }
+                .company-address {
+                    margin: 5px 0;
+                    font-size: 11px;
+                }
+                .gstin-pan {
+                    margin: 2px 0;
+                    font-size: 10px;
+                }
+                .invoice-header {
+                    display: flex;
+                    justify-content: space-between;
+                    margin: 20px 0;
+                }
+                .invoice-title {
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #000;
+                    letter-spacing: 1px;
+                }
+                .invoice-details {
+                    text-align: right;
+                    font-size: 11px;
+                }
+                .billing-section {
+                    margin: 20px 0;
+                }
+                .billing-to {
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+                .details-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 20px 0;
+                    border: 1px solid #000;
+                }
+                .details-table th {
+                    background-color: #f0f0f0;
+                    padding: 8px;
+                    text-align: center;
+                    font-weight: bold;
+                    border: 1px solid #000;
+                    font-size: 11px;
+                }
+                .details-table td {
+                    padding: 8px;
+                    border: 1px solid #000;
+                    font-size: 11px;
+                }
+                .amount-col {
+                    text-align: right;
+                    width: 100px;
+                }
+                .total-row {
+                    font-weight: bold;
+                    background-color: #f5f5f5;
+                }
+                .amount-words {
+                    margin: 15px 0;
+                    font-weight: bold;
+                    border: 1px solid #000;
+                    padding: 8px;
+                    background-color: #f9f9f9;
+                }
+                .terms-section {
+                    margin: 20px 0;
+                    font-size: 10px;
+                    border: 1px solid #000;
+                    padding: 10px;
+                }
+                .terms-title {
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                    text-decoration: underline;
+                }
+                .signature-section {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 40px;
+                    padding-top: 20px;
+                }
+                .signature-box {
+                    text-align: center;
+                    width: 30%;
+                }
+                .signature-line {
+                    border-top: 1px solid #000;
+                    margin-top: 40px;
+                    padding-top: 5px;
+                    font-size: 11px;
+                }
+                .status-badge { 
+                    padding: 4px 8px; 
+                    border-radius: 4px; 
+                    font-size: 12px; 
+                    font-weight: bold; 
+                    display: inline-block;
+                    margin: 5px 0;
+                }
                 .status-pending { background-color: #fff3cd; color: #856404; }
                 .status-paid { background-color: #d4edda; color: #155724; }
             </style>
         </head>
         <body>
+            <div style="text-align: left; font-size: 10px; margin-bottom: 10px; color: #666;">
+                Subject to SURAT Jurisdiction
+            </div>
+            
+            <div class="header-section">
+                <div class="company-name">${property.lessorName || 'LESSOR NAME'}</div>
+                <div class="company-address">${property.lessorAddress || 'Lessor Address'}</div>
+                <div class="gstin-pan">GSTIN: ${property.gstin || 'N/A'}</div>
+                <div class="gstin-pan">PAN No.: ${property.panNo || 'N/A'}</div>
+                <div class="gstin-pan">Reverse Charge: Y/N</div>
+            </div>
+
             <div class="invoice-header">
-                <div class="company-info">
-                    <h1>Balar Builders</h1>
-                    <p>Business Address, City, State</p>
-                    <p>GST No: 27XXXXX1234X1Z5</p>
+                <div class="billing-section">
+                    <div class="billing-to">To,</div>
+                    <div><strong style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #000; font-weight: bold;">${property.lesseeName || 'TENANT NAME'}</strong></div>
+                    <div>${property.name}</div>
+                    <div>${property.address}</div>
+                    ${property.officerNo ? `<div>Office No: ${property.officerNo}</div>` : ''}
+                    ${property.lesseeGstin ? `<div>GSTIN: ${property.lesseeGstin}</div>` : ''}
                 </div>
                 <div class="invoice-details">
-                    <div class="invoice-number">INV-${String(paymentId).padStart(4, '0')}</div>
-                    <p>Date: ${getCurrentDate()}</p>
-                    <p>Due Date: ${formatDate(dueDate)}</p>
-                    <span class="status-badge status-${payment ? payment.status.toLowerCase() : 'pending'}">${payment ? payment.status : 'Pending'}</span>
+                    <div class="invoice-title">INVOICE</div>
+                    <div>Invoice No. : ${payment && payment.invoiceNo ? payment.invoiceNo : nextInvoiceId}</div>
+                    <div>Date : ${getCurrentDate()}</div>
+                    ${payment ? `<div>Status: <span class="status-badge status-${payment.status.toLowerCase()}">${payment.status}</span></div>` : `<div>Status: <span class="status-badge status-pending">Pending</span></div>`}
                 </div>
             </div>
             
-            <div class="property-details">
-                <h3>Property Details</h3>
-                <p><strong>Property:</strong> ${property.name}</p>
-                <p><strong>Address:</strong> ${property.address}</p>
-                <p><strong>Type:</strong> ${property.type}</p>
-                ${property.lesseeName ? `<p><strong>Lessee:</strong> ${property.lesseeName}</p>` : ''}
-            </div>
-            
-            <div class="payment-details">
-                <h3>Payment Details</h3>
                 <table class="details-table">
                     <thead>
                         <tr>
                             <th>Description</th>
-                            <th>Period</th>
-                            <th>Amount</th>
+                        <th>Quantity</th>
+                        <th>Unit</th>
+                        <th>Rate</th>
+                        <th>GST %</th>
+                        <th>Rs.</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Monthly Rent</td>
-                            <td>${formatDate(dueDate)}</td>
-                            <td>₹${baseAmount.toLocaleString()}</td>
-                        </tr>
-                               <tr>
-                                   <td>GST (${property.gstIncludedInRent ? (property.gstPercentage || 18) : 0}%)</td>
-                                   <td>-</td>
-                                   <td>₹${gstAmount.toLocaleString()}</td>
+                        <td>RENT INCOME<br/>${property.officerNo ? property.officerNo + ', ' : ''}${property.projectName || property.name} [${formatDate(dueDate).split('/')[1]}, ${formatDate(dueDate).split('/')[2]}]</td>
+                        <td style="text-align: center;">1</td>
+                        <td style="text-align: center;">Month</td>
+                        <td class="amount-col">₹${baseAmount.toLocaleString()}</td>
+                        <td style="text-align: center;">${gstAmount > 0 ? '18.00' : '0.00'}</td>
+                        <td class="amount-col">₹${totalAmount.toLocaleString()}</td>
                                </tr>
                         <tr class="total-row">
-                            <td colspan="2"><strong>Total Amount</strong></td>
-                            <td><strong>₹${totalAmount.toLocaleString()}</strong></td>
+                        <td colspan="5" style="text-align: right;"><strong>TOTAL Rs.</strong></td>
+                        <td class="amount-col"><strong>₹${totalAmount.toLocaleString()}</strong></td>
                         </tr>
                     </tbody>
                 </table>
+
+            <div class="amount-words">
+                <strong>Rupees:</strong> ${amountInWords}
+            </div>
                 
                 ${payment && payment.status === 'Paid' ? `
-                    <p><strong>Payment Mode:</strong> ${payment.paymentMode || 'N/A'}</p>
-                    <p><strong>Receipt No:</strong> ${payment.receiptNo || 'N/A'}</p>
-                    <p><strong>Payment Date:</strong> ${payment.paymentDate ? formatDate(payment.paymentDate) : 'N/A'}</p>
-                ` : `
-                    <p><strong>Status:</strong> <span class="status-badge status-pending">Pending Payment</span></p>
-                    <p><strong>Please make payment by:</strong> ${formatDate(dueDate)}</p>
-                `}
+                <div style="margin: 15px 0; padding: 10px; border: 1px solid #d4edda; background-color: #d4edda; color: #155724;">
+                    <strong>Payment Information:</strong><br/>
+                    Payment Mode: ${payment.paymentMode || 'N/A'}<br/>
+                    Receipt No: ${payment.receiptNo || 'N/A'}<br/>
+                    Payment Date: ${payment.paymentDate ? formatDate(payment.paymentDate) : 'N/A'}
+                </div>
+            ` : `
+                <div style="margin: 15px 0; padding: 10px; border: 1px solid #fff3cd; background-color: #fff3cd; color: #856404;">
+                    <strong>Payment Due:</strong> ${formatDate(dueDate)}<br/>
+                    Please make payment by the due date.
+                </div>
+            `}
+
+            <div class="terms-section">
+                <div class="terms-title">TERMS (-)</div>
+                <div>1. We reserve the right of recovery before due date at any time.</div>
+                <div>2. The sale is understood to have been made after due consideration of the quality of goods and prevailing rates.</div>
+                <div>3. Report shall have to be presented within 24 hours of delivery, where after no complaints or any change in quality or shortage in quantity shall be considered for goods already under process.</div>
+                <div>4. The goods are despatched at buyers risk.</div>
+                <div>5. The payment of this bill shall be made by the due date failing which interest @ the rate of 1.5% p.m. shall be charged from the due date.</div>
             </div>
             
-            <div class="footer">
-                <p>${payment && payment.status === 'Paid' ? 'Thank you for your payment!' : 'Please make payment by the due date.'}</p>
-                <p>This is a computer generated invoice.</p>
+            <div class="signature-section">
+                <div class="signature-box">
+                    <div class="signature-line"><strong style="color: #000; font-weight: bold;">Received</strong></div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line"><strong style="color: #000; font-weight: bold;">Prepared by</strong></div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line"><strong style="color: #000; font-weight: bold;">For ${property.lessorName || 'LESSOR NAME'}</strong><br/><br/><br/><strong style="color: #000; font-weight: bold;">Authorised Signatory</strong></div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px; font-size: 10px; color: #666;">
+                This is a computer generated invoice.
             </div>
         </body>
         </html>
@@ -2858,73 +3072,253 @@ function viewPaymentReceipt(paymentId) {
         return;
     }
     
+    // Function to convert number to words (Indian format)
+    function numberToWords(amount) {
+        const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+        const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+        const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+        
+        function convertHundreds(num) {
+            let result = '';
+            if (num > 99) {
+                result += ones[Math.floor(num / 100)] + ' Hundred ';
+                num %= 100;
+            }
+            if (num > 19) {
+                result += tens[Math.floor(num / 10)] + ' ';
+                num %= 10;
+            } else if (num > 9) {
+                result += teens[num - 10] + ' ';
+                return result;
+            }
+            if (num > 0) {
+                result += ones[num] + ' ';
+            }
+            return result;
+        }
+        
+        if (amount === 0) return 'Zero';
+        
+        let result = '';
+        let crores = Math.floor(amount / 10000000);
+        let lakhs = Math.floor((amount % 10000000) / 100000);
+        let thousands = Math.floor((amount % 100000) / 1000);
+        let hundreds = amount % 1000;
+        
+        if (crores > 0) result += convertHundreds(crores) + 'Crore ';
+        if (lakhs > 0) result += convertHundreds(lakhs) + 'Lakh ';
+        if (thousands > 0) result += convertHundreds(thousands) + 'Thousand ';
+        if (hundreds > 0) result += convertHundreds(hundreds);
+        
+        return result.trim() + ' Only';
+    }
+
+    const totalAmount = payment.total || payment.amount || 0;
+    const amountInWords = numberToWords(Math.floor(totalAmount));
+    
     const receiptHTML = `
         <!DOCTYPE html>
         <html>
         <head>
             <title>Receipt - ${property.name}</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .receipt-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px; }
-                .company-info h1 { color: #1e3a8a; margin: 0; }
-                .receipt-details { margin: 20px 0; }
-                .details-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                .details-table th, .details-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-                .details-table th { background-color: #1e3a8a; color: white; }
-                .total-row { font-weight: bold; background-color: #f5f5f5; }
-                .footer { margin-top: 40px; text-align: center; color: #666; }
-                .receipt-number { font-size: 20px; font-weight: bold; color: #1e3a8a; margin: 10px 0; }
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 0; 
+                    padding: 20px;
+                    font-size: 12px;
+                    line-height: 1.4;
+                }
+                .header-section {
+                    text-align: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 2px solid #000;
+                }
+                .company-name {
+                    font-size: 20px;
+                    font-weight: bold;
+                    margin: 0 0 5px 0;
+                    text-transform: uppercase;
+                    color: #000;
+                    letter-spacing: 1px;
+                }
+                .company-address {
+                    margin: 5px 0;
+                    font-size: 11px;
+                }
+                .gstin-pan {
+                    margin: 2px 0;
+                    font-size: 10px;
+                }
+                .invoice-header {
+                    display: flex;
+                    justify-content: space-between;
+                    margin: 20px 0;
+                }
+                .invoice-title {
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #000;
+                    letter-spacing: 1px;
+                }
+                .invoice-details {
+                    text-align: right;
+                    font-size: 11px;
+                }
+                .billing-section {
+                    margin: 20px 0;
+                }
+                .billing-to {
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+                .details-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 20px 0;
+                    border: 1px solid #000;
+                }
+                .details-table th {
+                    background-color: #f0f0f0;
+                    padding: 8px;
+                    text-align: center;
+                    font-weight: bold;
+                    border: 1px solid #000;
+                    font-size: 11px;
+                }
+                .details-table td {
+                    padding: 8px;
+                    border: 1px solid #000;
+                    font-size: 11px;
+                }
+                .amount-col {
+                    text-align: right;
+                    width: 100px;
+                }
+                .total-row {
+                    font-weight: bold;
+                    background-color: #f5f5f5;
+                }
+                .amount-words {
+                    margin: 15px 0;
+                    font-weight: bold;
+                    border: 1px solid #000;
+                    padding: 8px;
+                    background-color: #f9f9f9;
+                }
+                .terms-section {
+                    margin: 20px 0;
+                    font-size: 10px;
+                    border: 1px solid #000;
+                    padding: 10px;
+                }
+                .terms-title {
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                    text-decoration: underline;
+                }
+                .signature-section {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 40px;
+                    padding-top: 20px;
+                }
+                .signature-box {
+                    text-align: center;
+                    width: 30%;
+                }
+                .signature-line {
+                    border-top: 1px solid #000;
+                    margin-top: 40px;
+                    padding-top: 5px;
+                    font-size: 11px;
+                }
             </style>
         </head>
         <body>
-            <div class="receipt-header">
-                <div class="company-info">
-                    <h1>Balar Builders</h1>
-                    <p>Business Address, City, State</p>
-                    <p>GST No: 27XXXXX1234X1Z5</p>
+            <div style="text-align: left; font-size: 10px; margin-bottom: 10px; color: #666;">
+                Subject to SURAT Jurisdiction
                 </div>
-                <div class="receipt-number">RECEIPT NO: ${payment.receiptNo || 'N/A'}</div>
-                <p>Date: ${formatDate(payment.paymentDate || payment.date || new Date())}</p>
+            
+            <div class="header-section">
+                <div class="company-name">${property.lessorName || 'LESSOR NAME'}</div>
+                <div class="company-address">${property.lessorAddress || 'Lessor Address'}</div>
+                <div class="gstin-pan">GSTIN: ${property.gstin || 'N/A'}</div>
+                <div class="gstin-pan">PAN No.: ${property.panNo || 'N/A'}</div>
+                <div class="gstin-pan">Reverse Charge: Y/N</div>
             </div>
             
-            <div class="receipt-details">
-                <h3>Payment Receipt</h3>
-                <p><strong>Property:</strong> ${property.name}</p>
-                <p><strong>Address:</strong> ${property.address}</p>
-                ${property.lesseeName ? `<p><strong>Lessee:</strong> ${property.lesseeName}</p>` : ''}
-                <p><strong>Payment Mode:</strong> ${payment.paymentMode || 'N/A'}</p>
+            <div class="invoice-header">
+                <div class="billing-section">
+                    <div class="billing-to">To,</div>
+                    <div><strong style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #000; font-weight: bold;">${property.lesseeName || 'TENANT NAME'}</strong></div>
+                    <div>${property.name}</div>
+                    <div>${property.address}</div>
+                    ${property.officerNo ? `<div>Office No: ${property.officerNo}</div>` : ''}
+                    ${property.lesseeGstin ? `<div>GSTIN: ${property.lesseeGstin}</div>` : ''}
+                </div>
+                <div class="invoice-details">
+                    <div class="invoice-title">INVOICE</div>
+                    <div>Invoice No. : ${payment.invoiceNo || nextInvoiceId}</div>
+                    <div>Date : ${formatDate(payment.paymentDate || payment.date || new Date())}</div>
+                </div>
+            </div>
                 
                 <table class="details-table">
                     <thead>
                         <tr>
                             <th>Description</th>
-                            <th>Amount</th>
+                        <th>Quantity</th>
+                        <th>Unit</th>
+                        <th>Rate</th>
+                        <th>GST %</th>
+                        <th>Rs.</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Monthly Rent</td>
-                            <td>₹${(payment.base || payment.amount || 0).toLocaleString()}</td>
-                        </tr>
-                        <tr>
-                            <td>GST (18%)</td>
-                            <td>₹${(payment.gst || 0).toLocaleString()}</td>
+                        <td>RENT INCOME<br/>${property.officerNo ? property.officerNo + ', ' : ''}${property.projectName || property.name} [${formatDate(payment.date || payment.dueDate || new Date()).split('/')[1]}, ${formatDate(payment.date || payment.dueDate || new Date()).split('/')[2]}]</td>
+                        <td style="text-align: center;">1</td>
+                        <td style="text-align: center;">Month</td>
+                        <td class="amount-col">₹${(payment.base || payment.amount || 0).toLocaleString()}</td>
+                        <td style="text-align: center;">${payment.gst > 0 ? '18.00' : '0.00'}</td>
+                        <td class="amount-col">₹${(payment.total || payment.amount || 0).toLocaleString()}</td>
                         </tr>
                         <tr class="total-row">
-                            <td><strong>Total Amount Paid</strong></td>
-                            <td><strong>₹${(payment.total || payment.amount || 0).toLocaleString()}</strong></td>
+                        <td colspan="5" style="text-align: right;"><strong>TOTAL Rs.</strong></td>
+                        <td class="amount-col"><strong>₹${(payment.total || payment.amount || 0).toLocaleString()}</strong></td>
                         </tr>
                     </tbody>
                 </table>
                 
-                <p><strong>Payment Date:</strong> ${formatDate(payment.paymentDate || payment.date || new Date())}</p>
-                <p><strong>Period:</strong> ${formatDate(payment.date || payment.dueDate || new Date())}</p>
-                ${payment.notes ? `<p><strong>Notes:</strong> ${payment.notes}</p>` : ''}
+            <div class="amount-words">
+                <strong>Rupees:</strong> ${amountInWords}
             </div>
             
-            <div class="footer">
-                <p>Thank you for your payment!</p>
-                <p>This is a computer generated receipt.</p>
+            <div class="terms-section">
+                <div class="terms-title">TERMS (-)</div>
+                <div>1. We reserve the right of recovery before due date at any time.</div>
+                <div>2. The sale is understood to have been made after due consideration of the quality of goods and prevailing rates.</div>
+                <div>3. Report shall have to be presented within 24 hours of delivery, where after no complaints or any change in quality or shortage in quantity shall be considered for goods already under process.</div>
+                <div>4. The goods are despatched at buyers risk.</div>
+                <div>5. The payment of this bill shall be made by the due date failing which interest @ the rate of 1.5% p.m. shall be charged from the due date.</div>
+            </div>
+
+            <div class="signature-section">
+                <div class="signature-box">
+                    <div class="signature-line"><strong style="color: #000; font-weight: bold;">Received</strong></div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line"><strong style="color: #000; font-weight: bold;">Prepared by</strong></div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line"><strong style="color: #000; font-weight: bold;">For ${property.lessorName || 'LESSOR NAME'}</strong><br/><br/><br/><strong style="color: #000; font-weight: bold;">Authorised Signatory</strong></div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px; font-size: 10px; color: #666;">
+                This is a computer generated receipt.
             </div>
         </body>
         </html>
