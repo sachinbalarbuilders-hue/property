@@ -1170,7 +1170,6 @@ function openPropertyModal(propertyId = null) {
     
     propertyModal.classList.remove('hidden');
     switchTab('information');
-    setupBillsSection();
     renderDocuments();
     document.body.style.overflow = 'hidden';
 }
@@ -1321,6 +1320,9 @@ function resetPropertyForm() {
     
     // Reset maintenance fields visibility
     toggleMaintenanceFields();
+    
+    // Setup bills section for new property
+    setupBillsSection();
 }
 
 function loadPropertyData(propertyId) {
@@ -2953,6 +2955,7 @@ function generatePaymentInvoice(paymentId) {
                     <div>${property.address}</div>
                     ${property.officerNo ? `<div>Office No: ${property.officerNo}</div>` : ''}
                     ${property.lesseeGstin ? `<div>GSTIN: ${property.lesseeGstin}</div>` : ''}
+                    ${property.lesseePan ? `<div>PAN No.: ${property.lesseePan}</div>` : ''}
                 </div>
                 <div class="invoice-details">
                     <div class="invoice-title">INVOICE</div>
@@ -3257,6 +3260,7 @@ function viewPaymentReceipt(paymentId) {
                     <div>${property.address}</div>
                     ${property.officerNo ? `<div>Office No: ${property.officerNo}</div>` : ''}
                     ${property.lesseeGstin ? `<div>GSTIN: ${property.lesseeGstin}</div>` : ''}
+                    ${property.lesseePan ? `<div>PAN No.: ${property.lesseePan}</div>` : ''}
                 </div>
                 <div class="invoice-details">
                     <div class="invoice-title">INVOICE</div>
