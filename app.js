@@ -8,6 +8,48 @@ let nextId = 1;
 let nextReceiptId = 1;
 let nextInvoiceId = 1;
 
+// Table Column Configuration
+// Default visible columns configuration
+const defaultVisibleColumns = [
+    'serialNo', 'name', 'address', 'type', 'rentAmount', 'status', 'actions'
+];
+
+let tableColumns = {
+    // Basic Information
+    serialNo: { label: 'Serial No', visible: defaultVisibleColumns.includes('serialNo'), category: 'basic' },
+    name: { label: 'Property Name', visible: defaultVisibleColumns.includes('name'), category: 'basic' },
+    address: { label: 'Address', visible: defaultVisibleColumns.includes('address'), category: 'basic' },
+    type: { label: 'Property Type', visible: defaultVisibleColumns.includes('type'), category: 'basic' },
+    status: { label: 'Status', visible: defaultVisibleColumns.includes('status'), category: 'basic' },
+    actions: { label: 'Actions', visible: defaultVisibleColumns.includes('actions'), category: 'basic' },
+    
+    // Property Information
+    projectName: { label: 'Project Name', visible: false, category: 'property' },
+    officerNo: { label: 'Office No', visible: false, category: 'property' },
+    floorNo: { label: 'Floor No', visible: false, category: 'property' },
+    carpetArea: { label: 'Carpet Area', visible: false, category: 'property' },
+    superBuiltupArea: { label: 'Super Built-up Area', visible: false, category: 'property' },
+    terraceArea: { label: 'Terrace Area', visible: false, category: 'property' },
+    furniture: { label: 'Furniture', visible: false, category: 'property' },
+    lessorName: { label: 'Lessor Name', visible: false, category: 'property' },
+    lessorGstin: { label: 'Lessor GSTIN', visible: false, category: 'property' },
+    lessorPan: { label: 'Lessor PAN', visible: false, category: 'property' },
+    
+    // Rental Information
+    lesseeName: { label: 'Lessee Name', visible: false, category: 'rental' },
+    lesseeGstin: { label: 'Lessee GSTIN', visible: false, category: 'rental' },
+    lesseePan: { label: 'Lessee PAN', visible: false, category: 'rental' },
+    rentAmount: { label: 'Rent Amount', visible: defaultVisibleColumns.includes('rentAmount'), category: 'rental' },
+    rentPeriod: { label: 'Rent Period', visible: false, category: 'rental' },
+    securityDeposit: { label: 'Security Deposit', visible: false, category: 'rental' },
+    agreementStartDate: { label: 'Agreement Start', visible: false, category: 'rental' },
+    agreementTenure: { label: 'Agreement Tenure', visible: false, category: 'rental' },
+    rentPayableDate: { label: 'Rent Due Date', visible: false, category: 'rental' },
+    escalationPercentage: { label: 'Escalation %', visible: false, category: 'rental' },
+    gstIncludedInRent: { label: 'GST Included', visible: false, category: 'rental' },
+    maintenance: { label: 'Maintenance', visible: false, category: 'rental' }
+};
+
 // Static Data
 const billTypes = [
     { name: "Property Tax", key: "propertyTax" },
@@ -529,6 +571,7 @@ function loadData() {
 // Initialize Application
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
+    loadTableSettings();
     initializeApp();
     setupEventListeners();
     populateSelectOptions();
@@ -1399,6 +1442,9 @@ function saveProperty() {
     for (let [key, value] of formData.entries()) {
         if (key === 'isRental' || key === 'maintenanceEnabled') {
             propertyData[key] = true;
+        } else if (key === 'maintenance' && value) {
+            // Convert maintenance to number
+            propertyData[key] = parseFloat(value) || 0;
         } else {
             propertyData[key] = value;
         }
@@ -1699,13 +1745,17 @@ function collectDocumentsData() {
 }
 
 function renderPropertiesTable() {
+    const visibleColumns = getOptimalColumns();
+    renderTableHeader(visibleColumns);
     const tbody = propertiesTableBody;
     tbody.innerHTML = '';
+
+    const colspanCount = visibleColumns.length;
 
     if (properties.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="empty-state">
+                <td colspan="${colspanCount}" class="empty-state">
                     <h3>No properties found</h3>
                     <p>Click "Add Property" to get started</p>
                 </td>
@@ -1717,36 +1767,270 @@ function renderPropertiesTable() {
     properties.forEach((property, index) => {
         const row = document.createElement('tr');
         
-        const rentDisplay = property.isRental && property.rentAmount 
-            ? `₹${property.rentAmount}/${property.rentPeriod || 'month'}`
-            : 'N/A';
-            
-        const status = property.isRental ? 'Active' : 'Vacant';
-        const statusClass = property.isRental ? 'property-status--active' : 'property-status--vacant';
-
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>
-                <div>
-                    <strong>${property.name || 'Unnamed Property'}</strong>
-                    ${property.projectName ? `<br><small>${property.projectName}</small>` : ''}
-                </div>
-            </td>
-            <td>${property.address || 'No address'}</td>
-            <td>${property.type || 'Not specified'}</td>
-            <td>${rentDisplay}</td>
-            <td><span class="property-status ${statusClass}">${status}</span></td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn btn--sm btn--primary" onclick="viewProperty(${property.id})">View</button>
-                    <button class="btn btn--sm btn--outline" onclick="showPaymentDashboard(${property.id})">Payments</button>
-                    <button class="btn btn--sm btn--outline" onclick="deleteProperty(${property.id})">Delete</button>
-                </div>
-            </td>
-        `;
+        visibleColumns.forEach(columnKey => {
+            const cell = document.createElement('td');
+            cell.innerHTML = getCellContent(property, columnKey, index);
+            cell.className = `column-${columnKey}`;
+            row.appendChild(cell);
+        });
         
         tbody.appendChild(row);
     });
+}
+
+function getOptimalColumns() {
+    // Priority order for columns (most important first) - EXCLUDING actions which will be added at the end
+    const columnPriority = [
+        'serialNo',     // Always show
+        'name',         // Always show  
+        'address',      // Always show
+        'type',         // Always show
+        'rentAmount',   // Always show
+        'status',       // Always show
+        'projectName',  // Secondary priority
+        'lessorName',   // Secondary priority
+        'floorNo',      // Secondary priority
+        'carpetArea',   // Secondary priority
+        'lesseeName',   // Lower priority
+        'rentPeriod',   // Lower priority
+        'securityDeposit', // Lower priority
+        'officerNo',
+        'superBuiltupArea',
+        'terraceArea',
+        'furniture',
+        'agreementStartDate',
+        'agreementTenure',
+        'rentPayableDate',
+        'escalationPercentage',
+        'gstIncludedInRent',
+        'maintenance'
+    ];
+    
+    // Get all user-selected visible columns (including actions)
+    const userSelectedColumns = Object.keys(tableColumns).filter(key => 
+        tableColumns[key].visible
+    );
+    
+    // Start with user-selected columns in priority order
+    let finalColumns = [];
+    
+    // Add user-selected columns in priority order (no limit since we have horizontal scroll)
+    columnPriority.forEach(columnKey => {
+        if (userSelectedColumns.includes(columnKey)) {
+            finalColumns.push(columnKey);
+        }
+    });
+    
+    // Add any remaining user-selected columns that weren't in priority order
+    userSelectedColumns.forEach(columnKey => {
+        if (!finalColumns.includes(columnKey)) {
+            finalColumns.push(columnKey);
+        }
+    });
+    
+    return finalColumns;
+}
+
+function renderTableHeader(visibleColumns) {
+    const thead = document.getElementById('propertiesTableHeader');
+    thead.innerHTML = '';
+    
+    visibleColumns.forEach(columnKey => {
+        const th = document.createElement('th');
+        th.textContent = tableColumns[columnKey].label;
+        th.className = `header-${columnKey}`;
+        thead.appendChild(th);
+    });
+}
+
+function toggleActionMenu(event, propertyId) {
+    event.stopPropagation();
+    
+    // Close any existing temp menu
+    const existingTempMenu = document.getElementById('tempActionMenu');
+    if (existingTempMenu) {
+        existingTempMenu.remove();
+        return;
+    }
+    
+    // Close all other action menus
+    document.querySelectorAll('.action-menu').forEach(menu => {
+        if (menu.id !== `actionMenu${propertyId}`) {
+            menu.classList.remove('show');
+        }
+    });
+    
+    // Toggle the clicked menu
+    const menu = document.getElementById(`actionMenu${propertyId}`);
+    
+    if (menu) {
+        const isCurrentlyShown = menu.style.display === 'block';
+        if (isCurrentlyShown) {
+            menu.style.display = 'none';
+            console.log('Menu hidden');
+        } else {
+            // Create a new menu element instead of using the existing one
+            const newMenu = document.createElement('div');
+            newMenu.id = 'tempActionMenu';
+            // Get the button position
+            const button = event.target.closest('.action-menu-btn');
+            const rect = button.getBoundingClientRect();
+            
+            // Check if there's enough space below the button
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const menuHeight = 120; // Approximate menu height
+            const showAbove = spaceBelow < menuHeight;
+            
+            const topPosition = showAbove ? rect.top - menuHeight - 4 : rect.bottom + 4;
+            
+            newMenu.innerHTML = `
+                <div style="position: fixed; top: ${topPosition}px; left: ${rect.right - 160}px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); z-index: 99999; padding: 8px; min-width: 160px;">
+                    <button onclick="viewProperty(${propertyId}); document.getElementById('tempActionMenu').remove();" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 12px 16px; margin: 0; background: none; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #374151; border-radius: 4px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
+                        <span>👁️</span> Edit Property
+                    </button>
+                    <button onclick="showPaymentDashboard(${propertyId}); document.getElementById('tempActionMenu').remove();" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 12px 16px; margin: 0; background: none; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #374151; border-radius: 4px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
+                        <span>💰</span> View Payments
+                    </button>
+                    <button onclick="deleteProperty(${propertyId}); document.getElementById('tempActionMenu').remove();" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 12px 16px; margin: 0; background: none; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #dc2626; border-radius: 4px;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">
+                        <span>🗑️</span> Delete Property
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(newMenu);
+        }
+        // Add click outside to close
+        setTimeout(() => {
+            document.addEventListener('click', function closeMenu(e) {
+                if (!e.target.closest('#tempActionMenu')) {
+                    const tempMenu = document.getElementById('tempActionMenu');
+                    if (tempMenu) {
+                        tempMenu.remove();
+                    }
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
+        }, 100);
+    } else {
+        console.error('Menu element not found for property:', propertyId);
+    }
+}
+
+function closeActionMenus() {
+    document.querySelectorAll('.action-menu').forEach(menu => {
+        menu.classList.remove('show');
+    });
+}
+
+// Close action menus when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.action-dropdown')) {
+        closeActionMenus();
+    }
+});
+
+function getCellContent(property, columnKey, index) {
+    switch (columnKey) {
+        case 'serialNo':
+            return `<span class="serial-no">${index + 1}</span>`;
+        case 'name':
+            return `
+                <div class="property-name">
+                    <strong>${property.name || 'Unnamed Property'}</strong>
+                    ${property.projectName && !tableColumns.projectName.visible ? `<br><small style="color: var(--color-text-secondary);">${property.projectName}</small>` : ''}
+                </div>
+            `;
+        case 'projectName':
+            return `<span class="project-name">${property.projectName || 'N/A'}</span>`;
+        case 'address':
+            return `<span class="address" title="${property.address || 'No address'}">${property.address || 'No address'}</span>`;
+        case 'type':
+            return `<span class="property-type">${property.type || 'Not specified'}</span>`;
+        case 'officerNo':
+            return `<span class="officer-no">${property.officerNo || 'N/A'}</span>`;
+        case 'floorNo':
+            return `<span class="floor-no">${property.floorNo || 'N/A'}</span>`;
+        case 'carpetArea':
+            return `<span class="carpet-area">${property.carpetArea || 'N/A'}</span>`;
+        case 'superBuiltupArea':
+            return `<span class="super-builtup-area">${property.superBuiltupArea || 'N/A'}</span>`;
+        case 'terraceArea':
+            return `<span class="terrace-area">${property.terraceArea || 'N/A'}</span>`;
+        case 'furniture':
+            return `<span class="furniture">${property.furniture || 'N/A'}</span>`;
+        case 'lessorName':
+            return `<span class="lessor-name">${property.lessorName || 'N/A'}</span>`;
+        case 'lessorGstin':
+            return `<span class="lessor-gstin">${property.lessorGstin || 'N/A'}</span>`;
+        case 'lessorPan':
+            return `<span class="lessor-pan">${property.lessorPan || 'N/A'}</span>`;
+        case 'lesseeName':
+            return `<span class="lessee-name">${property.lesseeName || 'N/A'}</span>`;
+        case 'lesseeGstin':
+            return `<span class="lessee-gstin">${property.lesseeGstin || 'N/A'}</span>`;
+        case 'lesseePan':
+            return `<span class="lessee-pan">${property.lesseePan || 'N/A'}</span>`;
+        case 'rentAmount':
+            if (property.isRental && property.rentAmount) {
+                const rentDisplay = `₹${property.rentAmount.toLocaleString()}${tableColumns.rentPeriod.visible ? '' : '/' + (property.rentPeriod || 'month')}`;
+                return `<span class="rent-amount">${rentDisplay}</span>`;
+            }
+            return `<span class="rent-amount">N/A</span>`;
+        case 'rentPeriod':
+            return `<span class="rent-period">${property.rentPeriod || 'N/A'}</span>`;
+        case 'securityDeposit':
+            const deposit = property.securityDeposit ? `₹${property.securityDeposit.toLocaleString()}` : 'N/A';
+            return `<span class="security-deposit">${deposit}</span>`;
+        case 'agreementStartDate':
+            const startDate = property.agreementStartDate ? formatDate(new Date(property.agreementStartDate)) : 'N/A';
+            return `<span class="agreement-start">${startDate}</span>`;
+        case 'agreementTenure':
+            const tenure = property.agreementTenureAmount ? `${property.agreementTenureAmount} ${property.agreementTenureUnit || 'months'}` : 'N/A';
+            return `<span class="agreement-tenure">${tenure}</span>`;
+        case 'rentPayableDate':
+            return `<span class="rent-due-date">${property.rentPayableDate || 'N/A'}</span>`;
+        case 'escalationPercentage':
+            const escalation = property.escalationPercentage ? `${property.escalationPercentage}%` : 'N/A';
+            return `<span class="escalation">${escalation}</span>`;
+        case 'gstIncludedInRent':
+            return `<span class="gst-included">${property.gstIncludedInRent ? 'Yes' : 'No'}</span>`;
+        case 'maintenance':
+            if (property.maintenance) {
+                if (typeof property.maintenance === 'object' && property.maintenance.amount) {
+                    const period = property.maintenance.period || 'month';
+                    const periodText = period === 'year' ? '/year' : '/month';
+                    return `₹${parseFloat(property.maintenance.amount).toLocaleString()}${periodText}`;
+                } else if (typeof property.maintenance === 'number' || !isNaN(parseFloat(property.maintenance))) {
+                    return `₹${parseFloat(property.maintenance).toLocaleString()}/month`;
+                }
+            }
+            return '<span class="unknown">N/A</span>';
+        case 'status':
+            const status = property.isRental ? 'Active' : 'Vacant';
+            const statusClass = property.isRental ? 'property-status--active' : 'property-status--vacant';
+            return `<span class="property-status ${statusClass}">${status}</span>`;
+        case 'actions':
+            console.log('Generating actions for property ID:', property.id);
+            return `
+                <div class="action-dropdown">
+                    <button class="btn btn--sm btn--outline action-menu-btn" onclick="toggleActionMenu(event, ${property.id})" title="Actions">
+                        <span>⋮</span>
+                    </button>
+                    <div class="action-menu" id="actionMenu${property.id}" style="background: red; border: 2px solid black; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 99999; min-width: 160px; display: none;">
+                        <button class="action-menu-item" onclick="closeActionMenus(); viewProperty(${property.id})" style="display: block !important; padding: 15px !important; background: yellow !important; border: 2px solid blue !important; width: 100% !important; font-size: 16px !important; color: black !important;">
+                            <span>👁️</span> Edit Property
+                        </button>
+                        <button class="action-menu-item" onclick="closeActionMenus(); showPaymentDashboard(${property.id})" style="display: block !important; padding: 15px !important; background: yellow !important; border: 2px solid blue !important; width: 100% !important; font-size: 16px !important; color: black !important;">
+                            <span>💰</span> View Payments
+                        </button>
+                        <button class="action-menu-item delete-action" onclick="closeActionMenus(); deleteProperty(${property.id})" style="display: block !important; padding: 15px !important; background: yellow !important; border: 2px solid blue !important; width: 100% !important; font-size: 16px !important; color: black !important;">
+                            <span>🗑️</span> Delete Property
+                        </button>
+                </div>
+                </div>
+            `;
+        default:
+            return '<span class="unknown">N/A</span>';
+    }
 }
 
 function renderPaymentSchedule() {
@@ -1800,20 +2084,53 @@ function generatePaymentSchedule(property) {
     const agreementTenureAmount = parseInt(property.agreementTenureAmount || property.agreementTenure || 12);
     const agreementTenureUnit = property.agreementTenureUnit || 'months';
     
-    // Convert to months for calculation
+    // Convert to appropriate units based on rent period
+    let totalPayments, periodLabel;
+    if (rentPeriod === 'week') {
+        // For weekly rent, convert tenure to weeks
+        const tenureWeeks = agreementTenureUnit === 'years' ? agreementTenureAmount * 52 : 
+                           agreementTenureUnit === 'months' ? agreementTenureAmount * 4.33 : 
+                           agreementTenureAmount; // assume weeks if no unit specified
+        totalPayments = Math.ceil(tenureWeeks);
+        periodLabel = 'week';
+    } else if (rentPeriod === 'year') {
+        // For yearly rent, convert tenure to years
+        const tenureYears = agreementTenureUnit === 'months' ? Math.ceil(agreementTenureAmount / 12) : 
+                           agreementTenureUnit === 'weeks' ? Math.ceil(agreementTenureAmount / 52) :
+                           agreementTenureAmount; // assume years if no unit specified
+        totalPayments = tenureYears;
+        periodLabel = 'year';
+    } else {
+        // For monthly rent, convert to months
     const tenureMonths = agreementTenureUnit === 'years' ? agreementTenureAmount * 12 : agreementTenureAmount;
+        totalPayments = tenureMonths;
+        periodLabel = 'month';
+    }
     
-    // Determine if we need to skip the first month
+    // Determine if we need to skip the first period
     const rentPayableDay = parseInt(property.rentPayableDate || 7);
-    const skipFirstMonth = startDate.getDate() > rentPayableDay;
+    const skipFirstPeriod = startDate.getDate() > rentPayableDay;
     
     // Generate payments for the entire agreement tenure
-    for (let i = 0; i < tenureMonths; i++) {
-        // Calculate the correct month for this payment
+    for (let i = 0; i < totalPayments; i++) {
+        let dueDate;
+        
+        if (rentPeriod === 'week') {
+            // For weekly payments, add weeks to start date
+            const weeksToAdd = skipFirstPeriod ? (i + 1) : i;
+            dueDate = new Date(startDate);
+            dueDate.setDate(startDate.getDate() + (weeksToAdd * 7));
+        } else if (rentPeriod === 'year') {
+            // For yearly payments, add years to start date
+            const yearsToAdd = skipFirstPeriod ? (i + 1) : i;
+            dueDate = new Date(startDate);
+            dueDate.setFullYear(startDate.getFullYear() + yearsToAdd);
+        } else {
+            // For monthly/yearly payments, use existing logic
         let targetMonth = startDate.getMonth();
         let targetYear = startDate.getFullYear();
         
-        if (skipFirstMonth) {
+            if (skipFirstPeriod) {
             // Skip first month, so add 1 + payment number
             targetMonth += (i + 1);
         } else {
@@ -1827,13 +2144,14 @@ function generatePaymentSchedule(property) {
             targetMonth = targetMonth % 12;
         }
         
-        // Create due date using string format to avoid timezone issues (IST safe)
-        const monthStr = String(targetMonth + 1).padStart(2, '0');
-        const dayStr = String(rentPayableDay).padStart(2, '0');
-        const dateStr = `${targetYear}-${monthStr}-${dayStr}`;
-        
-        // Create date without time component to avoid timezone conversion
-        const dueDate = new Date(dateStr);
+            // Create due date using string format to avoid timezone issues (IST safe)
+            const monthStr = String(targetMonth + 1).padStart(2, '0');
+            const dayStr = String(rentPayableDay).padStart(2, '0');
+            const dateStr = `${targetYear}-${monthStr}-${dayStr}`;
+            
+            // Create date without time component to avoid timezone conversion
+            dueDate = new Date(dateStr);
+        }
         
         
         // Check if this payment is already paid (from payment history)
@@ -1845,9 +2163,13 @@ function generatePaymentSchedule(property) {
             return paymentDateStr === dueDateStr && p.status === 'Paid';
         });
         
-        // Generate period description based on original tenure unit
+        // Generate period description based on rent period
         let periodDescription;
-        if (agreementTenureUnit === 'years') {
+        if (rentPeriod === 'week') {
+            periodDescription = `Week ${i + 1}`;
+        } else if (rentPeriod === 'year') {
+            periodDescription = `Year ${i + 1}`;
+        } else if (agreementTenureUnit === 'years') {
             const yearNumber = Math.floor(i / 12) + 1;
             const monthInYear = (i % 12) + 1;
             periodDescription = `Year ${yearNumber}, Month ${monthInYear}`;
@@ -1862,7 +2184,7 @@ function generatePaymentSchedule(property) {
         let notes = '';
         if (i === 0) {
             notes = 'First Payment';
-        } else if (i === tenureMonths - 1) {
+        } else if (i === totalPayments - 1) {
             notes = 'Final Payment';
         }
         
@@ -2232,6 +2554,90 @@ function updateDashboardSummary() {
     document.getElementById('activeRentals').textContent = activeRentals;
     document.getElementById('pendingBills').textContent = pendingBills;
     document.getElementById('monthlyRevenue').textContent = `₹${Math.round(monthlyRevenue).toLocaleString()}`;
+}
+
+// Table Settings Functions
+function openTableSettings() {
+    const modal = document.getElementById('tableSettingsModal');
+    modal.classList.remove('hidden');
+    populateColumnSettings();
+    document.body.style.overflow = 'hidden';
+}
+
+function closeTableSettings() {
+    const modal = document.getElementById('tableSettingsModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+function populateColumnSettings() {
+    const basicContainer = document.getElementById('basicColumns');
+    const propertyContainer = document.getElementById('propertyColumns');
+    const rentalContainer = document.getElementById('rentalColumns');
+    
+    basicContainer.innerHTML = '';
+    propertyContainer.innerHTML = '';
+    rentalContainer.innerHTML = '';
+    
+    Object.keys(tableColumns).forEach(columnKey => {
+        const column = tableColumns[columnKey];
+        const checkbox = document.createElement('label');
+        checkbox.className = 'checkbox-label';
+        checkbox.innerHTML = `
+            <input type="checkbox" ${column.visible ? 'checked' : ''} 
+                   onchange="toggleColumn('${columnKey}', this.checked)">
+            ${column.label}
+        `;
+        
+        if (column.category === 'basic') {
+            basicContainer.appendChild(checkbox);
+        } else if (column.category === 'property') {
+            propertyContainer.appendChild(checkbox);
+        } else if (column.category === 'rental') {
+            rentalContainer.appendChild(checkbox);
+        }
+    });
+}
+
+function toggleColumn(columnKey, visible) {
+    tableColumns[columnKey].visible = visible;
+    // Save settings immediately when toggled
+    saveTableSettings();
+    // Re-render table to show changes immediately
+    renderPropertiesTable();
+}
+
+function applyTableSettings() {
+    // Settings are already saved and table re-rendered when toggled
+    closeTableSettings();
+    showNotification('Table settings applied successfully');
+}
+
+function resetTableColumns() {
+    // Reset to default visibility using configuration
+    Object.keys(tableColumns).forEach(key => {
+        tableColumns[key].visible = defaultVisibleColumns.includes(key);
+    });
+    populateColumnSettings();
+    saveTableSettings();
+    renderPropertiesTable();
+}
+
+function saveTableSettings() {
+    localStorage.setItem('tableColumns', JSON.stringify(tableColumns));
+}
+
+function loadTableSettings() {
+    const saved = localStorage.getItem('tableColumns');
+    if (saved) {
+        const savedColumns = JSON.parse(saved);
+        // Merge with default columns to handle new columns added later
+        Object.keys(tableColumns).forEach(key => {
+            if (savedColumns[key]) {
+                tableColumns[key].visible = savedColumns[key].visible;
+            }
+        });
+    }
 }
 
 function toggleRentalFields() {

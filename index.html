@@ -25,7 +25,7 @@
     </header>
 
     <!-- Main Dashboard -->
-    <main class="main-content" id="mainDashboard">
+    <main class="main-content main-dashboard" id="mainDashboard">
         <div class="container">
             <!-- Dashboard Summary -->
             <div class="dashboard-summary">
@@ -59,22 +59,24 @@
 
             <!-- Properties Table -->
             <div class="table-container">
-                <table class="properties-table">
+                <div class="table-header">
+                    <h3>Properties</h3>
+                    <button class="btn btn--outline" onclick="openTableSettings()">
+                        <span>⚙️</span> Table Settings
+                    </button>
+                </div>
+                <div class="table-scroll-wrapper">
+                    <table class="properties-table">
                     <thead>
-                        <tr>
-                            <th>Serial No</th>
-                            <th>Name</th>
-                            <th>Address</th>
-                            <th>Type</th>
-                            <th>Rent</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                        <tr id="propertiesTableHeader">
+                            <!-- Headers will be populated by JavaScript -->
                         </tr>
                     </thead>
                     <tbody id="propertiesTableBody">
                         <!-- Properties will be populated by JavaScript -->
                     </tbody>
-                </table>
+                    </table>
+                </div>
             </div>
         </div>
     </main>
@@ -264,11 +266,11 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">GSTIN</label>
-                                <input type="text" class="form-control" name="gstin">
+                                <input type="text" class="form-control" name="lessorGstin" placeholder="e.g., 24ABCDE1234F1Z5">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">PAN No</label>
-                                <input type="text" class="form-control" name="panNo">
+                                <input type="text" class="form-control" name="lessorPan" placeholder="e.g., ABCDE1234F">
                             </div>
                         </div>
 
@@ -290,6 +292,7 @@
                         <div class="form-group">
                             <label class="form-label">Period</label>
                             <select class="form-control" name="rentPeriod">
+                                <option value="week">Per Week</option>
                                 <option value="month">Per Month</option>
                                 <option value="year">Per Year</option>
                             </select>
@@ -343,7 +346,8 @@
                             <input type="number" class="form-control" name="securityDeposit">
                         </div>
                         <div class="form-group">
-                            <!-- Empty div for layout -->
+                            <label class="form-label">Maintenance</label>
+                            <input type="number" class="form-control" name="maintenance" placeholder="Monthly maintenance amount">
                         </div>
                     </div>
 
@@ -390,11 +394,11 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">GSTIN</label>
-                            <input type="text" class="form-control" name="lesseeGstin">
+                            <input type="text" class="form-control" name="lesseeGstin" placeholder="e.g., 24ABCDE1234F1Z5">
                         </div>
                         <div class="form-group">
                             <label class="form-label">PAN No</label>
-                            <input type="text" class="form-control" name="lesseePan">
+                            <input type="text" class="form-control" name="lesseePan" placeholder="e.g., ABCDE1234F">
                         </div>
                     </div>
 
@@ -543,6 +547,41 @@
             <div class="modal-footer">
                 <button class="btn btn--outline" id="paymentCancelBtn">Cancel</button>
                 <button class="btn btn--primary" id="submitPaymentBtn">Submit Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Settings Modal -->
+    <div class="modal hidden" id="tableSettingsModal">
+        <div class="modal-overlay" id="tableSettingsOverlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Table Column Settings</h2>
+                <button class="modal-close" onclick="closeTableSettings()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Select which columns to display in the properties table:</p>
+                
+                <div class="column-settings">
+                    <div class="column-category">
+                        <h4>Basic Information</h4>
+                        <div id="basicColumns" class="column-checkboxes"></div>
+                    </div>
+                    
+                    <div class="column-category">
+                        <h4>Property Information</h4>
+                        <div id="propertyColumns" class="column-checkboxes"></div>
+                    </div>
+                    
+                    <div class="column-category">
+                        <h4>Rental Information</h4>
+                        <div id="rentalColumns" class="column-checkboxes"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--outline" onclick="resetTableColumns()">Reset to Default</button>
+                <button class="btn btn--primary" onclick="applyTableSettings()">Apply Changes</button>
             </div>
         </div>
     </div>
