@@ -686,6 +686,29 @@ function showPaymentDashboard(propertyId) {
     });
 }
 
+function refreshPaymentDashboardIfOpen(propertyId) {
+    // Check if payment dashboard is currently open and showing this property
+    const isPaymentDashboardOpen = !paymentDashboard.classList.contains('hidden');
+    const isCurrentProperty = currentPropertyId === propertyId;
+    
+    if (isPaymentDashboardOpen && isCurrentProperty) {
+        // Refresh the payment dashboard data
+        const property = properties.find(p => p.id === propertyId);
+        if (property) {
+            // Update property info in case name or address changed
+            document.getElementById('paymentPropertyName').textContent = property.name || 'Unnamed Property';
+            document.getElementById('paymentPropertyAddress').textContent = property.address || 'No address';
+            
+            // Re-render all payment data with updated rent amount
+            renderPaymentTable();
+            renderBillButtons();
+            updatePaymentSummary();
+            
+            showNotification('Payment schedule updated with new rent amount', 'success');
+        }
+    }
+}
+
 function renderBillButtons() {
     const property = properties.find(p => p.id === currentPropertyId);
     if (!property || !property.bills || !billButtons) return;
@@ -1451,6 +1474,20 @@ function saveProperty() {
             if (oldProperty.gstPercentage !== propertyData.gstPercentage && 
                 propertyData.gstPercentage && propertyData.paymentHistory) {
                 recalculatePaymentHistory(properties[index]);
+            }
+            
+            // Check if rent-related fields changed and refresh payment dashboard if it's currently open
+            const rentFieldsChanged = (
+                oldProperty.rentAmount !== propertyData.rentAmount ||
+                oldProperty.rentPeriod !== propertyData.rentPeriod ||
+                oldProperty.gstIncludedInRent !== propertyData.gstIncludedInRent ||
+                oldProperty.gstPercentage !== propertyData.gstPercentage ||
+                oldProperty.agreementStartDate !== propertyData.agreementStartDate ||
+                oldProperty.rentPayableDate !== propertyData.rentPayableDate
+            );
+            
+            if (rentFieldsChanged) {
+                refreshPaymentDashboardIfOpen(currentPropertyId);
             }
         }
         showNotification('Property updated successfully');
