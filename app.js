@@ -1531,13 +1531,38 @@ function saveProperty() {
         if (index !== -1) {
             const oldProperty = properties[index];
             
+            // Store old rent amount for smart update
+            const oldRentAmount = oldProperty.rentAmount;
+            const newRentAmount = propertyData.rentAmount;
             
             properties[index] = { ...properties[index], ...propertyData };
             
-            // Recalculate existing payment history if GST percentage changed
+            // Smart payment history update - only affects future payments
+            if (oldRentAmount && newRentAmount && oldRentAmount !== newRentAmount) {
+                // Additional protection: backup paid payments before update
+                const paidPaymentsBackup = backupPaidPayments(properties[index]);
+                smartUpdatePaymentHistory(properties[index], oldRentAmount, newRentAmount);
+                // Restore paid payments if they were accidentally changed
+                restorePaidPayments(properties[index], paidPaymentsBackup);
+            }
+            
+            // Recalculate existing payment history if GST percentage changed (but preserve paid amounts)
             if (oldProperty.gstPercentage !== propertyData.gstPercentage && 
                 propertyData.gstPercentage && propertyData.paymentHistory) {
                 recalculatePaymentHistory(properties[index]);
+            }
+            
+            // Handle GST enablement for future payments while preserving past payments
+            if ((oldProperty.gstIncludedInRent !== propertyData.gstIncludedInRent || 
+                 oldProperty.gstPercentage !== propertyData.gstPercentage) && 
+                propertyData.paymentHistory) {
+                enableGSTForFuturePayments(
+                    properties[index], 
+                    oldProperty.gstIncludedInRent, 
+                    propertyData.gstIncludedInRent,
+                    oldProperty.gstPercentage, 
+                    propertyData.gstPercentage
+                );
             }
             
             // Check if rent-related fields changed and refresh payment dashboard if it's currently open
@@ -1589,7 +1614,18 @@ function generateInitialPaymentHistory(baseAmount) {
             status: i < 2 ? 'Paid' : 'Pending',
             paymentDate: i < 2 ? new Date(2025, i, 3 + i * 2).toISOString().split('T')[0] : null,
             paymentMode: i < 2 ? (i === 0 ? 'Online' : 'UPI') : null,
-            receiptNo: i < 2 ? `RCP${String(nextReceiptId++).padStart(3, '0')}` : null
+            receiptNo: i < 2 ? `RCP${String(nextReceiptId++).padStart(3, '0')}` : null,
+            // Enhanced partial payment structure
+            totalAmount: total,
+            paidAmount: i < 2 ? total : 0,
+            remainingAmount: i < 2 ? 0 : total,
+            partialPayments: i < 2 ? [{
+                amount: total,
+                date: new Date(2025, i, 3 + i * 2).toISOString().split('T')[0],
+                mode: i === 0 ? 'Online' : 'UPI',
+                receiptNo: `RCP${String(nextReceiptId - 1).padStart(3, '0')}`,
+                notes: 'Full payment'
+            }] : []
         });
     }
     
@@ -2197,6 +2233,7 @@ function generatePaymentSchedule(property) {
         }
         
         schedule.push({
+            id: `schedule-${i}`,
             dueDate: dueDate.toISOString().split('T')[0],
             amount: escalatedRent,
             period: periodDescription,
@@ -2219,9 +2256,13 @@ function generatePaymentSchedule(property) {
     return schedule;
 }
 
-function getPaymentStatusClass(dueDate, isPaid) {
+function getPaymentStatusClass(dueDate, isPaid, isPartiallyPaid) {
     if (isPaid) {
         return 'payment-status--paid';
+    }
+    
+    if (isPartiallyPaid) {
+        return 'payment-status--partially-paid';
     }
     
     const due = new Date(dueDate);
@@ -2287,17 +2328,73 @@ function renderPaymentTable() {
         paymentTableBody.innerHTML = '<tr><td colspan="8" class="empty-state"><h3>No payment schedule available</h3></td></tr>';
         return;
     }
+    
 
     schedule.forEach((payment, index) => {
         const row = document.createElement('tr');
         
-        const statusClass = getPaymentStatusClass(payment.dueDate, payment.paid);
-        const statusText = payment.paid ? 'Paid' : getPaymentStatusText(payment.dueDate);
+        // Find corresponding payment history record for actions
+        const paymentHistory = property.paymentHistory?.find(p => {
+            const historyDate = new Date(p.dueDate);
+            const scheduleDate = new Date(payment.dueDate);
+            return historyDate.getTime() === scheduleDate.getTime();
+        });
+        
+        // Get payment status considering partial payments
+        const paymentStatus = paymentHistory ? getPartialPaymentStatus(paymentHistory) : (payment.paid ? 'Paid' : 'Pending');
+        const statusClass = getPaymentStatusClass(payment.dueDate, paymentStatus === 'Paid', paymentStatus === 'Partially Paid');
+        const statusText = paymentStatus;
         
         // Calculate GST and total based on whether GST is included in rent
         const rentAmount = payment.amount;
         let baseAmount, gstAmount, totalAmount;
         
+        // Handle partial payments and regular payments
+        if (paymentHistory && (paymentStatus === 'Paid' || paymentStatus === 'Partially Paid')) {
+            // For paid payments, always use original stored amounts (never recalculate)
+            if (paymentStatus === 'Paid') {
+                baseAmount = paymentHistory.base || 0;
+                gstAmount = paymentHistory.gst || 0;
+                totalAmount = paymentHistory.total || 0;
+            } else {
+                // For partial payments, use partial payment amounts
+                const partialSummary = getPartialPaymentSummary(paymentHistory);
+                if (partialSummary.paymentCount > 0) {
+                    if (paymentStatus === 'Partially Paid') {
+                        // For partial payments, show remaining amount
+                        const remainingAmount = partialSummary.remainingAmount;
+                        
+                        // Check if this payment was created before GST was enabled
+                        // If the original payment has GST = 0, it was created before GST enablement
+                        const wasCreatedBeforeGst = (paymentHistory.gst || 0) === 0 && 
+                                                   (paymentHistory.base || 0) === (paymentHistory.total || 0);
+                        
+                        if (wasCreatedBeforeGst) {
+                            // Use original payment amounts (no GST calculation)
+                            baseAmount = remainingAmount;
+                            gstAmount = 0;
+                        } else {
+                            // Calculate GST based on current property settings
+                            if (property.gstIncludedInRent && property.gstPercentage) {
+                                const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
+                                baseAmount = Math.round(remainingAmount / (1 + gstPercentage));
+                                gstAmount = remainingAmount - baseAmount;
+                            } else {
+                                baseAmount = remainingAmount;
+                                gstAmount = 0;
+                            }
+                        }
+                        totalAmount = remainingAmount;
+                    }
+                } else {
+                    // Use original payment history amounts
+                    baseAmount = paymentHistory.base || 0;
+                    gstAmount = paymentHistory.gst || 0;
+                    totalAmount = paymentHistory.total || 0;
+                }
+            }
+        } else {
+            // For unpaid payments, calculate based on current rent amount
         if (property.gstIncludedInRent) {
             // GST is included in rent amount, so calculate base amount
             const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
@@ -2309,16 +2406,24 @@ function renderPaymentTable() {
             baseAmount = rentAmount;
             gstAmount = 0;
             totalAmount = rentAmount;
+            }
         }
         
-        // Find corresponding payment history record for actions
-        const paymentHistory = property.paymentHistory?.find(p => {
-            const historyDate = new Date(p.dueDate);
-            const scheduleDate = new Date(payment.dueDate);
-            return historyDate.getTime() === scheduleDate.getTime();
-        });
+        // Fallback: If amounts are 0 or invalid, use calculated amounts
+        if (baseAmount === 0 || totalAmount === 0) {
+            if (property.gstIncludedInRent) {
+                const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
+                baseAmount = Math.round(rentAmount / (1 + gstPercentage));
+                gstAmount = rentAmount - baseAmount;
+                totalAmount = rentAmount;
+            } else {
+                baseAmount = rentAmount;
+                gstAmount = 0;
+                totalAmount = rentAmount;
+            }
+        }
         
-        const paymentId = paymentHistory?.id || `schedule-${index}`;
+        const paymentId = paymentHistory?.id || payment.id || `schedule-${index}`;
         
         row.innerHTML = `
             <td>${index + 1}</td>
@@ -2326,7 +2431,7 @@ function renderPaymentTable() {
             <td>${formatDate(payment.dueDate)}</td>
             <td class="payment-amount">₹${baseAmount.toLocaleString()}</td>
             <td class="payment-amount">₹${gstAmount.toLocaleString()}</td>
-            <td class="payment-amount">₹${totalAmount.toLocaleString()}</td>
+                <td class="payment-amount">₹${totalAmount.toLocaleString()}${paymentStatus === 'Partially Paid' ? ' <small>(Remaining)</small>' : ''}</td>
             <td><span class="payment-status ${statusClass}">${statusText}</span></td>
             <td>
                 <div class="payment-actions">
@@ -2334,9 +2439,19 @@ function renderPaymentTable() {
                         ⋯
                     </button>
                     <div class="payment-dropdown hidden" id="dropdown-${paymentId}">
-                        ${!payment.paid ? 
+                        ${paymentStatus === 'Pending' ? 
                             `<button class="dropdown-item" onclick="openPaymentModal('${paymentId}'); hidePaymentDropdown('${paymentId}')">
-                                📝 Receive Payment
+                                📝 Receive Full Payment
+                            </button>
+                            <button class="dropdown-item" onclick="openPartialPaymentModal('${paymentId}'); hidePaymentDropdown('${paymentId}')">
+                                💰 Add Partial Payment
+                            </button>` : 
+                            paymentStatus === 'Partially Paid' ?
+                            `<button class="dropdown-item" onclick="openPartialPaymentModal('${paymentId}'); hidePaymentDropdown('${paymentId}')">
+                                💰 Add Partial Payment
+                            </button>
+                            <button class="dropdown-item" onclick="viewPaymentReceipt('${paymentId}'); hidePaymentDropdown('${paymentId}')">
+                                📋 View Receipt
                             </button>` : 
                             `<button class="dropdown-item" onclick="viewPaymentReceipt('${paymentId}'); hidePaymentDropdown('${paymentId}')">
                                 📋 View Receipt
@@ -2345,11 +2460,6 @@ function renderPaymentTable() {
                         <button class="dropdown-item" onclick="generatePaymentInvoice('${paymentId}'); hidePaymentDropdown('${paymentId}')">
                             📄 Generate Invoice
                         </button>
-                        ${payment.paid ? 
-                            `<button class="dropdown-item" onclick="showPaymentDetails('${paymentId}'); hidePaymentDropdown('${paymentId}')">
-                                ℹ️ Payment Details
-                            </button>` : ''
-                        }
                     </div>
                 </div>
             </td>
@@ -2397,20 +2507,24 @@ function updatePaymentSummary() {
             // Check if this payment has been paid in payment history
             let paymentStatus = 'Pending';
             if (property.paymentHistory && property.paymentHistory.length > 0) {
-                const paidPayment = property.paymentHistory.find(ph => {
+                const paymentHistory = property.paymentHistory.find(ph => {
                     const phDueDate = new Date(ph.dueDate);
                     const scheduleDueDate = new Date(p.dueDate);
                     const phDateStr = phDueDate.toISOString().split('T')[0];
                     const scheduleDateStr = scheduleDueDate.toISOString().split('T')[0];
-                    return phDateStr === scheduleDateStr && ph.status === 'Paid';
+                    return phDateStr === scheduleDateStr;
                 });
                 
-                if (paidPayment) {
-                    paymentStatus = 'Paid';
+                if (paymentHistory) {
+                    // Use the payment status from payment history (including partial payments)
+                    paymentStatus = getPartialPaymentStatus(paymentHistory);
+                    
+                    if (paymentStatus === 'Paid') {
                     // Use actual payment amounts from payment history
-                    baseAmount = paidPayment.base || baseAmount;
-                    gstAmount = paidPayment.gst || gstAmount;
-                    totalAmount = paidPayment.total || totalAmount;
+                        baseAmount = paymentHistory.base || baseAmount;
+                        gstAmount = paymentHistory.gst || gstAmount;
+                        totalAmount = paymentHistory.total || totalAmount;
+                    }
                 }
             }
             
@@ -2427,10 +2541,57 @@ function updatePaymentSummary() {
         payments = [];
     }
 
-    const totalCollected = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + p.total, 0);
+    // Calculate total collected including partial payments
+    const totalCollected = payments.reduce((sum, p) => {
+        if (p.status === 'Paid') {
+            return sum + p.total;
+        } else if (p.status === 'Partially Paid') {
+            // For partial payments, add the paid amount
+            const property = properties.find(prop => prop.id === currentPropertyId);
+            if (property && property.paymentHistory) {
+                const paymentHistory = property.paymentHistory.find(ph => {
+                    const phDueDate = new Date(ph.dueDate);
+                    const pDueDate = new Date(p.dueDate);
+                    return phDueDate.toISOString().split('T')[0] === pDueDate.toISOString().split('T')[0];
+                });
+                if (paymentHistory) {
+                    const partialSummary = getPartialPaymentSummary(paymentHistory);
+                    return sum + partialSummary.paidAmount;
+                }
+            }
+        }
+        return sum;
+    }, 0);
     const pendingAmount = payments.filter(p => p.status === 'Pending').reduce((sum, p) => sum + p.total, 0);
     const overdueAmount = payments.filter(p => p.status === 'Pending' && new Date(p.dueDate) < new Date()).reduce((sum, p) => sum + p.total, 0);
-    const gstCollected = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + (p.gst || 0), 0);
+    // Calculate GST collected including partial payments
+    const gstCollected = payments.reduce((sum, p) => {
+        if (p.status === 'Paid') {
+            return sum + (p.gst || 0);
+        } else if (p.status === 'Partially Paid') {
+            // For partial payments, calculate GST for paid amount
+            const property = properties.find(prop => prop.id === currentPropertyId);
+            if (property && property.paymentHistory) {
+                const paymentHistory = property.paymentHistory.find(ph => {
+                    const phDueDate = new Date(ph.dueDate);
+                    const pDueDate = new Date(p.dueDate);
+                    return phDueDate.toISOString().split('T')[0] === pDueDate.toISOString().split('T')[0];
+                });
+                if (paymentHistory) {
+                    const partialSummary = getPartialPaymentSummary(paymentHistory);
+                    // Only calculate GST if GST is enabled for the property
+                    if (property.gstIncludedInRent && property.gstPercentage) {
+                        const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                        const baseAmount = Math.round(partialSummary.paidAmount / (1 + gstPercentage));
+                        const gstAmount = partialSummary.paidAmount - baseAmount;
+                        return sum + gstAmount;
+                    }
+                    // If GST is disabled, no GST amount to add
+                }
+            }
+        }
+        return sum;
+    }, 0);
 
     document.getElementById('totalCollected').textContent = `₹${totalCollected.toLocaleString()}`;
     document.getElementById('pendingAmount').textContent = `₹${pendingAmount.toLocaleString()}`;
@@ -2683,6 +2844,12 @@ function recalculatePaymentHistory(property) {
     if (!property.paymentHistory) return;
     
     property.paymentHistory.forEach(payment => {
+        // Only recalculate GST for unpaid payments to preserve paid amounts
+        if (payment.status !== 'Paid') {
+            // PROTECTION: Never update payments that have partial payments
+            if (payment.partialPayments && payment.partialPayments.length > 0) {
+                return; // Skip payments with partial payments
+            }
         if (property.gstIncludedInRent && property.gstPercentage) {
             // GST is included in total, calculate base amount
             const gstPercentage = parseFloat(property.gstPercentage) / 100;
@@ -2693,7 +2860,519 @@ function recalculatePaymentHistory(property) {
             payment.gst = 0;
             payment.total = payment.base;
         }
+        }
+        // For paid payments, preserve the original amounts
     });
+}
+
+/**
+ * Enable GST for future payments while preserving past payment amounts
+ * This function ensures that past payments (made without GST) remain unchanged
+ * and only future payments will have GST applied
+ */
+function enableGSTForFuturePayments(property, oldGstIncluded, newGstIncluded, oldGstPercentage, newGstPercentage) {
+    if (!property.paymentHistory) return;
+    
+    // Don't update if GST settings haven't changed
+    if (oldGstIncluded === newGstIncluded && oldGstPercentage === newGstPercentage) return;
+    
+    const today = new Date();
+    
+    property.paymentHistory.forEach(payment => {
+        // STRICT PROTECTION: Never update paid payments
+        if (payment.status === 'Paid') {
+            return; // Skip all paid payments completely
+        }
+        
+        // PROTECTION: Never update payments that have partial payments
+        if (payment.partialPayments && payment.partialPayments.length > 0) {
+            return; // Skip payments with partial payments
+        }
+        
+        // Only update payments that are due today or in the future
+        const paymentDueDate = new Date(payment.dueDate);
+        const isFuturePayment = paymentDueDate >= today;
+        
+        if (isFuturePayment) {
+            // Recalculate GST based on new GST settings
+            if (newGstIncluded && newGstPercentage) {
+                // GST is now included - recalculate base amount
+                const gstPercentage = parseFloat(newGstPercentage) / 100;
+                payment.base = Math.round(payment.total / (1 + gstPercentage));
+                payment.gst = payment.total - payment.base;
+            } else {
+                // GST is now disabled - no GST
+                payment.gst = 0;
+                payment.total = payment.base;
+            }
+            
+            // Add a note about the GST change
+            if (!payment.notes) {
+                payment.notes = `GST ${newGstIncluded ? 'enabled' : 'disabled'} on ${today.toISOString().split('T')[0]}`;
+            }
+        }
+    });
+}
+
+/**
+ * Smart payment update function that preserves past payment amounts
+ * and only updates future payments when rent amount changes
+ * STRICT PROTECTION: Never changes paid payments
+ */
+function smartUpdatePaymentHistory(property, oldRentAmount, newRentAmount) {
+    if (!property.paymentHistory || !oldRentAmount || !newRentAmount) return;
+    
+    // Don't update if rent amount hasn't changed
+    if (oldRentAmount === newRentAmount) return;
+    
+    const today = new Date();
+    const rentChangeDate = today.toISOString().split('T')[0];
+    
+    property.paymentHistory.forEach(payment => {
+        // STRICT PROTECTION: Never update paid payments
+        if (payment.status === 'Paid') {
+            return; // Skip all paid payments completely
+        }
+        
+        // Only update payments that are:
+        // 1. Not yet paid (status !== 'Paid') - already checked above
+        // 2. Due date is today or in the future
+        const paymentDueDate = new Date(payment.dueDate);
+        const isFuturePayment = paymentDueDate >= today;
+        
+        if (isFuturePayment) {
+            // Calculate the ratio of rent change
+            const rentRatio = newRentAmount / oldRentAmount;
+            
+            // Update base amount proportionally
+            const newBaseAmount = Math.round(payment.base * rentRatio);
+            
+            // Recalculate GST and total based on current GST settings
+            if (property.gstIncludedInRent && property.gstPercentage) {
+                // GST is included in total
+                const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                payment.total = Math.round(newBaseAmount * (1 + gstPercentage));
+                payment.gst = payment.total - newBaseAmount;
+            } else {
+                // GST is not included
+                payment.total = newBaseAmount;
+                payment.gst = 0;
+            }
+            
+            payment.base = newBaseAmount;
+            
+            // Add a note about the rent change
+            if (!payment.notes) {
+                payment.notes = `Rent updated from ₹${oldRentAmount.toLocaleString()} to ₹${newRentAmount.toLocaleString()} on ${rentChangeDate}`;
+            }
+        }
+    });
+}
+
+/**
+ * Update future payment schedule when rent amount changes
+ * This function generates new payment schedule for future payments only
+ */
+function updateFuturePaymentSchedule(property, oldRentAmount, newRentAmount) {
+    if (!property.paymentHistory || !oldRentAmount || !newRentAmount) return;
+    
+    // Don't update if rent amount hasn't changed
+    if (oldRentAmount === newRentAmount) return;
+    
+    // Find the last paid payment to determine where to start updating
+    const lastPaidPayment = property.paymentHistory
+        .filter(p => p.status === 'Paid')
+        .sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate))[0];
+    
+    if (!lastPaidPayment) return;
+    
+    const lastPaidDate = new Date(lastPaidPayment.dueDate);
+    const today = new Date();
+    
+    // Update only future payments (due date after last paid date)
+    property.paymentHistory.forEach(payment => {
+        const paymentDueDate = new Date(payment.dueDate);
+        
+        // Only update payments that are due after the last paid payment
+        if (paymentDueDate > lastPaidDate && payment.status !== 'Paid') {
+            // Calculate the ratio of rent change
+            const rentRatio = newRentAmount / oldRentAmount;
+            
+            // Update base amount proportionally
+            const newBaseAmount = Math.round(payment.base * rentRatio);
+            
+            // Recalculate GST and total based on current GST settings
+            if (property.gstIncludedInRent && property.gstPercentage) {
+                // GST is included in total
+                const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                payment.total = Math.round(newBaseAmount * (1 + gstPercentage));
+                payment.gst = payment.total - newBaseAmount;
+            } else {
+                // GST is not included
+                payment.total = newBaseAmount;
+                payment.gst = 0;
+            }
+            
+            payment.base = newBaseAmount;
+        }
+    });
+}
+
+/**
+ * Backup paid payments to protect them from changes
+ */
+function backupPaidPayments(property) {
+    if (!property.paymentHistory) return {};
+    
+    const backup = {};
+    property.paymentHistory.forEach(payment => {
+        if (payment.status === 'Paid') {
+            backup[payment.id] = {
+                base: payment.base,
+                gst: payment.gst,
+                total: payment.total,
+                amount: payment.amount,
+                status: payment.status,
+                paymentDate: payment.paymentDate,
+                paymentMode: payment.paymentMode,
+                receiptNo: payment.receiptNo,
+                notes: payment.notes
+            };
+        }
+    });
+    return backup;
+}
+
+/**
+ * Restore paid payments from backup if they were accidentally changed
+ */
+function restorePaidPayments(property, backup) {
+    if (!property.paymentHistory || !backup) return;
+    
+    property.paymentHistory.forEach(payment => {
+        if (payment.status === 'Paid' && backup[payment.id]) {
+            const originalPayment = backup[payment.id];
+            // Restore original values
+            payment.base = originalPayment.base;
+            payment.gst = originalPayment.gst;
+            payment.total = originalPayment.total;
+            payment.amount = originalPayment.amount;
+            payment.status = originalPayment.status;
+            payment.paymentDate = originalPayment.paymentDate;
+            payment.paymentMode = originalPayment.paymentMode;
+            payment.receiptNo = originalPayment.receiptNo;
+            payment.notes = originalPayment.notes;
+        }
+    });
+}
+
+/**
+ * Add partial payment to a payment record
+ */
+function addPartialPayment(paymentId, amount, paymentDate, paymentMode, receiptNo, notes) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.paymentHistory) return;
+    
+    const payment = property.paymentHistory.find(p => p.id == paymentId);
+    if (!payment) return;
+    
+    // Initialize partial payment structure if not exists
+    if (!payment.partialPayments) {
+        payment.partialPayments = [];
+        payment.totalAmount = payment.total || payment.base + (payment.gst || 0);
+        payment.paidAmount = 0;
+        payment.remainingAmount = payment.totalAmount;
+    }
+    
+    // Add partial payment
+    const partialPayment = {
+        amount: parseFloat(amount),
+        date: paymentDate,
+        mode: paymentMode,
+        receiptNo: receiptNo || `RCP-${Date.now()}`,
+        notes: notes || 'Partial payment'
+    };
+    
+    payment.partialPayments.push(partialPayment);
+    
+    // Update payment amounts
+    payment.paidAmount = payment.partialPayments.reduce((sum, p) => sum + p.amount, 0);
+    payment.remainingAmount = payment.totalAmount - payment.paidAmount;
+    
+    // Update status
+    if (payment.remainingAmount <= 0) {
+        payment.status = 'Paid';
+        payment.paymentDate = paymentDate;
+        payment.paymentMode = paymentMode;
+        payment.receiptNo = receiptNo;
+    } else {
+        payment.status = 'Partially Paid';
+    }
+    
+    // Update legacy fields for compatibility
+    payment.total = payment.paidAmount;
+    
+    // Calculate base and GST for paid amount based on property GST settings
+    if (property.gstIncludedInRent && property.gstPercentage) {
+        // GST is included in rent - calculate base amount
+        const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
+        payment.base = Math.round(payment.paidAmount / (1 + gstPercentage));
+        payment.gst = payment.paidAmount - payment.base;
+    } else {
+        // GST is not included - no GST calculation
+        payment.base = payment.paidAmount;
+        payment.gst = 0;
+    }
+    
+    saveData();
+    renderPaymentTable();
+    updatePaymentSummary();
+    
+    showNotification(`Partial payment of ₹${amount.toLocaleString()} recorded successfully`);
+}
+
+/**
+ * Get payment status for partial payments
+ */
+function getPartialPaymentStatus(payment) {
+    if (!payment.partialPayments || payment.partialPayments.length === 0) {
+        return payment.status || 'Pending';
+    }
+    
+    if (payment.remainingAmount <= 0) {
+        return 'Paid';
+    } else if (payment.paidAmount > 0) {
+        return 'Partially Paid';
+    } else {
+        return 'Pending';
+    }
+}
+
+/**
+ * Calculate partial payment summary
+ */
+function getPartialPaymentSummary(payment) {
+    if (!payment.partialPayments || payment.partialPayments.length === 0) {
+        return {
+            totalAmount: payment.totalAmount || payment.total || 0,
+            paidAmount: payment.paidAmount || 0,
+            remainingAmount: payment.remainingAmount || (payment.totalAmount || payment.total || 0),
+            paymentCount: 0
+        };
+    }
+    
+    return {
+        totalAmount: payment.totalAmount || 0,
+        paidAmount: payment.paidAmount || 0,
+        remainingAmount: payment.remainingAmount || 0,
+        paymentCount: payment.partialPayments.length
+    };
+}
+
+/**
+ * Open partial payment modal
+ */
+function openPartialPaymentModal(paymentId) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property) {
+        showNotification('Property not found', 'error');
+        return;
+    }
+    
+    let payment = null;
+    
+    // First try to find in payment history
+    if (property.paymentHistory) {
+        payment = property.paymentHistory.find(p => p.id == paymentId);
+    }
+    
+    // If not found in payment history, create a new payment record
+    if (!payment) {
+        // Generate payment schedule to get the payment details
+        const schedule = generatePaymentSchedule(property);
+        const schedulePayment = schedule.find(p => p.id === paymentId);
+        
+        if (!schedulePayment) {
+            showNotification('Payment not found for ID: ' + paymentId, 'error');
+            return;
+        }
+        
+        // Calculate GST and total based on current property settings
+        let baseAmount, gstAmount, totalAmount;
+        
+        if (property.gstIncludedInRent && property.gstPercentage) {
+            // GST is included in rent amount, so calculate base amount
+            const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
+            baseAmount = Math.round(schedulePayment.amount / (1 + gstPercentage));
+            gstAmount = schedulePayment.amount - baseAmount;
+            totalAmount = schedulePayment.amount;
+        } else {
+            // GST is not included - no GST at all
+            baseAmount = schedulePayment.amount;
+            gstAmount = 0;
+            totalAmount = schedulePayment.amount;
+        }
+        
+        // Create a new payment record
+        payment = {
+            id: paymentId,
+            date: schedulePayment.dueDate,
+            dueDate: schedulePayment.dueDate,
+            base: baseAmount,
+            gst: gstAmount,
+            total: totalAmount,
+            status: 'Pending',
+            totalAmount: totalAmount,
+            paidAmount: 0,
+            remainingAmount: totalAmount,
+            partialPayments: []
+        };
+        
+        // Add to payment history if it doesn't exist
+        if (!property.paymentHistory) {
+            property.paymentHistory = [];
+        }
+        property.paymentHistory.push(payment);
+        saveData();
+    }
+    
+    const partialSummary = getPartialPaymentSummary(payment);
+    
+    // Remove any existing modal first
+    const existingModal = document.getElementById('partialPaymentModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'partialPaymentModal';
+    modal.innerHTML = `
+        <div class="modal-overlay" onclick="closePartialPaymentModal()"></div>
+        <div class="modal-content payment-modal-content">
+            <div class="modal-header">
+                <h2>Add Partial Payment</h2>
+                <button class="modal-close" onclick="closePartialPaymentModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="payment-summary-info">
+                    <h4>Payment Summary</h4>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <label>Total Amount:</label>
+                            <span>₹${partialSummary.totalAmount.toLocaleString()}</span>
+                        </div>
+                        <div class="summary-item">
+                            <label>Paid Amount:</label>
+                            <span>₹${partialSummary.paidAmount.toLocaleString()}</span>
+                        </div>
+                        <div class="summary-item">
+                            <label>Remaining:</label>
+                            <span>₹${partialSummary.remainingAmount.toLocaleString()}</span>
+                        </div>
+                        <div class="summary-item">
+                            <label>Payments Made:</label>
+                            <span>${partialSummary.paymentCount}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <form id="partialPaymentForm">
+                    <div class="form-group">
+                        <label class="form-label">Payment Amount *</label>
+                        <input type="number" class="form-control" id="partialAmount" 
+                               placeholder="Enter amount" min="1" max="${partialSummary.remainingAmount}" 
+                               step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Date *</label>
+                        <input type="date" class="form-control" id="partialPaymentDate" 
+                               value="${new Date().toISOString().split('T')[0]}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Mode *</label>
+                        <select class="form-control" id="partialPaymentMode" required>
+                            <option value="">Select Mode</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Cheque">Cheque</option>
+                            <option value="Online">Online</option>
+                            <option value="UPI">UPI</option>
+                            <option value="NEFT">NEFT</option>
+                            <option value="RTGS">RTGS</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Receipt Number</label>
+                        <input type="text" class="form-control" id="partialReceiptNo" 
+                               placeholder="Enter receipt number">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" id="partialNotes" rows="3" 
+                                  placeholder="Enter notes (optional)"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--outline" onclick="closePartialPaymentModal()">Cancel</button>
+                <button class="btn btn--primary" onclick="submitPartialPayment('${paymentId}')">Add Payment</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Show the modal
+    modal.style.display = 'flex';
+    modal.classList.remove('hidden');
+}
+
+/**
+ * Close partial payment modal
+ */
+function closePartialPaymentModal() {
+    const modal = document.getElementById('partialPaymentModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+/**
+ * Submit partial payment
+ */
+function submitPartialPayment(paymentId) {
+    const amount = document.getElementById('partialAmount').value;
+    const paymentDate = document.getElementById('partialPaymentDate').value;
+    const paymentMode = document.getElementById('partialPaymentMode').value;
+    const receiptNo = document.getElementById('partialReceiptNo').value;
+    const notes = document.getElementById('partialNotes').value;
+    
+    // Validate required fields
+    if (!amount || !paymentDate || !paymentMode) {
+        showNotification('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    if (parseFloat(amount) <= 0) {
+        showNotification('Please enter a valid amount', 'error');
+        return;
+    }
+    
+    // Add partial payment
+    addPartialPayment(paymentId, amount, paymentDate, paymentMode, receiptNo, notes);
+    
+    // Close modal
+    closePartialPaymentModal();
+}
+
+/**
+ * Test function to open partial payment modal
+ */
+function testPartialPaymentModal() {
+    console.log('Testing partial payment modal...');
+    openPartialPaymentModal('1');
 }
 
 function calculateEscalatedRent(baseRent, paymentDate, property) {
@@ -4356,28 +5035,6 @@ document.addEventListener('click', function(event) {
     }
 });
 
-function showPaymentDetails(paymentId) {
-    const property = properties.find(p => p.id === currentPropertyId);
-    if (!property || !property.paymentHistory) return;
-    
-    const payment = property.paymentHistory.find(p => p.id === paymentId);
-    if (!payment) return;
-    
-    // Create a simple alert with payment details (could be enhanced to show in a modal)
-    const details = `
-Payment Details:
-• Amount: ₹${payment.total.toLocaleString()}
-• Base Rent: ₹${payment.base.toLocaleString()}
-• GST (18%): ₹${payment.gst.toLocaleString()}
-• Payment Date: ${formatDate(payment.paymentDate || payment.date)}
-• Payment Mode: ${payment.paymentMode || 'N/A'}
-• Receipt No: ${payment.receiptNo || 'N/A'}
-• Status: ${payment.status}
-${payment.notes ? `• Notes: ${payment.notes}` : ''}
-    `;
-    
-    alert(details);
-}
 
 function formatDate(dateString) {
     const date = new Date(dateString);
