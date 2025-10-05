@@ -686,6 +686,12 @@ function setupEventListeners() {
         });
     }
 
+    // Different contact person checkbox
+    const differentContactPersonCheckbox = document.getElementById('differentContactPersonCheckbox');
+    if (differentContactPersonCheckbox) {
+        differentContactPersonCheckbox.addEventListener('change', toggleContactPersonField);
+    }
+
     // Legal charges percentage auto-calculation
     const legalChargesLessorPercentage = document.querySelector('[name="legalChargesLessorPercentage"]');
     const legalChargesLesseePercentage = document.querySelector('[name="legalChargesLesseePercentage"]');
@@ -3110,6 +3116,24 @@ function toggleGstFields() {
             }
         } else if (!gstCheckbox.checked && !gstDetails.classList.contains('hidden')) {
             gstDetails.classList.add('hidden');
+        }
+    }
+}
+
+function toggleContactPersonField() {
+    const checkbox = document.getElementById('differentContactPersonCheckbox');
+    const contactPersonNameField = document.getElementById('contactPersonNameField');
+    
+    if (checkbox && contactPersonNameField) {
+        if (checkbox.checked) {
+            contactPersonNameField.classList.remove('hidden');
+        } else {
+            contactPersonNameField.classList.add('hidden');
+            // Clear the field when hiding
+            const input = contactPersonNameField.querySelector('input[name="lesseeContact"]');
+            if (input) {
+                input.value = '';
+            }
         }
     }
 }

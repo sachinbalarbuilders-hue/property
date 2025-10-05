@@ -333,6 +333,61 @@ h6 {
   letter-spacing: var(--letter-spacing-tight);
 }
 
+/* Banking-style dark mode heading improvements */
+@media (prefers-color-scheme: dark) {
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--color-gray-200) !important;
+    font-weight: 600 !important;
+  }
+  
+  /* Specific overrides for form content headings */
+  .modal-body h1,
+  .modal-body h2,
+  .modal-body h3,
+  .modal-body h4,
+  .modal-body h5,
+  .modal-body h6 {
+    color: var(--color-gray-200) !important;
+  }
+  
+  .tab-content h1,
+  .tab-content h2,
+  .tab-content h3,
+  .tab-content h4,
+  .tab-content h5,
+  .tab-content h6 {
+    color: var(--color-gray-200) !important;
+  }
+}
+
+[data-color-scheme="dark"] h1, 
+[data-color-scheme="dark"] h2, 
+[data-color-scheme="dark"] h3, 
+[data-color-scheme="dark"] h4, 
+[data-color-scheme="dark"] h5, 
+[data-color-scheme="dark"] h6 {
+  color: var(--color-gray-200) !important;
+  font-weight: 600 !important;
+}
+
+[data-color-scheme="dark"] .modal-body h1,
+[data-color-scheme="dark"] .modal-body h2,
+[data-color-scheme="dark"] .modal-body h3,
+[data-color-scheme="dark"] .modal-body h4,
+[data-color-scheme="dark"] .modal-body h5,
+[data-color-scheme="dark"] .modal-body h6 {
+  color: var(--color-gray-200) !important;
+}
+
+[data-color-scheme="dark"] .tab-content h1,
+[data-color-scheme="dark"] .tab-content h2,
+[data-color-scheme="dark"] .tab-content h3,
+[data-color-scheme="dark"] .tab-content h4,
+[data-color-scheme="dark"] .tab-content h5,
+[data-color-scheme="dark"] .tab-content h6 {
+  color: var(--color-gray-200) !important;
+}
+
 h1 {
   font-size: var(--font-size-4xl);
 }
@@ -484,6 +539,99 @@ pre code {
     box-shadow var(--duration-fast) var(--ease-standard);
 }
 
+/* Modern Dark Input Styling - Enhanced Design */
+@media (prefers-color-scheme: dark) {
+  .form-control::placeholder {
+    color: #999999 !important;
+    opacity: 1 !important;
+    font-weight: 400 !important;
+  }
+  
+  .form-control,
+  input.form-control,
+  select.form-control,
+  textarea.form-control {
+    background-color: #2d2d2d !important;
+    background: linear-gradient(145deg, #2d2d2d 0%, #323232 100%) !important;
+    border-color: #555555 !important;
+    color: #ffffff !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(255, 255, 255, 0.05) !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  
+  .form-control:focus,
+  input.form-control:focus,
+  select.form-control:focus,
+  textarea.form-control:focus {
+    background-color: #323232 !important;
+    background: linear-gradient(145deg, #323232 0%, #383838 100%) !important;
+    border-color: #2da6b2 !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(45, 166, 178, 0.2) !important;
+    outline: none !important;
+  }
+  
+  .form-control:hover,
+  input.form-control:hover,
+  select.form-control:hover,
+  textarea.form-control:hover {
+    border-color: #666666 !important;
+    background-color: #323232 !important;
+    background: linear-gradient(145deg, #323232 0%, #383838 100%) !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(255, 255, 255, 0.08) !important;
+  }
+}
+
+[data-color-scheme="dark"] .form-control::placeholder {
+  color: #999999 !important;
+  opacity: 1 !important;
+  font-weight: 400 !important;
+}
+
+[data-color-scheme="dark"] .form-control,
+[data-color-scheme="dark"] input.form-control,
+[data-color-scheme="dark"] select.form-control,
+[data-color-scheme="dark"] textarea.form-control {
+  background-color: #2d2d2d !important;
+  background: linear-gradient(145deg, #2d2d2d 0%, #323232 100%) !important;
+  border-color: #555555 !important;
+  color: #ffffff !important;
+  border-width: 1px !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(255, 255, 255, 0.05) !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[data-color-scheme="dark"] .form-control:focus,
+[data-color-scheme="dark"] input.form-control:focus,
+[data-color-scheme="dark"] select.form-control:focus,
+[data-color-scheme="dark"] textarea.form-control:focus {
+  background-color: #323232 !important;
+  background: linear-gradient(145deg, #323232 0%, #383838 100%) !important;
+  border-color: #2da6b2 !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(45, 166, 178, 0.2) !important;
+  outline: none !important;
+}
+
+[data-color-scheme="dark"] .form-control:hover,
+[data-color-scheme="dark"] input.form-control:hover,
+[data-color-scheme="dark"] select.form-control:hover,
+[data-color-scheme="dark"] textarea.form-control:hover {
+  border-color: #666666 !important;
+  background-color: #323232 !important;
+  background: linear-gradient(145deg, #323232 0%, #383838 100%) !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(255, 255, 255, 0.08) !important;
+}
+
 textarea.form-control {
   font-family: var(--font-family-base);
   font-size: var(--font-size-base);
@@ -533,6 +681,21 @@ select.form-control {
   margin-bottom: var(--space-8);
   font-weight: var(--font-weight-medium);
   font-size: var(--font-size-sm);
+}
+
+/* Banking-style dark mode form label improvements */
+@media (prefers-color-scheme: dark) {
+  .form-label {
+    color: var(--color-gray-200) !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+  }
+}
+
+[data-color-scheme="dark"] .form-label {
+  color: var(--color-gray-200) !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
 }
 
 .form-group {
@@ -1367,6 +1530,27 @@ select.form-control {
   font-size: var(--font-size-lg);
 }
 
+/* Banking-style dark mode tab content heading improvements */
+@media (prefers-color-scheme: dark) {
+  .tab-content h3 {
+    color: var(--color-gray-200) !important;
+    border-bottom-color: rgba(var(--color-gray-400-rgb), 0.3) !important;
+  }
+  
+  .tab-content h4 {
+    color: var(--color-gray-200) !important;
+  }
+}
+
+[data-color-scheme="dark"] .tab-content h3 {
+  color: var(--color-gray-200) !important;
+  border-bottom-color: rgba(var(--color-gray-400-rgb), 0.3) !important;
+}
+
+[data-color-scheme="dark"] .tab-content h4 {
+  color: var(--color-gray-200) !important;
+}
+
 /* Form Styles */
 .form-row {
   display: grid;
@@ -1393,6 +1577,21 @@ select.form-control {
   position: relative;
   z-index: 1;
   width: auto;
+}
+
+/* Banking-style dark mode checkbox label improvements */
+@media (prefers-color-scheme: dark) {
+  .checkbox-label {
+    color: var(--color-gray-200) !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+  }
+}
+
+[data-color-scheme="dark"] .checkbox-label {
+  color: var(--color-gray-200) !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -2945,6 +3144,37 @@ select.form-control {
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
+/* Modern Input Group Text - Enhanced Design */
+@media (prefers-color-scheme: dark) {
+  .input-group-text,
+  .input-group .input-group-text {
+    background-color: #2d2d2d !important;
+    background: linear-gradient(145deg, #2d2d2d 0%, #323232 100%) !important;
+    border-color: #555555 !important;
+    color: #cccccc !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    border-radius: 0 8px 8px 0 !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(255, 255, 255, 0.05) !important;
+    padding: 10px 14px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+}
+
+[data-color-scheme="dark"] .input-group-text,
+[data-color-scheme="dark"] .input-group .input-group-text {
+  background-color: #2d2d2d !important;
+  background: linear-gradient(145deg, #2d2d2d 0%, #323232 100%) !important;
+  border-color: #555555 !important;
+  color: #cccccc !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  border-radius: 0 8px 8px 0 !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(255, 255, 255, 0.05) !important;
+  padding: 10px 14px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
 .input-group:focus-within .input-group-text {
   border-color: var(--color-primary);
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
@@ -2952,8 +3182,286 @@ select.form-control {
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
+/* Modern Input Group Focus - Enhanced Design */
+@media (prefers-color-scheme: dark) {
+  .input-group:focus-within .input-group-text,
+  .input-group:focus-within .input-group .input-group-text {
+    border-color: #2da6b2 !important;
+    background-color: #323232 !important;
+    background: linear-gradient(145deg, #323232 0%, #383838 100%) !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(45, 166, 178, 0.2) !important;
+    font-weight: 500 !important;
+  }
+}
+
+[data-color-scheme="dark"] .input-group:focus-within .input-group-text,
+[data-color-scheme="dark"] .input-group:focus-within .input-group .input-group-text {
+  border-color: #2da6b2 !important;
+  background-color: #323232 !important;
+  background: linear-gradient(145deg, #323232 0%, #383838 100%) !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(45, 166, 178, 0.2) !important;
+  font-weight: 500 !important;
+}
+
 .input-group:hover .input-group-text {
   background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
   transform: translateY(-1px);
+}
+
+/* Modern Input Group Hover - Enhanced Design */
+@media (prefers-color-scheme: dark) {
+  .input-group:hover .input-group-text,
+  .input-group:hover .input-group .input-group-text {
+    background-color: #323232 !important;
+    background: linear-gradient(145deg, #323232 0%, #383838 100%) !important;
+    border-color: #666666 !important;
+    color: #ffffff !important;
+    font-weight: 500 !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(255, 255, 255, 0.08) !important;
+  }
+}
+
+[data-color-scheme="dark"] .input-group:hover .input-group-text,
+[data-color-scheme="dark"] .input-group:hover .input-group .input-group-text {
+  background-color: #323232 !important;
+  background: linear-gradient(145deg, #323232 0%, #383838 100%) !important;
+  border-color: #666666 !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Remove number input arrows/spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* COMPREHENSIVE DARK MODE OVERRIDE - Modern Input Elements */
+@media (prefers-color-scheme: dark) {
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="password"],
+  select,
+  textarea,
+  .form-control,
+  .input-group-text,
+  .input-group .form-control,
+  .input-group .input-group-text {
+    background-color: #2d2d2d !important;
+    background: linear-gradient(145deg, #2d2d2d 0%, #323232 100%) !important;
+    color: #ffffff !important;
+    border-color: #555555 !important;
+  }
+  
+  input:focus,
+  select:focus,
+  textarea:focus,
+  .form-control:focus,
+  .input-group-text:focus {
+    background-color: #323232 !important;
+    background: linear-gradient(145deg, #323232 0%, #383838 100%) !important;
+    color: #ffffff !important;
+    border-color: #2da6b2 !important;
+  }
+  
+  /* Modern dropdown/select overrides */
+  select,
+  select option,
+  select:focus,
+  select:hover,
+  .form-select,
+  .form-select option,
+  .form-select:focus,
+  .form-select:hover {
+    background-color: #2d2d2d !important;
+    background: #2d2d2d !important;
+    background-image: none !important;
+    color: #ffffff !important;
+    border-color: #555555 !important;
+    color-scheme: dark !important;
+  }
+  
+  /* Force dropdown list background */
+  select[size],
+  select[multiple],
+  select:focus,
+  select:active {
+    background-color: #2d2d2d !important;
+    background: #2d2d2d !important;
+    background-image: none !important;
+  }
+  
+  /* Dropdown options - Enhanced visibility */
+  option {
+    background-color: #2d2d2d !important;
+    background: #2d2d2d !important;
+    background-image: none !important;
+    color: #ffffff !important;
+    padding: 8px 12px !important;
+  }
+  
+  option:hover,
+  option:focus,
+  option:checked,
+  option:active,
+  option[selected] {
+    background-color: #3a3a3a !important;
+    background: #3a3a3a !important;
+    background-image: none !important;
+    color: #ffffff !important;
+  }
+  
+  /* Ensure non-hovered options stay dark */
+  select option:not(:hover):not(:focus):not(:checked):not(:active) {
+    background-color: #2d2d2d !important;
+    background: #2d2d2d !important;
+    background-image: none !important;
+    color: #ffffff !important;
+  }
+  
+  /* Select dropdown list styling */
+  select::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  select::-webkit-scrollbar-track {
+    background: #1a1a1a;
+  }
+  
+  select::-webkit-scrollbar-thumb {
+    background: #555555;
+    border-radius: 4px;
+  }
+  
+  select::-webkit-scrollbar-thumb:hover {
+    background: #666666;
+  }
+  
+  /* Input group container - transparent background */
+  .input-group,
+  div.input-group {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
+}
+
+[data-color-scheme="dark"] input[type="text"],
+[data-color-scheme="dark"] input[type="number"],
+[data-color-scheme="dark"] input[type="email"],
+[data-color-scheme="dark"] input[type="tel"],
+[data-color-scheme="dark"] input[type="date"],
+[data-color-scheme="dark"] input[type="password"],
+[data-color-scheme="dark"] select,
+[data-color-scheme="dark"] textarea,
+[data-color-scheme="dark"] .form-control,
+[data-color-scheme="dark"] .input-group-text,
+[data-color-scheme="dark"] .input-group .form-control,
+[data-color-scheme="dark"] .input-group .input-group-text {
+  background-color: #2d2d2d !important;
+  background: linear-gradient(145deg, #2d2d2d 0%, #323232 100%) !important;
+  color: #ffffff !important;
+  border-color: #555555 !important;
+}
+
+[data-color-scheme="dark"] input:focus,
+[data-color-scheme="dark"] select:focus,
+[data-color-scheme="dark"] textarea:focus,
+[data-color-scheme="dark"] .form-control:focus,
+[data-color-scheme="dark"] .input-group-text:focus {
+  background-color: #323232 !important;
+  background: linear-gradient(145deg, #323232 0%, #383838 100%) !important;
+  color: #ffffff !important;
+  border-color: #2da6b2 !important;
+}
+
+/* Modern dropdown/select overrides for data-color-scheme */
+[data-color-scheme="dark"] select,
+[data-color-scheme="dark"] select option,
+[data-color-scheme="dark"] select:focus,
+[data-color-scheme="dark"] select:hover,
+[data-color-scheme="dark"] .form-select,
+[data-color-scheme="dark"] .form-select option,
+[data-color-scheme="dark"] .form-select:focus,
+[data-color-scheme="dark"] .form-select:hover {
+  background-color: #2d2d2d !important;
+  background: #2d2d2d !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border-color: #555555 !important;
+  color-scheme: dark !important;
+}
+
+/* Force dropdown list background */
+[data-color-scheme="dark"] select[size],
+[data-color-scheme="dark"] select[multiple],
+[data-color-scheme="dark"] select:focus,
+[data-color-scheme="dark"] select:active {
+  background-color: #2d2d2d !important;
+  background: #2d2d2d !important;
+  background-image: none !important;
+}
+
+[data-color-scheme="dark"] option {
+  background-color: #2d2d2d !important;
+  background: #2d2d2d !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  padding: 8px 12px !important;
+}
+
+[data-color-scheme="dark"] option:hover,
+[data-color-scheme="dark"] option:focus,
+[data-color-scheme="dark"] option:checked,
+[data-color-scheme="dark"] option:active,
+[data-color-scheme="dark"] option[selected] {
+  background-color: #3a3a3a !important;
+  background: #3a3a3a !important;
+  background-image: none !important;
+  color: #ffffff !important;
+}
+
+/* Ensure non-hovered options stay dark */
+[data-color-scheme="dark"] select option:not(:hover):not(:focus):not(:checked):not(:active) {
+  background-color: #2d2d2d !important;
+  background: #2d2d2d !important;
+  background-image: none !important;
+  color: #ffffff !important;
+}
+
+/* Select dropdown list styling */
+[data-color-scheme="dark"] select::-webkit-scrollbar {
+  width: 8px;
+}
+
+[data-color-scheme="dark"] select::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+[data-color-scheme="dark"] select::-webkit-scrollbar-thumb {
+  background: #555555;
+  border-radius: 4px;
+}
+
+[data-color-scheme="dark"] select::-webkit-scrollbar-thumb:hover {
+  background: #666666;
+}
+
+/* Input group container - transparent background */
+[data-color-scheme="dark"] .input-group,
+[data-color-scheme="dark"] div.input-group {
+  background-color: transparent !important;
+  background: transparent !important;
 }
 

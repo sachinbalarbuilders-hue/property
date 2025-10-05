@@ -394,53 +394,80 @@
 
                     <h4>Lessee Details</h4>
                     <div class="form-row" style="display: flex; gap: 20px; align-items: flex-end;">
-                        <div class="form-group" style="flex: 1; min-width: 220px;">
+                        <div class="form-group" style="flex: 1; min-width: 280px;">
                             <label class="form-label">Name</label>
                             <div class="input-group">
-                                <input type="text" class="form-control" name="lesseeName" style="width: 150px;">
+                                <input type="text" class="form-control" name="lesseeName" style="width: 250px;">
                             </div>
                         </div>
-                        <div class="form-group" style="flex: 1; min-width: 220px;">
+                        <div class="form-group" style="flex: 1; min-width: 280px;">
                             <label class="form-label">Contact Number</label>
                             <div class="input-group">
-                                <input type="tel" class="form-control" name="lesseeContactNumber" placeholder="Enter contact number" style="width: 150px;">
+                                <input type="tel" class="form-control" name="lesseeContactNumber" placeholder="Enter contact number" style="width: 250px;">
                             </div>
                         </div>
-                        <div class="form-group" style="flex: 1; min-width: 220px;">
+                        <div class="form-group" style="flex: 1; min-width: 280px;">
                             <label class="form-label">Email</label>
                             <div class="input-group">
-                                <input type="email" class="form-control" name="lesseeEmail" style="width: 150px;">
+                                <input type="email" class="form-control" name="lesseeEmail" style="width: 300px;">
                             </div>
                         </div>
-                        <div class="form-group" style="flex: 1; min-width: 220px;">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="differentContactPerson" id="differentContactPersonCheckbox">
+                                Different Contact Person
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-row hidden" id="contactPersonNameField">
+                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
+                            <label class="form-label">Contact Person Name</label>
+                            <input type="text" class="form-control" name="lesseeContact" placeholder="Enter contact person name" style="width: 250px;">
+                            </div>
+                        </div>
+
+                    <div class="form-row" style="display: flex; gap: 20px; align-items: flex-end;">
+                        <div class="form-group" style="flex: 1; min-width: 280px;">
                             <label class="form-label">PAN No</label>
                             <div class="input-group">
-                                <input type="text" class="form-control" name="lesseePan" placeholder="e.g., ABCDE1234F" style="width: 150px;">
+                                <input type="text" class="form-control" name="lesseePan" placeholder="e.g., ABCDE1234F" style="width: 250px;">
                             </div>
                         </div>
-                    </div>
-
-                    <div class="form-row" style="display: flex; gap: 20px; align-items: flex-end;">
-                        <div class="form-group" style="flex: 1; min-width: 220px;">
-                            <label class="form-label">Contact Person Name</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" name="lesseeContact" placeholder="Only if different from lessee name" style="width: 150px;">
-                            </div>
-                        </div>
-                        <div class="form-group" style="flex: 1; min-width: 220px;">
-                            <label class="form-label">Address</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" name="lesseeAddress" style="width: 200px;">
-                            </div>
-                        </div>
-                        <div class="form-group" style="flex: 1; min-width: 220px;">
+                        <div class="form-group" style="flex: 1; min-width: 280px;">
                             <label class="form-label">GSTIN</label>
                             <div class="input-group">
-                                <input type="text" class="form-control" name="lesseeGstin" placeholder="e.g., 24ABCDE1234F1Z5" style="width: 150px;">
+                                <input type="text" class="form-control" name="lesseeGstin" placeholder="e.g., 24ABCDE1234F1Z5" style="width: 250px;">
                             </div>
                         </div>
-                        <div class="form-group" style="flex: 1; min-width: 220px;">
-                            <!-- Empty space for alignment -->
+                        <div class="form-group" style="flex: 1; min-width: 280px;">
+                            <label class="form-label">Address Line</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="lesseeAddressLine" placeholder="Street, Building, Area" style="width: 250px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="display: flex; gap: 20px; align-items: flex-end;">
+                        <div class="form-group" style="flex: 1; min-width: 280px;">
+                            <label class="form-label">City</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="lesseeCity" placeholder="Enter city" style="width: 250px;">
+                            </div>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 280px;">
+                            <label class="form-label">State</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="lesseeState" placeholder="Enter state" style="width: 250px;">
+                            </div>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 280px;">
+                            <label class="form-label">Pincode</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="lesseePincode" placeholder="e.g., 400001" maxlength="6" style="width: 250px;">
+                            </div>
                         </div>
                     </div>
 
@@ -456,6 +483,22 @@
                         </div>
                         <div class="form-group" style="flex: 1; min-width: 220px;">
                             <!-- Empty space for alignment -->
+                        </div>
+                    </div>
+
+                    <h4>Bank Details</h4>
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
+                            <label class="form-label">Bank Name</label>
+                            <input type="text" class="form-control" name="bankName" style="width: 250px;">
+                        </div>
+                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
+                            <label class="form-label">Account No</label>
+                            <input type="text" class="form-control" name="accountNo" style="width: 300px;">
+                        </div>
+                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
+                            <label class="form-label">IFSC Code</label>
+                            <input type="text" class="form-control" name="ifscCode" style="width: 200px;">
                         </div>
                     </div>
 
@@ -470,24 +513,22 @@
                     </div>
                     <div class="form-row gst-details hidden" id="gstDetails">
                         <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">GST Type</label>
-                            <select class="form-control" name="gstType" style="width: 200px;">
-                                <option value="">Select</option>
-                                <option value="included">Included in Rent</option>
-                                <option value="excluded">Excluded from Rent</option>
+                            <label class="form-label">GST Details</label>
+                            <div class="input-group">
+                                <select class="form-control" name="gstType" style="width: 180px;">
+                                    <option value="">Select Type</option>
+                                    <option value="included">Included</option>
+                                    <option value="excluded">Excluded</option>
                             </select>
-                        </div>
-                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">GST Percentage (%)</label>
-                            <input type="number" class="form-control" name="gstPercentage" min="0" max="100" step="0.1" placeholder="e.g., 18" style="width: 150px;">
-                        </div>
-                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">GST Borne By</label>
-                            <select class="form-control" name="gstBorneBy" style="width: 180px;">
+                                <input type="number" class="form-control" name="gstPercentage" min="0" max="100" step="0.1" placeholder="%" style="width: 80px;">
+                                <span class="input-group-text">%</span>
+                                <span class="input-group-text" style="background: transparent; border: none; padding: 0 8px; color: #999; font-size: 12px;">Borne By:</span>
+                                <select class="form-control" name="gstBorneBy" style="width: 120px;">
                                 <option value="">Select</option>
-                                <option value="lessor">Borne by Lessor</option>
-                                <option value="lessee" selected>Borne by Lessee</option>
+                                    <option value="lessor">Lessor</option>
+                                    <option value="lessee" selected>Lessee</option>
                             </select>
+                            </div>
                         </div>
                     </div>
                     <div class="form-row">
@@ -500,16 +541,16 @@
                     </div>
                     <div class="form-row municipal-taxes-details hidden" id="municipalTaxesDetails">
                         <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">Municipal Taxes Amount</label>
-                            <input type="number" class="form-control" name="municipalTaxesAmount" placeholder="Enter amount (optional)" style="width: 200px;">
-                        </div>
-                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">Municipal Taxes Borne By</label>
-                            <select class="form-control" name="municipalTaxesBorneBy" style="width: 200px;">
+                            <label class="form-label">Municipal Taxes</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="municipalTaxesAmount" placeholder="Amount" style="width: 150px;">
+                                <span class="input-group-text" style="background: transparent; border: none; padding: 0 8px; color: #999; font-size: 12px;">Borne By:</span>
+                                <select class="form-control" name="municipalTaxesBorneBy" style="width: 120px;">
                                 <option value="">Select</option>
-                                <option value="lessor">Borne by Lessor</option>
-                                <option value="lessee">Borne by Lessee</option>
+                                    <option value="lessor">Lessor</option>
+                                    <option value="lessee">Lessee</option>
                             </select>
+                            </div>
                         </div>
                     </div>
                     <div class="form-row">
@@ -522,16 +563,16 @@
                     </div>
                     <div class="form-row signage-tax-details hidden" id="signageTaxDetails">
                         <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">Signage Tax Amount</label>
-                            <input type="number" class="form-control" name="signageTaxAmount" placeholder="Enter amount (optional)" style="width: 200px;">
-                        </div>
-                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">Signage Tax Borne By</label>
-                            <select class="form-control" name="signageTaxBorneBy" style="width: 200px;">
+                            <label class="form-label">Signage Tax</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="signageTaxAmount" placeholder="Amount" style="width: 150px;">
+                                <span class="input-group-text" style="background: transparent; border: none; padding: 0 8px; color: #999; font-size: 12px;">Borne By:</span>
+                                <select class="form-control" name="signageTaxBorneBy" style="width: 120px;">
                                 <option value="">Select</option>
-                                <option value="lessor">Borne by Lessor</option>
-                                <option value="lessee">Borne by Lessee</option>
+                                    <option value="lessor">Lessor</option>
+                                    <option value="lessee">Lessee</option>
                             </select>
+                            </div>
                         </div>
                     </div>
                     <div class="form-row">
@@ -544,27 +585,30 @@
                     </div>
                     <div class="form-row legal-charges-details hidden" id="legalChargesDetails">
                         <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">Legal Charges Amount</label>
-                            <input type="number" class="form-control" name="legalChargesAmount" placeholder="Enter amount (optional)" style="width: 200px;">
-                        </div>
-                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">Legal Charges Borne By</label>
-                            <select class="form-control" name="legalChargesBorneBy" id="legalChargesBorneBySelect" style="width: 200px;">
+                            <label class="form-label">Legal Charges</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="legalChargesAmount" placeholder="Amount" style="width: 150px;">
+                                <span class="input-group-text" style="background: transparent; border: none; padding: 0 8px; color: #999; font-size: 12px;">Borne By:</span>
+                                <select class="form-control" name="legalChargesBorneBy" id="legalChargesBorneBySelect" style="width: 150px;">
                                 <option value="">Select</option>
-                                <option value="lessor">Borne by Lessor</option>
-                                <option value="lessee">Borne by Lessee</option>
-                                <option value="custom">Custom Percentage</option>
+                                    <option value="lessor">Lessor</option>
+                                    <option value="lessee">Lessee</option>
+                                    <option value="custom">Custom %</option>
                             </select>
+                            </div>
                         </div>
                     </div>
                     <div class="form-row legal-charges-custom hidden" id="legalChargesCustom">
                         <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">Lessor Percentage</label>
-                            <input type="number" class="form-control" name="legalChargesLessorPercentage" placeholder="e.g., 50" min="0" max="100" style="width: 150px;">
+                            <label class="form-label">Custom Percentage Split</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="background: transparent; border: none; padding: 0 8px; color: #999; font-size: 12px;">Lessor:</span>
+                                <input type="number" class="form-control" name="legalChargesLessorPercentage" placeholder="%" min="0" max="100" style="width: 80px;">
+                                <span class="input-group-text">%</span>
+                                <span class="input-group-text" style="background: transparent; border: none; padding: 0 8px; color: #999; font-size: 12px;">Lessee:</span>
+                                <input type="number" class="form-control" name="legalChargesLesseePercentage" placeholder="%" min="0" max="100" style="width: 80px;">
+                                <span class="input-group-text">%</span>
                         </div>
-                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">Lessee Percentage</label>
-                            <input type="number" class="form-control" name="legalChargesLesseePercentage" placeholder="e.g., 50" min="0" max="100" style="width: 150px;">
                         </div>
                     </div>
                     <div class="form-row">
@@ -577,32 +621,16 @@
                     </div>
                     <div class="form-row maintenance-details hidden" id="maintenanceDetails">
                         <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">Maintenance Amount</label>
-                            <input type="number" class="form-control" name="maintenanceAmount" placeholder="Enter amount (optional)" style="width: 200px;">
-                        </div>
-                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">Maintenance Borne By</label>
-                            <select class="form-control" name="maintenanceBorneBy" style="width: 200px;">
+                            <label class="form-label">Maintenance Fees</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="maintenanceAmount" placeholder="Amount" style="width: 150px;">
+                                <span class="input-group-text" style="background: transparent; border: none; padding: 0 8px; color: #999; font-size: 12px;">Borne By:</span>
+                                <select class="form-control" name="maintenanceBorneBy" style="width: 120px;">
                                 <option value="">Select</option>
-                                <option value="lessor">Borne by Lessor</option>
-                                <option value="lessee">Borne by Lessee</option>
+                                    <option value="lessor">Lessor</option>
+                                    <option value="lessee">Lessee</option>
                             </select>
                         </div>
-                    </div>
-
-                    <h4>Bank Details</h4>
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">Bank Name</label>
-                            <input type="text" class="form-control" name="bankName" style="width: 250px;">
-                        </div>
-                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">Account No</label>
-                            <input type="text" class="form-control" name="accountNo" style="width: 200px;">
-                        </div>
-                        <div class="form-group" style="flex: 0 0 auto; width: fit-content;">
-                            <label class="form-label">IFSC Code</label>
-                            <input type="text" class="form-control" name="ifscCode" style="width: 150px;">
                         </div>
                     </div>
 
