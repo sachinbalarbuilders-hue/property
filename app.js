@@ -31,6 +31,10 @@ let tableColumns = {
     superBuiltupArea: { label: 'Super Built-up Area', visible: false, category: 'property' },
     terraceArea: { label: 'Terrace Area', visible: false, category: 'property' },
     furniture: { label: 'Furniture', visible: false, category: 'property' },
+    shopFrontage: { label: 'Frontage', visible: false, category: 'property' },
+    dimensions: { label: 'Dimensions', visible: false, category: 'property' },
+    ceilingHeight: { label: 'Ceiling Height', visible: false, category: 'property' },
+    electricityCharges: { label: 'Electricity Charges', visible: false, category: 'property' },
     lessorName: { label: 'Lessor Name', visible: false, category: 'property' },
     lessorGstin: { label: 'Lessor GSTIN', visible: false, category: 'property' },
     lessorPan: { label: 'Lessor PAN', visible: false, category: 'property' },
@@ -46,8 +50,22 @@ let tableColumns = {
     agreementTenure: { label: 'Agreement Tenure', visible: false, category: 'rental' },
     rentPayableDate: { label: 'Rent Due Date', visible: false, category: 'rental' },
     escalationPercentage: { label: 'Escalation %', visible: false, category: 'rental' },
+    escalationPeriod: { label: 'Escalation Period', visible: false, category: 'rental' },
     gstIncludedInRent: { label: 'GST Included', visible: false, category: 'rental' },
-    maintenance: { label: 'Maintenance', visible: false, category: 'rental' }
+    municipalTaxes: { label: 'Municipal Taxes', visible: false, category: 'rental' },
+    municipalTaxesAmount: { label: 'Municipal Taxes Amount', visible: false, category: 'rental' },
+    municipalTaxesBorneBy: { label: 'Municipal Taxes Borne By', visible: false, category: 'rental' },
+    signageTax: { label: 'Signage Tax', visible: false, category: 'rental' },
+    signageTaxAmount: { label: 'Signage Tax Amount', visible: false, category: 'rental' },
+    signageTaxBorneBy: { label: 'Signage Tax Borne By', visible: false, category: 'rental' },
+    legalCharges: { label: 'Legal Charges', visible: false, category: 'rental' },
+    legalChargesAmount: { label: 'Legal Charges Amount', visible: false, category: 'rental' },
+    legalChargesBorneBy: { label: 'Legal Charges Borne By', visible: false, category: 'rental' },
+    legalChargesLessorPercentage: { label: 'Legal Charges Lessor %', visible: false, category: 'rental' },
+    legalChargesLesseePercentage: { label: 'Legal Charges Lessee %', visible: false, category: 'rental' },
+    maintenance: { label: 'Maintenance', visible: false, category: 'rental' },
+    maintenanceAmount: { label: 'Maintenance Amount', visible: false, category: 'rental' },
+    maintenanceBorneBy: { label: 'Maintenance Borne By', visible: false, category: 'rental' }
 };
 
 // Static Data
@@ -101,7 +119,7 @@ const sampleData = {
             agreementTenureUnit: "months",
             securityDeposit: 36000,
             escalationPercentage: 5,
-            escalationDays: 365,
+            escalationPeriod: 'months',
             lessorName: "Rajesh Patel",
             lessorAddress: "123 Main Street, Ahmedabad",
             lessorContact: "9876543210",
@@ -227,7 +245,7 @@ const sampleData = {
             agreementTenureUnit: "months",
             securityDeposit: 135000, // 3 months rent
             escalationPercentage: 8,
-            escalationDays: 365,
+            escalationPeriod: 'months',
             rentFreePeriodAmount: 30,
             rentFreePeriodUnit: "days",
             lesseeName: "TechCorp Solutions",
@@ -337,7 +355,7 @@ const sampleData = {
             agreementTenureUnit: "years",
             securityDeposit: 45000, // 3 months rent
             escalationPercentage: 5,
-            escalationDays: 365,
+            escalationPeriod: 'months',
             rentFreePeriodAmount: 15,
             rentFreePeriodUnit: "days",
             lesseeName: "Mr. Sharma Family",
@@ -391,7 +409,7 @@ const sampleData = {
             agreementTenureUnit: "years",
             securityDeposit: 45000, // 3 months rent
             escalationPercentage: 5, // 5% annual escalation
-            escalationDays: 365,
+            escalationPeriod: 'months',
             rentFreePeriodAmount: 0,
             rentFreePeriodUnit: "days",
             lesseeName: "Mr. Kumar",
@@ -626,6 +644,76 @@ function setupEventListeners() {
     const maintenanceCheckbox = document.getElementById('maintenanceCheckbox');
     if (maintenanceCheckbox) {
         maintenanceCheckbox.addEventListener('change', toggleMaintenanceFields);
+    }
+
+    // Legal charges select
+    const legalChargesSelect = document.getElementById('legalChargesSelect');
+    if (legalChargesSelect) {
+        legalChargesSelect.addEventListener('change', toggleLegalChargesCustom);
+    }
+
+    // Municipal taxes checkbox
+    const municipalTaxesCheckbox = document.getElementById('municipalTaxesCheckbox');
+    if (municipalTaxesCheckbox) {
+        municipalTaxesCheckbox.addEventListener('change', toggleMunicipalTaxesFields);
+    }
+
+    // Signage tax checkbox
+    const signageTaxCheckbox = document.getElementById('signageTaxCheckbox');
+    if (signageTaxCheckbox) {
+        signageTaxCheckbox.addEventListener('change', toggleSignageTaxFields);
+    }
+
+    // Legal charges checkbox
+    const legalChargesCheckbox = document.getElementById('legalChargesCheckbox');
+    if (legalChargesCheckbox) {
+        legalChargesCheckbox.addEventListener('change', toggleLegalChargesFields);
+    }
+
+
+    // Legal charges borne by select
+    const legalChargesBorneBySelect = document.getElementById('legalChargesBorneBySelect');
+    if (legalChargesBorneBySelect) {
+        legalChargesBorneBySelect.addEventListener('change', toggleLegalChargesCustom);
+    }
+
+    // GST checkbox
+    const gstCheckbox = document.getElementById('gstCheckbox');
+    if (gstCheckbox) {
+        gstCheckbox.addEventListener('change', function(event) {
+            event.stopPropagation();
+            toggleGstFields();
+        });
+    }
+
+    // Legal charges percentage auto-calculation
+    const legalChargesLessorPercentage = document.querySelector('[name="legalChargesLessorPercentage"]');
+    const legalChargesLesseePercentage = document.querySelector('[name="legalChargesLesseePercentage"]');
+    
+    if (legalChargesLessorPercentage && legalChargesLesseePercentage) {
+        legalChargesLessorPercentage.addEventListener('input', function() {
+            if (this.value.trim() !== '') {
+                const lessorPercentage = parseFloat(this.value);
+                if (!isNaN(lessorPercentage)) {
+                    const lesseePercentage = Math.max(0, 100 - lessorPercentage);
+                    legalChargesLesseePercentage.value = lesseePercentage;
+                }
+            } else {
+                legalChargesLesseePercentage.value = '';
+            }
+        });
+        
+        legalChargesLesseePercentage.addEventListener('input', function() {
+            if (this.value.trim() !== '') {
+                const lesseePercentage = parseFloat(this.value);
+                if (!isNaN(lesseePercentage)) {
+                    const lessorPercentage = Math.max(0, 100 - lesseePercentage);
+                    legalChargesLessorPercentage.value = lessorPercentage;
+                }
+            } else {
+                legalChargesLessorPercentage.value = '';
+            }
+        });
     }
 
     // Auto-calculate rent per sqft
@@ -1364,6 +1452,45 @@ function resetPropertyForm() {
     // Reset maintenance fields visibility
     toggleMaintenanceFields();
     
+    // Reset legal charges custom visibility
+    toggleLegalChargesCustom();
+    
+    // Reset municipal taxes fields visibility
+    toggleMunicipalTaxesFields();
+    
+    // Reset signage tax fields visibility
+    toggleSignageTaxFields();
+    
+    // Reset legal charges fields visibility
+    toggleLegalChargesFields();
+    
+    // Set default rent period to month
+    const rentPeriodSelect = document.querySelector('[name="rentPeriod"]');
+    if (rentPeriodSelect) {
+        rentPeriodSelect.value = 'month';
+    }
+    
+    // Set default rent free period unit to days
+    const rentFreePeriodUnitSelect = document.querySelector('[name="rentFreePeriodUnit"]');
+    if (rentFreePeriodUnitSelect) {
+        rentFreePeriodUnitSelect.value = 'days';
+    }
+    
+    // Set default agreement tenure unit to months
+    const agreementTenureUnitSelect = document.querySelector('[name="agreementTenureUnit"]');
+    if (agreementTenureUnitSelect) {
+        agreementTenureUnitSelect.value = 'months';
+    }
+
+    // Set default escalation period to months
+    const escalationPeriodSelect = document.querySelector('[name="escalationPeriod"]');
+    if (escalationPeriodSelect) {
+        escalationPeriodSelect.value = 'months';
+    }
+    
+    // Reset GST fields visibility
+    toggleGstFields();
+    
     // Setup bills section for new property
     setupBillsSection();
 }
@@ -1429,6 +1556,21 @@ function loadPropertyData(propertyId) {
     // Toggle maintenance fields visibility
     toggleMaintenanceFields();
     
+    // Toggle legal charges custom visibility
+    toggleLegalChargesCustom();
+    
+    // Toggle municipal taxes fields visibility
+    toggleMunicipalTaxesFields();
+    
+    // Toggle signage tax fields visibility
+    toggleSignageTaxFields();
+    
+    // Toggle legal charges fields visibility
+    toggleLegalChargesFields();
+    
+    // Toggle GST fields visibility
+    toggleGstFields();
+    
     // Calculate rent per sqft for loaded data
     calculateRentPerSqft();
 }
@@ -1440,11 +1582,8 @@ function saveProperty() {
 
     // Collect form data
     for (let [key, value] of formData.entries()) {
-        if (key === 'isRental' || key === 'maintenanceEnabled') {
+        if (key === 'isRental' || key === 'maintenanceEnabled' || key === 'municipalTaxesEnabled' || key === 'signageTaxEnabled' || key === 'legalChargesEnabled' || key === 'gstEnabled') {
             propertyData[key] = true;
-        } else if (key === 'maintenance' && value) {
-            // Convert maintenance to number
-            propertyData[key] = parseFloat(value) || 0;
         } else {
             propertyData[key] = value;
         }
@@ -1458,12 +1597,30 @@ function saveProperty() {
     if (!formData.has('maintenanceEnabled')) {
         propertyData.maintenanceEnabled = false;
     }
+    if (!formData.has('municipalTaxesEnabled')) {
+        propertyData.municipalTaxesEnabled = false;
+    }
+    if (!formData.has('signageTaxEnabled')) {
+        propertyData.signageTaxEnabled = false;
+    }
+    if (!formData.has('legalChargesEnabled')) {
+        propertyData.legalChargesEnabled = false;
+    }
+    if (!formData.has('gstEnabled')) {
+        propertyData.gstEnabled = false;
+    }
     
-    // Handle GST checkbox - explicitly check the DOM element
-    const gstCheckbox = document.querySelector('[name="gstIncludedInRent"]');
-    if (gstCheckbox) {
-        propertyData.gstIncludedInRent = gstCheckbox.checked;
+    // Handle GST data
+    if (propertyData.gstEnabled) {
+        propertyData.gst = {
+            type: propertyData.gstType || '',
+            percentage: propertyData.gstPercentage || null,
+            borneBy: propertyData.gstBorneBy || ''
+        };
+        // For backward compatibility
+        propertyData.gstIncludedInRent = propertyData.gstType === 'included';
     } else {
+        propertyData.gst = null;
         propertyData.gstIncludedInRent = false;
     }
 
@@ -1472,6 +1629,48 @@ function saveProperty() {
         propertyData.maintenance = {
             amount: propertyData.maintenanceAmount || 0,
             period: propertyData.maintenancePeriod || 'month'
+        };
+    } else {
+        propertyData.maintenance = null;
+    }
+
+    // Handle municipal taxes data
+    if (propertyData.municipalTaxesEnabled) {
+        propertyData.municipalTaxes = {
+            amount: propertyData.municipalTaxesAmount || null,
+            borneBy: propertyData.municipalTaxesBorneBy || ''
+        };
+    } else {
+        propertyData.municipalTaxes = null;
+    }
+
+    // Handle signage tax data
+    if (propertyData.signageTaxEnabled) {
+        propertyData.signageTax = {
+            amount: propertyData.signageTaxAmount || null,
+            borneBy: propertyData.signageTaxBorneBy || ''
+        };
+    } else {
+        propertyData.signageTax = null;
+    }
+
+    // Handle legal charges data
+    if (propertyData.legalChargesEnabled) {
+        propertyData.legalCharges = {
+            amount: propertyData.legalChargesAmount || null,
+            borneBy: propertyData.legalChargesBorneBy || '',
+            lessorPercentage: propertyData.legalChargesLessorPercentage || null,
+            lesseePercentage: propertyData.legalChargesLesseePercentage || null
+        };
+    } else {
+        propertyData.legalCharges = null;
+    }
+
+    // Handle maintenance data
+    if (propertyData.maintenanceEnabled) {
+        propertyData.maintenance = {
+            amount: propertyData.maintenanceAmount || null,
+            borneBy: propertyData.maintenanceBorneBy || ''
         };
     } else {
         propertyData.maintenance = null;
@@ -1834,12 +2033,30 @@ function getOptimalColumns() {
         'superBuiltupArea',
         'terraceArea',
         'furniture',
+        'shopFrontage',
+        'dimensions',
+        'ceilingHeight',
+        'electricityCharges',
         'agreementStartDate',
         'agreementTenure',
         'rentPayableDate',
         'escalationPercentage',
+        'escalationPeriod',
         'gstIncludedInRent',
-        'maintenance'
+        'municipalTaxes',
+        'municipalTaxesAmount',
+        'municipalTaxesBorneBy',
+        'signageTax',
+        'signageTaxAmount',
+        'signageTaxBorneBy',
+        'legalCharges',
+        'legalChargesAmount',
+        'legalChargesBorneBy',
+        'legalChargesLessorPercentage',
+        'legalChargesLesseePercentage',
+        'maintenance',
+        'maintenanceAmount',
+        'maintenanceBorneBy'
     ];
     
     // Get all user-selected visible columns (including actions)
@@ -2026,20 +2243,12 @@ function getCellContent(property, columnKey, index) {
             return `<span class="rent-due-date">${property.rentPayableDate || 'N/A'}</span>`;
         case 'escalationPercentage':
             const escalation = property.escalationPercentage ? `${property.escalationPercentage}%` : 'N/A';
-            return `<span class="escalation">${escalation}</span>`;
+            const escalationPeriod = property.escalationPeriod || 'months';
+            return `<span class="escalation">${escalation} per ${escalationPeriod}</span>`;
+        case 'escalationPeriod':
+            return `<span class="escalation-period">${property.escalationPeriod || 'N/A'}</span>`;
         case 'gstIncludedInRent':
             return `<span class="gst-included">${property.gstIncludedInRent ? 'Yes' : 'No'}</span>`;
-        case 'maintenance':
-            if (property.maintenance) {
-                if (typeof property.maintenance === 'object' && property.maintenance.amount) {
-                    const period = property.maintenance.period || 'month';
-                    const periodText = period === 'year' ? '/year' : '/month';
-                    return `₹${parseFloat(property.maintenance.amount).toLocaleString()}${periodText}`;
-                } else if (typeof property.maintenance === 'number' || !isNaN(parseFloat(property.maintenance))) {
-                    return `₹${parseFloat(property.maintenance).toLocaleString()}/month`;
-                }
-            }
-            return '<span class="unknown">N/A</span>';
         case 'status':
             const status = property.isRental ? 'Active' : 'Vacant';
             const statusClass = property.isRental ? 'property-status--active' : 'property-status--vacant';
@@ -2064,6 +2273,12 @@ function getCellContent(property, columnKey, index) {
                 </div>
                 </div>
             `;
+        case 'maintenance':
+            return property.maintenance ? 'Yes' : 'No';
+        case 'maintenanceAmount':
+            return property.maintenance?.amount ? `₹${property.maintenance.amount.toLocaleString()}` : 'N/A';
+        case 'maintenanceBorneBy':
+            return property.maintenance?.borneBy ? property.maintenance.borneBy : 'N/A';
         default:
             return '<span class="unknown">N/A</span>';
     }
@@ -2827,15 +3042,74 @@ function toggleMaintenanceFields() {
     }
 }
 
-function toggleGstPercentage() {
-    const gstCheckbox = document.querySelector('[name="gstIncludedInRent"]');
-    const gstPercentageGroup = document.getElementById('gstPercentageGroup');
+function toggleLegalChargesCustom() {
+    const legalChargesBorneBySelect = document.getElementById('legalChargesBorneBySelect');
+    const legalChargesCustom = document.getElementById('legalChargesCustom');
     
-    if (gstCheckbox && gstPercentageGroup) {
-        if (gstCheckbox.checked) {
-            gstPercentageGroup.style.display = 'block';
+    if (legalChargesBorneBySelect && legalChargesCustom) {
+        if (legalChargesBorneBySelect.value === 'custom') {
+            legalChargesCustom.classList.remove('hidden');
         } else {
-            gstPercentageGroup.style.display = 'none';
+            legalChargesCustom.classList.add('hidden');
+        }
+    }
+}
+
+function toggleMunicipalTaxesFields() {
+    const municipalTaxesCheckbox = document.getElementById('municipalTaxesCheckbox');
+    const municipalTaxesDetails = document.getElementById('municipalTaxesDetails');
+    
+    if (municipalTaxesCheckbox && municipalTaxesDetails) {
+        if (municipalTaxesCheckbox.checked) {
+            municipalTaxesDetails.classList.remove('hidden');
+        } else {
+            municipalTaxesDetails.classList.add('hidden');
+        }
+    }
+}
+
+function toggleSignageTaxFields() {
+    const signageTaxCheckbox = document.getElementById('signageTaxCheckbox');
+    const signageTaxDetails = document.getElementById('signageTaxDetails');
+    
+    if (signageTaxCheckbox && signageTaxDetails) {
+        if (signageTaxCheckbox.checked) {
+            signageTaxDetails.classList.remove('hidden');
+        } else {
+            signageTaxDetails.classList.add('hidden');
+        }
+    }
+}
+
+function toggleLegalChargesFields() {
+    const legalChargesCheckbox = document.getElementById('legalChargesCheckbox');
+    const legalChargesDetails = document.getElementById('legalChargesDetails');
+    
+    if (legalChargesCheckbox && legalChargesDetails) {
+        if (legalChargesCheckbox.checked) {
+            legalChargesDetails.classList.remove('hidden');
+        } else {
+            legalChargesDetails.classList.add('hidden');
+        }
+    }
+}
+
+
+function toggleGstFields() {
+    const gstCheckbox = document.getElementById('gstCheckbox');
+    const gstDetails = document.getElementById('gstDetails');
+    
+    if (gstCheckbox && gstDetails) {
+        // Only toggle if the checkbox state actually changed
+        if (gstCheckbox.checked && gstDetails.classList.contains('hidden')) {
+            gstDetails.classList.remove('hidden');
+            // Set default values when GST is enabled
+            const gstBorneBySelect = document.querySelector('[name="gstBorneBy"]');
+            if (gstBorneBySelect && !gstBorneBySelect.value) {
+                gstBorneBySelect.value = 'lessee';
+            }
+        } else if (!gstCheckbox.checked && !gstDetails.classList.contains('hidden')) {
+            gstDetails.classList.add('hidden');
         }
     }
 }
@@ -3378,7 +3652,17 @@ function testPartialPaymentModal() {
 function calculateEscalatedRent(baseRent, paymentDate, property) {
     const agreementStartDate = new Date(property.agreementStartDate);
     const escalationPercentage = parseFloat(property.escalationPercentage || 0) / 100;
-    const escalationDays = parseInt(property.escalationDays || 365);
+    
+    // Convert escalation period to days
+    let escalationDays = 365; // default to 1 year
+    const escalationPeriod = property.escalationPeriod || 'months';
+    if (escalationPeriod === 'days') {
+        escalationDays = 1; // This would need a separate field for number of days
+    } else if (escalationPeriod === 'months') {
+        escalationDays = 30; // Approximate days per month
+    } else if (escalationPeriod === 'years') {
+        escalationDays = 365; // Days per year
+    }
     
     // If no escalation, return base rent
     if (escalationPercentage === 0) {
