@@ -1239,6 +1239,20 @@ select.form-control {
   color: #1e3a8a;
 }
 
+.table-header .btn--outline {
+  color: white !important;
+  border-color: white;
+}
+
+.table-header .btn--outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white !important;
+}
+
+.table-header .btn--outline span {
+  color: white !important;
+}
+
 .properties-table,
 .payment-table {
   width: max-content;
@@ -1418,6 +1432,7 @@ select.form-control {
   font-size: 13px;
   cursor: pointer;
   padding: 4px 0;
+  color: var(--color-text);
 }
 
 .column-checkboxes input[type="checkbox"] {
@@ -1507,6 +1522,11 @@ select.form-control {
   padding: var(--space-24);
   max-height: 60vh;
   overflow-y: auto;
+  color: var(--color-text);
+}
+
+.modal-body p {
+  color: var(--color-text);
 }
 
 .tab-content {

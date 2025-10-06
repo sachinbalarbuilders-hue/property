@@ -11,7 +11,7 @@ let nextInvoiceId = 1;
 // Table Column Configuration
 // Default visible columns configuration
 const defaultVisibleColumns = [
-    'serialNo', 'name', 'address', 'type', 'rentAmount', 'status', 'actions'
+    'serialNo', 'name', 'type', 'rentAmount', 'lesseeName', 'securityDeposit', 'rentPayableDate', 'actions'
 ];
 
 let tableColumns = {
@@ -40,15 +40,15 @@ let tableColumns = {
     lessorPan: { label: 'Lessor PAN', visible: false, category: 'property' },
     
     // Rental Information
-    lesseeName: { label: 'Lessee Name', visible: false, category: 'rental' },
+    lesseeName: { label: 'Lessee Name', visible: defaultVisibleColumns.includes('lesseeName'), category: 'rental' },
     lesseeGstin: { label: 'Lessee GSTIN', visible: false, category: 'rental' },
     lesseePan: { label: 'Lessee PAN', visible: false, category: 'rental' },
     rentAmount: { label: 'Rent Amount', visible: defaultVisibleColumns.includes('rentAmount'), category: 'rental' },
     rentPeriod: { label: 'Rent Period', visible: false, category: 'rental' },
-    securityDeposit: { label: 'Security Deposit', visible: false, category: 'rental' },
+    securityDeposit: { label: 'Security Deposit', visible: defaultVisibleColumns.includes('securityDeposit'), category: 'rental' },
     agreementStartDate: { label: 'Agreement Start', visible: false, category: 'rental' },
     agreementTenure: { label: 'Agreement Tenure', visible: false, category: 'rental' },
-    rentPayableDate: { label: 'Rent Due Date', visible: false, category: 'rental' },
+    rentPayableDate: { label: 'Rent Due Date', visible: defaultVisibleColumns.includes('rentPayableDate'), category: 'rental' },
     escalationPercentage: { label: 'Escalation %', visible: false, category: 'rental' },
     escalationPeriod: { label: 'Escalation Period', visible: false, category: 'rental' },
     gstIncludedInRent: { label: 'GST Included', visible: false, category: 'rental' },
@@ -71,9 +71,9 @@ let tableColumns = {
 // Static Data
 const billTypes = [
     { name: "Property Tax", key: "propertyTax" },
-    { name: "Light Bill", key: "lightBill" },
-    { name: "Gas Bill", key: "gasBill" },
-    { name: "Internet Bill", key: "internetBill" }
+    { name: "Electricity Bill", key: "electricityBill" },
+    { name: "Water Bill", key: "waterBill" },
+    { name: "Gas Bill", key: "gasBill" }
 ];
 
 const propertyTypes = [
@@ -95,425 +95,90 @@ const sampleData = {
     properties: [
         {
             id: 1,
-            name: "Sunrise Apartments A-101",
-            address: "Sector 15, Gandhinagar",
-            type: "2BHK Apartment",
-            rentPerSqft: 25,
-            monthlyRent: 18000,
-            projectName: "Sunrise Complex",
-            officerNo: "101",
+            name: "Sample Apartment A-101",
+            projectName: "Green Valley Residency",
+            address: "Plot No. 123, Sector 15, New City",
+            city: "Mumbai",
+            state: "Maharashtra",
+            pincode: "400001",
+            type: "Residential",
+            officerNo: "A-101",
             floorNo: "1st Floor",
             furniture: "Semi-Furnished",
-            carpetArea: "850 sqft",
+            carpetArea: "1000 sqft",
             superBuiltupArea: "1200 sqft",
             balconyArea: "100 sqft",
             terraceArea: "0 sqft",
             isRental: true,
-            rentAmount: 18000,
+            rentAmount: 15000,
             rentPeriod: "month",
-            gstIncludedInRent: true,
-            gstPercentage: 18,
-            rentPayableDate: 7,
-            agreementStartDate: "2024-01-15",
-            agreementTenureAmount: 24,
-            agreementTenureUnit: "months",
-            securityDeposit: 36000,
+            rentPerSqft: 12.5,
+            gstIncludedInRent: false,
+            gstPercentage: 0,
+            rentPayableDate: 5,
+            agreementStartDate: "2025-01-01",
+            agreementTenureAmount: 2,
+            agreementTenureUnit: "years",
+            securityDeposit: 30000,
             escalationPercentage: 5,
             escalationPeriod: 'months',
-            lessorName: "Rajesh Patel",
-            lessorAddress: "123 Main Street, Ahmedabad",
-            lessorContact: "9876543210",
-            lessorEmail: "rajesh@example.com",
-            lesseeName: "Priya Sharma",
-            lesseeAddress: "456 Garden Road, Gandhinagar",
-            lesseeContact: "9123456789",
-            lesseeEmail: "priya@example.com",
-            gstin: "27XXXXX1234X1Z5",
+            rentFreePeriodAmount: 15,
+            rentFreePeriodUnit: "days",
+            lessorName: "Mr. Rajesh Kumar",
+            lessorAddress: "456 Owner Street, Mumbai, Maharashtra - 400002",
+            lessorContact: "9123456789",
+            lessorEmail: "rajesh.kumar@example.com",
+            lesseeName: "Mr. John Doe",
+            lesseeContact: "9876543210",
+            lesseeEmail: "john.doe@example.com",
+            lesseeAddress: "789 Tenant Road, Mumbai, Maharashtra - 400003",
+            gstin: "27ABCDE1234F1Z5",
             panNo: "ABCDE1234F",
             agreementType: "Notary",
             bankName: "HDFC Bank",
-            accountNo: "12345678901",
+            accountNo: "12345678901234",
             ifscCode: "HDFC0001234",
+            branchName: "Andheri West Branch",
             maintenanceEnabled: true,
             maintenance: {
                 amount: 2000,
-                period: "month"
-            },
-            rentFreePeriodAmount: 15,
-            rentFreePeriodUnit: "days",
-            status: "Active",
-            paymentHistory: [
-                {
-                    id: 1,
-                    date: "2025-01-01",
-                    dueDate: "2025-01-05",
-                    base: 18000,
-                    gst: 3240,
-                    total: 21240,
-                    status: "Paid",
-                    paymentDate: "2025-01-03",
-                    paymentMode: "Online",
-                    receiptNo: "RCP001"
-                },
-                {
-                    id: 2,
-                    date: "2025-02-01",
-                    dueDate: "2025-02-05",
-                    base: 18000,
-                    gst: 3240,
-                    total: 21240,
-                    status: "Paid",
-                    paymentDate: "2025-02-07",
-                    paymentMode: "UPI",
-                    receiptNo: "RCP002"
-                },
-                {
-                    id: 3,
-                    date: "2025-03-01",
-                    dueDate: "2025-03-05",
-                    base: 18000,
-                    gst: 3240,
-                    total: 21240,
-                    status: "Overdue"
-                }
-            ],
-            bills: {
-                propertyTax: { checked: true, billNo: "PT2024001", trackingDay: "365" },
-                lightBill: { checked: true, billNo: "EB240301", trackingDay: "90" },
-                gasBill: { checked: true, billNo: "GB240215", trackingDay: "60" },
-                internetBill: { checked: true, billNo: "INT240220", trackingDay: "30" }
-            },
-            documents: [
-                { name: "Rent Agreement.pdf", uploadDate: "2024-01-15" },
-                { name: "Property Papers.pdf", uploadDate: "2024-01-15" }
-            ]
-        },
-        {
-            id: 2,
-            name: "Green Valley B-205",
-            address: "Sector 22, Ahmedabad",
-            type: "3BHK Apartment",
-            monthlyRent: 25000,
-            isRental: true,
-            rentAmount: 25000,
-            rentPeriod: "month",
-            status: "Active",
-            lesseeName: "Amit Kumar",
-            lesseeContact: "9876543211",
-            paymentHistory: [
-                {
-                    id: 1,
-                    date: "2025-01-01",
-                    dueDate: "2025-01-10",
-                    base: 25000,
-                    gst: 4500,
-                    total: 29500,
-                    status: "Paid",
-                    paymentDate: "2025-01-09",
-                    paymentMode: "Cheque",
-                    receiptNo: "RCP003"
-                },
-                {
-                    id: 2,
-                    date: "2025-02-01",
-                    dueDate: "2025-02-10",
-                    base: 25000,
-                    gst: 4500,
-                    total: 29500,
-                    status: "Pending"
-                }
-            ]
-        },
-        {
-            id: 3,
-            name: "Premium Office Space",
-            projectName: "Business Park Tower",
-            address: "456 Corporate Avenue, Business District",
-            type: "Commercial",
-            carpetArea: "1200 sqft",
-            superBuiltupArea: "1500 sqft",
-            balconyArea: "0 sqft",
-            terraceArea: "200 sqft",
-            isRental: true,
-            rentAmount: 45000,
-            rentPeriod: "month",
-            gstIncludedInRent: true,
-            gstPercentage: 18,
-            rentPayableDate: 7,
-            agreementStartDate: "2025-01-15", // Today's date
-            agreementTenureAmount: 36, // 3 years in months
-            agreementTenureUnit: "months",
-            securityDeposit: 135000, // 3 months rent
-            escalationPercentage: 8,
-            escalationPeriod: 'months',
-            rentFreePeriodAmount: 30,
-            rentFreePeriodUnit: "days",
-            lesseeName: "TechCorp Solutions",
-            lesseePhone: "+91 98765 43211",
-            lesseeEmail: "contact@techcorp.com",
-            lesseeAddress: "789 Tech Street, IT Hub",
-            gstin: "27XXXXX5678X9Y0",
-            panNo: "TECHC1234G",
-            agreementType: "Registry",
-            bankName: "ICICI Bank",
-            accountNo: "98765432109",
-            ifscCode: "ICIC0009876",
-            maintenanceEnabled: true,
-            maintenance: {
-                amount: 5000,
-                period: "month"
-            },
-            status: "Active",
-            paymentHistory: [
-                {
-                    id: 4,
-                    date: "2025-01-15",
-                    dueDate: "2025-02-15",
-                    base: 38136, // GST included calculation
-                    gst: 6864,
-                    total: 45000,
-                    status: "Pending"
-                }
-            ],
-            bills: {
-                propertyTax: { 
-                    checked: true, 
-                    billNo: "PT2025001", 
-                    trackingDay: "365",
-                    documents: [
-                        {
-                            name: "Commercial Property Tax 2025.pdf",
-                            uploadDate: "2025-01-15",
-                            size: 320000,
-                            type: "application/pdf"
-                        }
-                    ]
-                },
-                lightBill: { 
-                    checked: true, 
-                    billNo: "EB250115", 
-                    trackingDay: "90",
-                    documents: [
-                        {
-                            name: "Electricity Bill Jan 2025.pdf",
-                            uploadDate: "2025-01-15",
-                            size: 145000,
-                            type: "application/pdf"
-                        },
-                        {
-                            name: "Electricity Bill Feb 2025.pdf",
-                            uploadDate: "2025-02-15",
-                            size: 138000,
-                            type: "application/pdf"
-                        }
-                    ]
-                },
-                gasBill: { checked: false },
-                internetBill: { 
-                    checked: true, 
-                    billNo: "INT250120", 
-                    trackingDay: "60",
-                    documents: [
-                        {
-                            name: "Internet Bill February 2025.pdf",
-                            uploadDate: "2025-02-20",
-                            size: 75000,
-                            type: "application/pdf"
-                        },
-                        {
-                            name: "Broadband Service Agreement.pdf",
-                            uploadDate: "2025-01-20",
-                            size: 280000,
-                            type: "application/pdf"
-                        }
-                    ]
-                }
-            },
-            documents: [
-                { name: "Commercial Lease Agreement.pdf", uploadDate: "2025-01-15" },
-                { name: "Property Registration.pdf", uploadDate: "2025-01-15" }
-            ]
-        },
-        {
-            id: 4,
-            name: "Residential Villa",
-            projectName: "Garden Heights",
-            address: "789 Garden Road, Suburb Area",
-            type: "Residential",
-            carpetArea: "1500 sqft",
-            superBuiltupArea: "2000 sqft",
-            balconyArea: "200 sqft",
-            terraceArea: "300 sqft",
-            isRental: true,
-            rentAmount: 15000,
-            rentPeriod: "month",
-            gstIncludedInRent: false, // No GST for residential
-            gstPercentage: 0,
-            rentPayableDate: 7,
-            agreementStartDate: "2024-10-14", // October 14th start date
-            agreementTenureAmount: 2,
-            agreementTenureUnit: "years",
-            securityDeposit: 45000, // 3 months rent
-            escalationPercentage: 5,
-            escalationPeriod: 'months',
-            rentFreePeriodAmount: 15,
-            rentFreePeriodUnit: "days",
-            lesseeName: "Mr. Sharma Family",
-            lesseePhone: "+91 98765 43212",
-            lesseeEmail: "sharma.family@email.com",
-            lesseeAddress: "456 Family Street, Residential Area",
-            gstin: "N/A", // Residential property
-            panNo: "SHARM1234A",
-            agreementType: "Notary",
-            bankName: "SBI Bank",
-            accountNo: "123456789012",
-            ifscCode: "SBIN0001234",
-            maintenanceEnabled: true,
-            maintenance: {
-                amount: 3000,
                 period: "month"
             },
             status: "Active",
             paymentHistory: [],
             bills: {
-                propertyTax: { checked: true, billNo: "PT2024004", dueDate: "2025-03-31", period: "yearly" },
-                lightBill: { checked: true, billNo: "EB241014", dueDate: "2024-11-15", period: "monthly" },
-                gasBill: { checked: true, billNo: "GB241020", dueDate: "2024-11-20", period: "monthly" },
-                internetBill: { checked: false }
-            },
-            documents: [
-                { name: "Residential Lease Agreement.pdf", uploadDate: "2024-10-14" },
-                { name: "Property Registration.pdf", uploadDate: "2024-10-14" }
-            ]
-        },
-        
-        // Sample property with 15k rent, 2 years, 7th payable, 18/7/2025 start, 5% escalation
-        {
-            id: 5,
-            name: "Modern Apartment",
-            projectName: "Skyline Towers",
-            address: "123 Skyline Avenue, City Center",
-            type: "Residential",
-            carpetArea: "1000 sqft",
-            superBuiltupArea: "1300 sqft",
-            balconyArea: "150 sqft",
-            terraceArea: "0 sqft",
-            isRental: true,
-            rentAmount: 15000,
-            rentPeriod: "month",
-            gstIncludedInRent: false, // Residential - no GST
-            gstPercentage: 0,
-            rentPayableDate: 7, // 7th of every month
-            agreementStartDate: "2025-09-26", // 26/9/2025 start date
-            agreementTenureAmount: 2, // 2 years
-            agreementTenureUnit: "years",
-            securityDeposit: 45000, // 3 months rent
-            escalationPercentage: 5, // 5% annual escalation
-            escalationPeriod: 'months',
-            rentFreePeriodAmount: 0,
-            rentFreePeriodUnit: "days",
-            lesseeName: "Mr. Kumar",
-            lesseePhone: "+91 98765 12345",
-            lesseeEmail: "kumar.tenant@email.com",
-            lesseeAddress: "789 Tenant Street, City Area",
-            gstin: "N/A", // Residential property
-            panNo: "KUMAR1234B",
-            agreementType: "Notary",
-            bankName: "HDFC Bank",
-            accountNo: "987654321098",
-            ifscCode: "HDFC0000987",
-            maintenanceEnabled: true,
-            maintenance: {
-                amount: 2000,
-                period: "month"
-            },
-            status: "Active",
-            paymentHistory: [], // Empty for dynamic generation
-            bills: {
                 propertyTax: { 
                     checked: true, 
-                    billNo: "PT2025005", 
-                    dueDate: "2026-03-31", 
-                    period: "yearly",
-                    documents: [
-                        {
-                            name: "Property Tax Receipt 2025.pdf",
-                            uploadDate: "2025-09-26",
-                            size: 245760,
-                            type: "application/pdf"
-                        },
-                        {
-                            name: "Property Registration Certificate.pdf",
-                            uploadDate: "2025-09-26",
-                            size: 512000,
-                            type: "application/pdf"
-                        }
-                    ]
+                    billNo: "PT2025001",
+                    trackingDay: "1",
+                    period: "year",
+                    dueDate: "31"
                 },
-                lightBill: { 
+                electricityBill: {
+                    checked: true,
+                    billNo: "EB12345",
+                    trackingDay: "1",
+                    period: "month",
+                    dueDate: "5"
+                },
+                waterBill: {
                     checked: true, 
-                    billNo: "EB250926", 
-                    dueDate: "2025-09-15", 
-                    period: "monthly",
-                    documents: [
-                        {
-                            name: "Electricity Bill Sep 2025.pdf",
-                            uploadDate: "2025-09-15",
-                            size: 128000,
-                            type: "application/pdf"
-                        }
-                    ]
+                    billNo: "WB67890",
+                    trackingDay: "2",
+                    period: "month",
+                    dueDate: "10"
                 },
                 gasBill: { 
                     checked: true, 
-                    billNo: "GB250930", 
-                    dueDate: "2025-09-30", 
-                    period: "monthly",
-                    documents: [
-                        {
-                            name: "Gas Bill September 2025.pdf",
-                            uploadDate: "2025-09-30",
-                            size: 89000,
-                            type: "application/pdf"
-                        },
-                        {
-                            name: "Gas Connection Certificate.jpg",
-                            uploadDate: "2025-09-30",
-                            size: 156000,
-                            type: "image/jpeg"
-                        }
-                    ]
-                },
-                internetBill: { 
-                    checked: true, 
-                    billNo: "IN251005", 
-                    dueDate: "2025-10-05", 
-                    period: "monthly",
-                    documents: [
-                        {
-                            name: "Internet Bill October 2025.pdf",
-                            uploadDate: "2025-10-05",
-                            size: 67000,
-                            type: "application/pdf"
-                        },
-                        {
-                            name: "Broadband Installation Receipt.pdf",
-                            uploadDate: "2025-10-05",
-                            size: 98000,
-                            type: "application/pdf"
-                        },
-                        {
-                            name: "Router Warranty Card.pdf",
-                            uploadDate: "2025-10-05",
-                            size: 45000,
-                            type: "application/pdf"
-                        }
-                    ]
+                    billNo: "GB54321",
+                    trackingDay: "1",
+                    period: "month",
+                    dueDate: "15"
                 }
             },
-            documents: [
-                { name: "2-Year Lease Agreement.pdf", uploadDate: "2025-09-26" },
-                { name: "Property Registration.pdf", uploadDate: "2025-09-26" }
+                    documents: [
+                { name: "Rent Agreement.pdf", uploadDate: "2025-01-01" },
+                { name: "Property Papers.pdf", uploadDate: "2025-01-01" }
             ]
         }
     ]
@@ -1183,33 +848,35 @@ function createIndividualBillSection(billKey) {
                     }
                     
                     // Calculate days display
-                    const daysDisplay = currentBillData.trackingDay ? (() => {
-                        // If bill is paid, show the status at the time of payment
-                        if (currentBillData.paid && currentBillData.paidDate) {
-                            const paidDate = new Date(currentBillData.paidDate);
-                            const trackingDays = parseInt(currentBillData.trackingDay);
-                            const lastDueDate = currentBillData.lastDueDate ? new Date(currentBillData.lastDueDate) : paidDate;
-                            const nextDueDate = new Date(lastDueDate.getTime() + (trackingDays * 24 * 60 * 60 * 1000));
-                            const daysDifference = Math.floor((nextDueDate - paidDate) / (24 * 60 * 60 * 1000));
-                            
-                            if (daysDifference <= 0) {
-                                return `-${Math.abs(daysDifference)}`;
-                            } else {
-                                return daysDifference.toString();
-                            }
-                        } else {
-                            // For unpaid bills, calculate current status
-                            const trackingDays = parseInt(currentBillData.trackingDay);
+                    const daysDisplay = currentBillData.trackingDay && currentBillData.period ? (() => {
+                        const trackingNum = parseInt(currentBillData.trackingDay);
+                        const period = currentBillData.period || 'month';
+                        const dueDate = parseInt(currentBillData.dueDate) || 1;
+                        
+                        // Calculate next due date based on period and due date day
                             const today = new Date();
-                            const lastDueDate = currentBillData.lastDueDate ? new Date(currentBillData.lastDueDate) : today;
-                            const nextDueDate = new Date(lastDueDate.getTime() + (trackingDays * 24 * 60 * 60 * 1000));
+                        let nextDueDate = new Date();
+                        
+                        if (period === 'day') {
+                            nextDueDate = new Date(today.getTime() + (trackingNum * 24 * 60 * 60 * 1000));
+                        } else if (period === 'week') {
+                            nextDueDate = new Date(today.getTime() + (trackingNum * 7 * 24 * 60 * 60 * 1000));
+                        } else if (period === 'month') {
+                            nextDueDate = new Date(today.getFullYear(), today.getMonth() + trackingNum, dueDate);
+                            // If due date is in the past for this cycle, move to next cycle
+                            if (nextDueDate < today) {
+                                nextDueDate = new Date(today.getFullYear(), today.getMonth() + trackingNum + 1, dueDate);
+                            }
+                        } else if (period === 'year') {
+                            nextDueDate = new Date(today.getFullYear() + trackingNum, today.getMonth(), dueDate);
+                        }
+                        
                             const daysDifference = Math.floor((nextDueDate - today) / (24 * 60 * 60 * 1000));
                             
                             if (daysDifference <= 0) {
-                                return `-${Math.abs(daysDifference)}`;
+                            return `<span style="color: red;">-${Math.abs(daysDifference)} days</span>`;
                             } else {
-                                return daysDifference.toString();
-                            }
+                            return `${daysDifference} days`;
                         }
                     })() : 'Not set';
                     
@@ -1332,6 +999,8 @@ function openPaymentModal(paymentId) {
         payment = property.paymentHistory.find(p => p.id == paymentId);
         if (payment) {
             // Recalculate GST amounts using current GST settings
+            const gstBorneBy = property.gst?.borneBy || 'lessee';
+            
             if (property.gstIncludedInRent) {
                 // GST is included in total, calculate base amount
                 const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
@@ -1339,10 +1008,17 @@ function openPaymentModal(paymentId) {
                 gstAmount = payment.total - baseAmount;
                 totalAmount = payment.total;
             } else {
-                // GST is not included - no GST at all
+                // GST is not included - check if borne by lessee
                 baseAmount = payment.base;
-                gstAmount = 0;
-                totalAmount = payment.base;
+                if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+                    const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                    gstAmount = Math.round(payment.base * gstPercentage);
+                    totalAmount = payment.base + gstAmount;
+                } else {
+                    // GST borne by lessor or no GST
+                    gstAmount = 0;
+                    totalAmount = payment.base;
+                }
             }
         }
     }
@@ -1356,6 +1032,8 @@ function openPaymentModal(paymentId) {
             const rentAmount = schedulePayment.amount;
             
             // Calculate GST and total based on whether GST is included in rent
+            const gstBorneBy = property.gst?.borneBy || 'lessee';
+            
             if (property.gstIncludedInRent) {
                 // GST is included in rent amount, so calculate base amount
                 const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
@@ -1363,10 +1041,17 @@ function openPaymentModal(paymentId) {
                 gstAmount = rentAmount - baseAmount;
                 totalAmount = rentAmount;
             } else {
-                // GST is not included - no GST at all
+                // GST is not included - check if borne by lessee
                 baseAmount = rentAmount;
-                gstAmount = 0;
-                totalAmount = rentAmount;
+                if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+                    const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                    gstAmount = Math.round(rentAmount * gstPercentage);
+                    totalAmount = rentAmount + gstAmount;
+                } else {
+                    // GST borne by lessor or no GST
+                    gstAmount = 0;
+                    totalAmount = rentAmount;
+                }
             }
         }
     }
@@ -1519,8 +1204,11 @@ function loadPropertyData(propertyId) {
 
     // Load maintenance data
     if (property.maintenance) {
-        document.querySelector('[name="maintenanceAmount"]').value = property.maintenance.amount || '';
-        document.querySelector('[name="maintenancePeriod"]').value = property.maintenance.period || 'month';
+        const maintenanceAmountInput = document.querySelector('[name="maintenanceAmount"]');
+        if (maintenanceAmountInput) {
+            maintenanceAmountInput.value = property.maintenance.amount || '';
+        }
+        // Note: maintenancePeriod field doesn't exist in the form, so we skip it
     }
 
     // Load GST data and show/hide percentage field
@@ -1623,11 +1311,13 @@ function saveProperty() {
             percentage: propertyData.gstPercentage || null,
             borneBy: propertyData.gstBorneBy || ''
         };
-        // For backward compatibility
+        // For backward compatibility - store at root level for payment calculations
         propertyData.gstIncludedInRent = propertyData.gstType === 'included';
+        propertyData.gstPercentage = parseFloat(propertyData.gstPercentage) || 0;
     } else {
         propertyData.gst = null;
         propertyData.gstIncludedInRent = false;
+        propertyData.gstPercentage = 0;
     }
 
     // Handle maintenance data
@@ -1930,11 +1620,15 @@ function collectBillsData() {
         const checkbox = document.querySelector(`#bill-${bill.key}`);
         const billNo = document.querySelector(`[name="bill-${bill.key}-no"]`);
         const trackingDay = document.querySelector(`[name="bill-${bill.key}-tracking-day"]`);
+        const period = document.querySelector(`[name="bill-${bill.key}-period"]`);
+        const dueDate = document.querySelector(`[name="bill-${bill.key}-due-date"]`);
         
         bills[bill.key] = {
             checked: checkbox ? checkbox.checked : false,
             billNo: billNo ? billNo.value : '',
-            trackingDay: trackingDay ? trackingDay.value : ''
+            trackingDay: trackingDay ? trackingDay.value : '',
+            period: period ? period.value : 'month',
+            dueDate: dueDate ? dueDate.value : ''
         };
     });
 
@@ -1943,32 +1637,18 @@ function collectBillsData() {
     document.querySelectorAll('.custom-bill-item').forEach(item => {
         const name = item.querySelector('[name="custom-bill-name"]').value;
         const billNo = item.querySelector('[name="custom-bill-no"]').value;
-        const dueValue = item.querySelector('[name="custom-bill-value"]').value;
-        const period = item.querySelector('[name="custom-bill-period"]').value;
         const trackingDay = item.querySelector('[name="custom-bill-tracking-day"]').value;
-        
-        // Calculate due date from value and period
-        let dueDate = '';
-        if (dueValue && period) {
-            const value = parseInt(dueValue);
-            const today = new Date();
-            let calculatedDueDate;
-            
-            if (period === 'days') {
-                calculatedDueDate = new Date(today.getTime() + (value * 24 * 60 * 60 * 1000));
-            } else if (period === 'months') {
-                calculatedDueDate = new Date(today.getFullYear(), today.getMonth() + value, today.getDate());
-            } else if (period === 'years') {
-                calculatedDueDate = new Date(today.getFullYear() + value, today.getMonth(), today.getDate());
-            }
-            
-            if (calculatedDueDate) {
-                dueDate = calculatedDueDate.toISOString().split('T')[0];
-            }
-        }
+        const period = item.querySelector('[name="custom-bill-period"]').value;
+        const dueDate = item.querySelector('[name="custom-bill-due-date"]').value;
         
         if (name) {
-            bills.customBills.push({ name, billNo, dueDate, dueValue, period, trackingDay });
+            bills.customBills.push({ 
+                name, 
+                billNo, 
+                trackingDay, 
+                period: period || 'month',
+                dueDate: dueDate || ''
+            });
         }
     });
 
@@ -2522,10 +2202,11 @@ function renderPaymentTable() {
 
     // Update GST header with dynamic percentage
     if (paymentTableHeader) {
-        if (property.gstIncludedInRent) {
-            paymentTableHeader.textContent = `GST (${property.gstPercentage || 18}%)`;
+        const gstPercentage = property.gstPercentage || 0;
+        if (gstPercentage > 0) {
+            paymentTableHeader.textContent = `GST (${gstPercentage}%)`;
         } else {
-            paymentTableHeader.textContent = 'GST (0%)';
+            paymentTableHeader.textContent = 'GST (%)';
         }
     }
 
@@ -2616,6 +2297,8 @@ function renderPaymentTable() {
             }
         } else {
             // For unpaid payments, calculate based on current rent amount
+        const gstBorneBy = property.gst?.borneBy || 'lessee';
+        
         if (property.gstIncludedInRent) {
             // GST is included in rent amount, so calculate base amount
             const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
@@ -2623,10 +2306,17 @@ function renderPaymentTable() {
             gstAmount = rentAmount - baseAmount;
             totalAmount = rentAmount;
         } else {
-            // GST is not included - no GST at all
+            // GST is not included - GST is added on top of rent
             baseAmount = rentAmount;
+            if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+                const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                gstAmount = Math.round(rentAmount * gstPercentage);
+                totalAmount = rentAmount + gstAmount;
+            } else {
+                // GST borne by lessor or no GST
             gstAmount = 0;
             totalAmount = rentAmount;
+            }
             }
         }
         
@@ -2711,6 +2401,7 @@ function updatePaymentSummary() {
         payments = schedule.map(p => {
             const rentAmount = p.amount;
             let baseAmount, gstAmount, totalAmount;
+            const gstBorneBy = property.gst?.borneBy || 'lessee';
             
             if (property.gstIncludedInRent && property.gstPercentage > 0) {
                 // GST is included in rent amount, so calculate base amount
@@ -2719,10 +2410,17 @@ function updatePaymentSummary() {
                 gstAmount = rentAmount - baseAmount;
                 totalAmount = rentAmount;
             } else {
-                // GST is not included - no GST at all
+                // GST is not included - GST is added on top of rent
                 baseAmount = rentAmount;
+                if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+                    const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                    gstAmount = Math.round(rentAmount * gstPercentage);
+                    totalAmount = rentAmount + gstAmount;
+                } else {
+                    // GST borne by lessor or no GST
                 gstAmount = 0;
                 totalAmount = rentAmount;
+                }
             }
             
             // Check if this payment has been paid in payment history
@@ -2783,8 +2481,39 @@ function updatePaymentSummary() {
         }
         return sum;
     }, 0);
-    const pendingAmount = payments.filter(p => p.status === 'Pending').reduce((sum, p) => sum + p.total, 0);
-    const overdueAmount = payments.filter(p => p.status === 'Pending' && new Date(p.dueDate) < new Date()).reduce((sum, p) => sum + p.total, 0);
+    // Calculate pending and overdue amounts based on GST "Borne By" setting
+    const gstBorneBy = property.gst?.borneBy || 'lessee';
+    const pendingAmount = payments.filter(p => p.status === 'Pending').reduce((sum, p) => {
+        if (property.gstIncludedInRent && property.gstPercentage) {
+            // GST is included - use total amount
+            return sum + p.total;
+        } else {
+            // GST is not included - check if borne by lessee
+            if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+                // GST borne by lessee - use total amount (base + GST)
+                return sum + p.total;
+            } else {
+                // GST borne by lessor or no GST - use base amount only
+                return sum + (p.base || 0);
+            }
+        }
+    }, 0);
+    
+    const overdueAmount = payments.filter(p => p.status === 'Pending' && new Date(p.dueDate) < new Date()).reduce((sum, p) => {
+        if (property.gstIncludedInRent && property.gstPercentage) {
+            // GST is included - use total amount
+            return sum + p.total;
+        } else {
+            // GST is not included - check if borne by lessee
+            if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+                // GST borne by lessee - use total amount (base + GST)
+                return sum + p.total;
+            } else {
+                // GST borne by lessor or no GST - use base amount only
+                return sum + (p.base || 0);
+            }
+        }
+    }, 0);
     // Calculate GST collected including partial payments
     const gstCollected = payments.reduce((sum, p) => {
         if (p.status === 'Paid') {
@@ -2800,14 +2529,23 @@ function updatePaymentSummary() {
                 });
                 if (paymentHistory) {
                     const partialSummary = getPartialPaymentSummary(paymentHistory);
-                    // Only calculate GST if GST is enabled for the property
+                    const gstBorneBy = property.gst?.borneBy || 'lessee';
+                    
+                    // Calculate GST based on property settings and borne by
                     if (property.gstIncludedInRent && property.gstPercentage) {
+                        // GST is included in total, calculate base amount
+                        const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                        const baseAmount = Math.round(partialSummary.paidAmount / (1 + gstPercentage));
+                        const gstAmount = partialSummary.paidAmount - baseAmount;
+                        return sum + gstAmount;
+                    } else if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+                        // GST is not included but borne by lessee
                         const gstPercentage = parseFloat(property.gstPercentage) / 100;
                         const baseAmount = Math.round(partialSummary.paidAmount / (1 + gstPercentage));
                         const gstAmount = partialSummary.paidAmount - baseAmount;
                         return sum + gstAmount;
                     }
-                    // If GST is disabled, no GST amount to add
+                    // If GST is disabled or borne by lessor, no GST amount to add
                 }
             }
         }
@@ -3148,15 +2886,24 @@ function recalculatePaymentHistory(property) {
             if (payment.partialPayments && payment.partialPayments.length > 0) {
                 return; // Skip payments with partial payments
             }
+        const gstBorneBy = property.gst?.borneBy || 'lessee';
+        
         if (property.gstIncludedInRent && property.gstPercentage) {
             // GST is included in total, calculate base amount
             const gstPercentage = parseFloat(property.gstPercentage) / 100;
             payment.base = Math.round(payment.total / (1 + gstPercentage));
             payment.gst = payment.total - payment.base;
         } else {
-            // GST is not included - no GST at all
+            // GST is not included - GST is added on top of base
+            if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+                const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                payment.gst = Math.round(payment.base * gstPercentage);
+                payment.total = payment.base + payment.gst;
+            } else {
+                // GST borne by lessor or no GST
             payment.gst = 0;
             payment.total = payment.base;
+            }
         }
         }
         // For paid payments, preserve the original amounts
@@ -3246,15 +2993,24 @@ function smartUpdatePaymentHistory(property, oldRentAmount, newRentAmount) {
             const newBaseAmount = Math.round(payment.base * rentRatio);
             
             // Recalculate GST and total based on current GST settings
+            const gstBorneBy = property.gst?.borneBy || 'lessee';
+            
             if (property.gstIncludedInRent && property.gstPercentage) {
                 // GST is included in total
                 const gstPercentage = parseFloat(property.gstPercentage) / 100;
                 payment.total = Math.round(newBaseAmount * (1 + gstPercentage));
                 payment.gst = payment.total - newBaseAmount;
             } else {
-                // GST is not included
+                // GST is not included - GST is added on top
+                if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+                    const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                    payment.gst = Math.round(newBaseAmount * gstPercentage);
+                    payment.total = newBaseAmount + payment.gst;
+                } else {
+                    // GST borne by lessor or no GST
                 payment.total = newBaseAmount;
                 payment.gst = 0;
+                }
             }
             
             payment.base = newBaseAmount;
@@ -3300,15 +3056,24 @@ function updateFuturePaymentSchedule(property, oldRentAmount, newRentAmount) {
             const newBaseAmount = Math.round(payment.base * rentRatio);
             
             // Recalculate GST and total based on current GST settings
+            const gstBorneBy = property.gst?.borneBy || 'lessee';
+            
             if (property.gstIncludedInRent && property.gstPercentage) {
                 // GST is included in total
                 const gstPercentage = parseFloat(property.gstPercentage) / 100;
                 payment.total = Math.round(newBaseAmount * (1 + gstPercentage));
                 payment.gst = payment.total - newBaseAmount;
             } else {
-                // GST is not included
+                // GST is not included - GST is added on top
+                if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+                    const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                    payment.gst = Math.round(newBaseAmount * gstPercentage);
+                    payment.total = newBaseAmount + payment.gst;
+                } else {
+                    // GST borne by lessor or no GST
                 payment.total = newBaseAmount;
                 payment.gst = 0;
+                }
             }
             
             payment.base = newBaseAmount;
@@ -3382,9 +3147,37 @@ function addPartialPayment(paymentId, amount, paymentDate, paymentMode, receiptN
         payment.remainingAmount = payment.totalAmount;
     }
     
+    // Calculate GST for partial payment based on property settings
+    const gstBorneBy = property.gst?.borneBy || 'lessee';
+    const partialAmount = parseFloat(amount);
+    let baseAmount, gstAmount, totalAmount;
+    
+    if (property.gstIncludedInRent && property.gstPercentage) {
+        // GST is included in total, calculate base amount
+        const gstPercentage = parseFloat(property.gstPercentage) / 100;
+        baseAmount = Math.round(partialAmount / (1 + gstPercentage));
+        gstAmount = partialAmount - baseAmount;
+        totalAmount = partialAmount;
+    } else {
+        // GST is not included - check if borne by lessee
+        baseAmount = partialAmount;
+        if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+            const gstPercentage = parseFloat(property.gstPercentage) / 100;
+            gstAmount = Math.round(partialAmount * gstPercentage);
+            totalAmount = partialAmount + gstAmount;
+        } else {
+            // GST borne by lessor or no GST
+            gstAmount = 0;
+            totalAmount = partialAmount;
+        }
+    }
+    
     // Add partial payment
     const partialPayment = {
-        amount: parseFloat(amount),
+        amount: totalAmount, // Store total amount
+        base: baseAmount,    // Store base amount
+        gst: gstAmount,      // Store GST amount
+        total: totalAmount,   // Store total amount
         date: paymentDate,
         mode: paymentMode,
         receiptNo: receiptNo || `RCP-${Date.now()}`,
@@ -3497,6 +3290,7 @@ function openPartialPaymentModal(paymentId) {
         
         // Calculate GST and total based on current property settings
         let baseAmount, gstAmount, totalAmount;
+        const gstBorneBy = property.gst?.borneBy || 'lessee';
         
         if (property.gstIncludedInRent && property.gstPercentage) {
             // GST is included in rent amount, so calculate base amount
@@ -3505,10 +3299,17 @@ function openPartialPaymentModal(paymentId) {
             gstAmount = schedulePayment.amount - baseAmount;
             totalAmount = schedulePayment.amount;
         } else {
-            // GST is not included - no GST at all
+            // GST is not included - check if borne by lessee
             baseAmount = schedulePayment.amount;
+            if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+                const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                gstAmount = Math.round(schedulePayment.amount * gstPercentage);
+                totalAmount = schedulePayment.amount + gstAmount;
+            } else {
+                // GST borne by lessor or no GST
             gstAmount = 0;
             totalAmount = schedulePayment.amount;
+            }
         }
         
         // Create a new payment record
@@ -3536,6 +3337,30 @@ function openPartialPaymentModal(paymentId) {
     
     const partialSummary = getPartialPaymentSummary(payment);
     
+    // Calculate correct amounts based on GST "Borne By" setting
+    const gstBorneBy = property.gst?.borneBy || 'lessee';
+    let displayTotalAmount, displayPaidAmount, displayRemainingAmount;
+    
+    if (property.gstIncludedInRent && property.gstPercentage) {
+        // GST is included - use total amounts
+        displayTotalAmount = partialSummary.totalAmount;
+        displayPaidAmount = partialSummary.paidAmount;
+        displayRemainingAmount = partialSummary.remainingAmount;
+    } else {
+        // GST is not included - check if borne by lessee
+        if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+            // GST borne by lessee - use total amounts (base + GST)
+            displayTotalAmount = partialSummary.totalAmount;
+            displayPaidAmount = partialSummary.paidAmount;
+            displayRemainingAmount = partialSummary.remainingAmount;
+        } else {
+            // GST borne by lessor or no GST - use base amounts only
+            displayTotalAmount = payment.base || 0;
+            displayPaidAmount = partialSummary.paidAmount;
+            displayRemainingAmount = displayTotalAmount - displayPaidAmount;
+        }
+    }
+    
     // Remove any existing modal first
     const existingModal = document.getElementById('partialPaymentModal');
     if (existingModal) {
@@ -3559,15 +3384,15 @@ function openPartialPaymentModal(paymentId) {
                     <div class="summary-grid">
                         <div class="summary-item">
                             <label>Total Amount:</label>
-                            <span>₹${partialSummary.totalAmount.toLocaleString()}</span>
+                            <span>₹${displayTotalAmount.toLocaleString()}</span>
                         </div>
                         <div class="summary-item">
                             <label>Paid Amount:</label>
-                            <span>₹${partialSummary.paidAmount.toLocaleString()}</span>
+                            <span>₹${displayPaidAmount.toLocaleString()}</span>
                         </div>
                         <div class="summary-item">
                             <label>Remaining:</label>
-                            <span>₹${partialSummary.remainingAmount.toLocaleString()}</span>
+                            <span>₹${displayRemainingAmount.toLocaleString()}</span>
                         </div>
                         <div class="summary-item">
                             <label>Payments Made:</label>
@@ -3580,7 +3405,7 @@ function openPartialPaymentModal(paymentId) {
                     <div class="form-group">
                         <label class="form-label">Payment Amount *</label>
                         <input type="number" class="form-control" id="partialAmount" 
-                               placeholder="Enter amount" min="1" max="${partialSummary.remainingAmount}" 
+                               placeholder="Enter amount" min="1" max="${displayRemainingAmount}" 
                                step="0.01" required>
                     </div>
                     <div class="form-group">
@@ -3783,15 +3608,30 @@ function setupBillsSection(existingBills = null) {
             </div>
             <div class="bill-details ${isChecked ? '' : 'hidden'}">
                 <div class="form-group">
-                    <label class="form-label">Bill No.</label>
+                    <label class="form-label">Consumer No</label>
                     <input type="text" class="form-control" name="bill-${bill.key}-no" 
                            value="${existingBill ? existingBill.billNo || '' : ''}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Days to Track</label>
+                    <label class="form-label">Track No</label>
                     <input type="number" class="form-control" name="bill-${bill.key}-tracking-day" 
-                           placeholder="Enter days" min="1" max="365"
+                           placeholder="Enter number" min="1" max="365"
                            value="${existingBill ? existingBill.trackingDay || '' : ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Period</label>
+                    <select class="form-control" name="bill-${bill.key}-period">
+                        <option value="day" ${existingBill && existingBill.period === 'day' ? 'selected' : ''}>Day</option>
+                        <option value="week" ${existingBill && existingBill.period === 'week' ? 'selected' : ''}>Week</option>
+                        <option value="month" ${existingBill && existingBill.period === 'month' ? 'selected' : ''}>Month</option>
+                        <option value="year" ${existingBill && existingBill.period === 'year' ? 'selected' : ''}>Year</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Due Date (Day of Month)</label>
+                    <input type="number" class="form-control" name="bill-${bill.key}-due-date" 
+                           placeholder="Enter day (1-31)" min="1" max="31"
+                           value="${existingBill ? existingBill.dueDate || '' : ''}">
                 </div>
             </div>
         `;
@@ -3824,36 +3664,34 @@ function addCustomBill(existingBill = null) {
                        value="${existingBill ? existingBill.name || '' : ''}">
             </div>
             <div class="form-group">
-                <label class="form-label">Bill No.</label>
+                <label class="form-label">Consumer No</label>
                 <input type="text" class="form-control" name="custom-bill-no"
                        value="${existingBill ? existingBill.billNo || '' : ''}">
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Due in</label>
-                <div class="form-row">
-                    <div class="form-group" style="flex: 1; margin-right: 10px;">
-                        <input type="number" class="form-control" name="custom-bill-value" 
-                               placeholder="Enter number" min="1" max="999"
-                               value="${existingBill ? existingBill.dueValue || '' : ''}">
+                <label class="form-label">Track No</label>
+                <input type="number" class="form-control" name="custom-bill-tracking-day" 
+                       placeholder="Enter number" min="1" max="365"
+                       value="${existingBill ? existingBill.trackingDay || '' : ''}">
                     </div>
-                    <div class="form-group" style="flex: 1;">
+            <div class="form-group">
+                <label class="form-label">Period</label>
                         <select class="form-control" name="custom-bill-period">
-                            <option value="days" ${existingBill && existingBill.period === 'days' ? 'selected' : ''}>Days</option>
-                            <option value="months" ${existingBill && existingBill.period === 'months' ? 'selected' : ''}>Months</option>
-                            <option value="years" ${existingBill && existingBill.period === 'years' ? 'selected' : ''}>Years</option>
+                    <option value="day" ${existingBill && existingBill.period === 'day' ? 'selected' : ''}>Day</option>
+                    <option value="week" ${existingBill && existingBill.period === 'week' ? 'selected' : ''}>Week</option>
+                    <option value="month" ${existingBill && existingBill.period === 'month' ? 'selected' : ''}>Month</option>
+                    <option value="year" ${existingBill && existingBill.period === 'year' ? 'selected' : ''}>Year</option>
                         </select>
-                    </div>
-                </div>
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Days to Track</label>
-                <input type="number" class="form-control" name="custom-bill-tracking-day" 
-                       placeholder="Enter days" min="1" max="365"
-                       value="${existingBill ? existingBill.trackingDay || '' : ''}">
+                <label class="form-label">Due Date (Day of Month)</label>
+                <input type="number" class="form-control" name="custom-bill-due-date" 
+                       placeholder="Enter day (1-31)" min="1" max="31"
+                       value="${existingBill ? existingBill.dueDate || '' : ''}">
             </div>
         </div>
     `;
@@ -4106,6 +3944,8 @@ function generatePaymentInvoice(paymentId) {
         payment = property.paymentHistory.find(p => p.id == paymentId);
         if (payment) {
             // Recalculate GST amounts using current GST settings
+            const gstBorneBy = property.gst?.borneBy || 'lessee';
+            
             if (property.gstIncludedInRent) {
                 // GST is included in total, calculate base amount
                 const gstPercentage = parseFloat(property.gstPercentage || 18) / 100;
@@ -4113,10 +3953,17 @@ function generatePaymentInvoice(paymentId) {
                 gstAmount = payment.total - baseAmount;
                 totalAmount = payment.total;
             } else {
-                // GST is not included - no GST at all
+                // GST is not included - check if borne by lessee
                 baseAmount = payment.base;
+                if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+                    const gstPercentage = parseFloat(property.gstPercentage) / 100;
+                    gstAmount = Math.round(payment.base * gstPercentage);
+                    totalAmount = payment.base + gstAmount;
+                } else {
+                    // GST borne by lessor or no GST
                 gstAmount = 0;
                 totalAmount = payment.base;
+                }
             }
             
             dueDate = payment.dueDate;
@@ -4947,12 +4794,39 @@ function processReceivePayment(billKey) {
     
     const paymentAmount = parseFloat(amount);
     
+    // Calculate GST based on property settings and borne by
+    const gstBorneBy = property.gst?.borneBy || 'lessee';
+    let baseAmount, gstAmount, totalAmount;
+    
+    if (property.gstIncludedInRent && property.gstPercentage) {
+        // GST is included in total, calculate base amount
+        const gstPercentage = parseFloat(property.gstPercentage) / 100;
+        baseAmount = Math.round(paymentAmount / (1 + gstPercentage));
+        gstAmount = paymentAmount - baseAmount;
+        totalAmount = paymentAmount;
+    } else {
+        // GST is not included - check if borne by lessee
+        baseAmount = paymentAmount;
+        if (property.gstPercentage && property.gstPercentage > 0 && gstBorneBy === 'lessee') {
+            const gstPercentage = parseFloat(property.gstPercentage) / 100;
+            gstAmount = Math.round(paymentAmount * gstPercentage);
+            totalAmount = paymentAmount + gstAmount;
+        } else {
+            // GST borne by lessor or no GST
+            gstAmount = 0;
+            totalAmount = paymentAmount;
+        }
+    }
+    
     // Process payment
     billData.paid = true;
     billData.paidDate = new Date().toISOString().split('T')[0];
     billData.paymentMode = billData.paymentMode || 'Cash';
     billData.receiptNo = billData.receiptNo || `RCP-${Date.now()}`;
-    billData.amount = paymentAmount;
+    billData.amount = totalAmount; // Store total amount
+    billData.base = baseAmount; // Store base amount
+    billData.gst = gstAmount; // Store GST amount
+    billData.total = totalAmount; // Store total amount
     billData.notes = remarks || 'Payment received';
     
     // Generate next period when payment is made (regardless of early or overdue)
