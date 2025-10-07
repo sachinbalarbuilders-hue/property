@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Property Management - Balar Builders</title>
     <link rel="stylesheet" href="style.css">
+    
 </head>
 <body>
     <!-- Header -->
@@ -202,7 +203,7 @@
                                 <input type="text" class="form-control" name="projectName">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Office No</label>
+                                <label class="form-label">Office No / Flat No / Shop No</label>
                                 <input type="text" class="form-control" name="officerNo">
                             </div>
                             <div class="form-group">
@@ -360,14 +361,15 @@
                     </div>
 
                     <div class="form-row" style="display: flex; gap: 20px; align-items: flex-end;">
-                        <div class="form-group" style="flex: 1; min-width: 220px;">
-                            <label class="form-label">Escalation Percentage</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" name="escalationPercentage" min="0" max="100" step="0.1" value="5" placeholder="5" style="width: 100px;">
-                                <select class="form-control" name="escalationPeriod" style="width: 80px;">
-                                    <option value="days">Days</option>
-                                    <option value="months" selected>Months</option>
-                                    <option value="years">Years</option>
+                        <div class="form-group" style="flex: 1; min-width: 280px;">
+                            <label class="form-label">Escalation</label>
+                            <div class="input-group escalation-group">
+                                <input type="number" class="form-control" name="escalationPercentage" min="0" max="100" step="0.1" value="5" placeholder="5">
+                                <span class="input-group-text">% every</span>
+                                <input type="number" class="form-control" name="escalationAmount" min="1" value="1" placeholder="1">
+                                <select class="form-control" name="escalationPeriod">
+                                    <option value="months">Months</option>
+                                    <option value="years" selected>Years</option>
                                 </select>
                             </div>
                         </div>

@@ -1841,7 +1841,7 @@ select.form-control {
 
 /* Payment Table Specific */
 .payment-amount {
-  color: #374151 !important;
+  color: white !important;
 }
 
 .receive-btn {
@@ -3063,6 +3063,38 @@ body {
   background: var(--color-white);
   border: 1px solid var(--color-gray-200);
   width: fit-content;
+}
+
+/* Escalation Group Specific Styling */
+.escalation-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-width: 280px;
+}
+
+.escalation-group input[name="escalationPercentage"] {
+  width: 70px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.escalation-group input[name="escalationAmount"] {
+  width: 60px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.escalation-group select[name="escalationPeriod"] {
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.escalation-group .input-group-text {
+  padding: 8px 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .input-group:hover {
