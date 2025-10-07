@@ -720,11 +720,6 @@ select.form-control {
   padding: var(--space-16);
 }
 
-.card__header,
-.card__footer {
-  padding: var(--space-16);
-  border-bottom: 1px solid var(--color-card-border-inner);
-}
 
 /* Status indicators - simplified with CSS variables */
 .status {
@@ -766,15 +761,6 @@ select.form-control {
     rgba(var(--color-warning-rgb, 168, 75, 47), var(--status-border-opacity));
 }
 
-.status--info {
-  background-color: rgba(
-    var(--color-info-rgb, 98, 108, 113),
-    var(--status-bg-opacity)
-  );
-  color: var(--color-info);
-  border: 1px solid
-    rgba(var(--color-info-rgb, 98, 108, 113), var(--status-border-opacity));
-}
 
 /* Container layout */
 .container {
@@ -810,69 +796,7 @@ select.form-control {
 .flex {
   display: flex;
 }
-.flex-col {
-  flex-direction: column;
-}
-.items-center {
-  align-items: center;
-}
-.justify-center {
-  justify-content: center;
-}
-.justify-between {
-  justify-content: space-between;
-}
-.gap-4 {
-  gap: var(--space-4);
-}
-.gap-8 {
-  gap: var(--space-8);
-}
-.gap-16 {
-  gap: var(--space-16);
-}
 
-.m-0 {
-  margin: 0;
-}
-.mt-8 {
-  margin-top: var(--space-8);
-}
-.mb-8 {
-  margin-bottom: var(--space-8);
-}
-.mx-8 {
-  margin-left: var(--space-8);
-  margin-right: var(--space-8);
-}
-.my-8 {
-  margin-top: var(--space-8);
-  margin-bottom: var(--space-8);
-}
-
-.p-0 {
-  padding: 0;
-}
-.py-8 {
-  padding-top: var(--space-8);
-  padding-bottom: var(--space-8);
-}
-.px-8 {
-  padding-left: var(--space-8);
-  padding-right: var(--space-8);
-}
-.py-16 {
-  padding-top: var(--space-16);
-  padding-bottom: var(--space-16);
-}
-.px-16 {
-  padding-left: var(--space-16);
-  padding-right: var(--space-16);
-}
-
-.block {
-  display: block;
-}
 .hidden {
   display: none;
 }
@@ -967,10 +891,25 @@ select.form-control {
 /* Dashboard Summary */
 .dashboard-summary,
 .payment-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
   gap: var(--space-20);
   margin-bottom: var(--space-32);
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .dashboard-summary,
+  .payment-summary {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-summary,
+  .payment-summary {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 .summary-card {
@@ -1341,6 +1280,13 @@ select.form-control {
   border: 1px solid rgba(var(--color-error-rgb), 0.2);
 }
 
+.payment-status--due-today {
+  background: rgba(var(--color-warning-rgb), 0.15);
+  color: var(--color-warning);
+  border: 1px solid rgba(var(--color-warning-rgb), 0.3);
+  font-weight: var(--font-weight-semibold);
+}
+
 /* Action Buttons */
 .action-buttons {
   display: flex;
@@ -1470,6 +1416,23 @@ select.form-control {
   margin: 0;
   color: var(--color-white);
   font-size: var(--font-size-2xl);
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--color-white) !important;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+.modal-header .btn {
+  color: var(--color-white) !important;
+  border-color: var(--color-white) !important;
+}
+
+.modal-header .btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: var(--color-white) !important;
 }
 
 .modal-close {
@@ -2168,7 +2131,7 @@ select.form-control {
   margin-top: var(--space-16);
   background: #ffffff;
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   border: 2px solid #e5e7eb;
 }
@@ -2214,7 +2177,6 @@ select.form-control {
 
 .individual-bill-table tbody tr:hover {
   background: #f8fafc;
-  transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -2230,6 +2192,7 @@ select.form-control {
   background-image: none !important;
   border: none !important;
   box-shadow: none !important;
+  position: relative;
 }
 
 /* Table cell containing bill actions */
@@ -2248,6 +2211,7 @@ select.form-control {
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
+  position: relative;
 }
 
 /* Action buttons inside individual bill tables - Higher specificity */
@@ -2379,6 +2343,13 @@ select.form-control {
   border-color: #ef4444;
 }
 
+.individual-bill-table .payment-status--due-today {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #f59e0b;
+  font-weight: 600;
+}
+
 .individual-bill-table .payment-status--pending {
   background: #fef3c7;
   color: #92400e;
@@ -2444,7 +2415,7 @@ select.form-control {
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--color-card-border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: visible;
   background: var(--color-surface);
 }
 
@@ -2468,13 +2439,21 @@ select.form-control {
 
   .dashboard-summary,
   .payment-summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .dashboard-header {
     flex-direction: column;
     gap: var(--space-16);
     align-items: flex-start;
+  }
+}
+
+/* Very small screens - stack cards vertically */
+@media (max-width: 480px) {
+  .dashboard-summary,
+  .payment-summary {
+    grid-template-columns: 1fr;
   }
 
   .search-controls {
@@ -2808,6 +2787,24 @@ select.form-control {
   overflow: visible !important;
 }
 
+/* Ensure all parent containers allow overflow */
+#individualBillSections {
+  overflow: visible !important;
+}
+
+#paymentDashboard {
+  overflow: visible !important;
+}
+
+.main-content {
+  overflow: visible !important;
+}
+
+body {
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
 .document-upload-inline .btn {
   font-size: 12px;
   padding: 6px 10px;
@@ -2848,7 +2845,7 @@ select.form-control {
   border: 1px solid var(--color-gray-300);
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 9999;
+  z-index: 999999;
   min-width: 180px;
   display: none;
   overflow: visible;
