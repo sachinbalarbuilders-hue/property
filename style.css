@@ -1841,8 +1841,7 @@ select.form-control {
 
 /* Payment Table Specific */
 .payment-amount {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text) !important;
+  color: #374151 !important;
 }
 
 .receive-btn {

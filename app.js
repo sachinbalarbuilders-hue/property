@@ -713,38 +713,39 @@ function getAllBillsForType(property, billKey) {
                 }
             }
         });
-    } else {
-        // For non-monthly periods, add the main bill
-    if (property.bills[billKey]) {
-        bills.push({ key: billKey, data: property.bills[billKey], isMain: true });
-    }
-    
-        // Add yearly bills (for year periods)
-        const currentYear = new Date().getFullYear();
-        const startYear = billData?.startDate ? new Date(billData.startDate).getFullYear() : currentYear;
-
-        for (let year = startYear; year <= currentYear; year++) {
-            const yearBillKey = `${billKey}_year_${year}`;
-            if (property.bills[yearBillKey]) {
-                bills.push({
-                    key: yearBillKey,
-                    data: property.bills[yearBillKey],
-                    isMain: false,
-                    year: year
-                });
+    } else if (billData && billData.period === 'year') {
+        // For yearly periods, only return yearly bills (not the main bill)
+        Object.keys(property.bills).forEach(billKeyName => {
+            if (billKeyName.startsWith(`${billKey}_year_`)) {
+                const parts = billKeyName.split('_');
+                if (parts.length === 3 && parts[0] === billKey && parts[1] === 'year') {
+                    const year = parseInt(parts[2]);
+                    
+                    bills.push({
+                        key: billKeyName,
+                        data: property.bills[billKeyName],
+                        isMain: false,
+                        year: year
+                    });
+                }
             }
+        });
+    } else {
+        // For non-monthly and non-yearly periods, add the main bill
+        if (property.bills[billKey]) {
+            bills.push({ key: billKey, data: property.bills[billKey], isMain: true });
         }
         
         // Add additional period bills (for non-year periods)
-    let period = 2;
-    while (property.bills[`${billKey}_period_${period}`]) {
-        bills.push({ 
-            key: `${billKey}_period_${period}`, 
-            data: property.bills[`${billKey}_period_${period}`], 
-            isMain: false,
-            period: period
-        });
-        period++;
+        let period = 2;
+        while (property.bills[`${billKey}_period_${period}`]) {
+            bills.push({ 
+                key: `${billKey}_period_${period}`, 
+                data: property.bills[`${billKey}_period_${period}`], 
+                isMain: false,
+                period: period
+            });
+            period++;
         }
     }
     
@@ -854,6 +855,118 @@ function generateYearlyBillsIfNeeded(property, billKey, billData) {
                 dueDate: billData.dueDate,
                 year: year,
                 dueDateFull: new Date(year, 0, dueDay).toISOString().split('T')[0],
+                creationDate: today.toISOString().split('T')[0],
+                paid: false
+            };
+        }
+    }
+}
+
+function generateYearlyBatchBillsIfNeeded(property, billKey, billData) {
+    if (!billData.trackingDay || billData.period !== 'year') return;
+    
+    const today = new Date();
+    const dueDay = parseInt(billData.dueDate) || 1;
+    const startDate = billData.startDate ? new Date(billData.startDate) : new Date(today.getFullYear(), 0, 1);
+    const startYear = startDate.getFullYear();
+    const trackingYears = parseInt(billData.trackingDay) || 1;
+    
+    // Generate bills for the specified number of years from start date
+    for (let i = 0; i < trackingYears; i++) {
+        const billYear = startYear + i;
+        const yearBillKey = `${billKey}_year_${billYear}`;
+        
+        // Check if this year's bill already exists
+        if (!property.bills[yearBillKey]) {
+            // Create bill for this year
+            property.bills[yearBillKey] = {
+                checked: true,
+                billNo: billData.billNo,
+                trackingDay: billData.trackingDay,
+                period: billData.period,
+                startDate: billData.startDate,
+                dueDate: billData.dueDate,
+                year: billYear,
+                dueDateFull: new Date(billYear, 0, dueDay).toISOString().split('T')[0],
+                creationDate: today.toISOString().split('T')[0],
+                paid: false
+            };
+        }
+    }
+}
+
+function regenerateYearlyBatchBillsIfNeeded(property, billKey, billData) {
+    if (!billData.trackingDay || billData.period !== 'year') return;
+    
+    const today = new Date();
+    const dueDay = parseInt(billData.dueDate) || 1;
+    const startDate = billData.startDate ? new Date(billData.startDate) : new Date(today.getFullYear(), 0, 1);
+    const startYear = startDate.getFullYear();
+    const trackingYears = parseInt(billData.trackingDay) || 1;
+    
+    // Count existing yearly bills for this bill type
+    const existingYearlyBills = Object.keys(property.bills).filter(key => 
+        key.startsWith(`${billKey}_year_`) && property.bills[key]
+    );
+    
+    // If we need more bills than exist, generate them
+    if (existingYearlyBills.length < trackingYears) {
+        for (let i = existingYearlyBills.length; i < trackingYears; i++) {
+            const billYear = startYear + i;
+            const yearBillKey = `${billKey}_year_${billYear}`;
+            
+            // Create bill for this year if it doesn't exist
+            if (!property.bills[yearBillKey]) {
+                property.bills[yearBillKey] = {
+                    checked: true,
+                    billNo: billData.billNo,
+                    trackingDay: billData.trackingDay,
+                    period: billData.period,
+                    startDate: billData.startDate,
+                    dueDate: billData.dueDate,
+                    year: billYear,
+                    dueDateFull: new Date(billYear, 0, dueDay).toISOString().split('T')[0],
+                    creationDate: today.toISOString().split('T')[0],
+                    paid: false
+                };
+            }
+        }
+    }
+}
+
+function generateNextYearBatchBillOnPayment(property, billKey, billData) {
+    if (!billData.trackingDay || billData.period !== 'year') return;
+    
+    const today = new Date();
+    const dueDay = parseInt(billData.dueDate) || 1;
+    const startDate = billData.startDate ? new Date(billData.startDate) : new Date(today.getFullYear(), 0, 1);
+    
+    // Calculate next year based on start date progression
+    const startYear = startDate.getFullYear();
+    const currentYear = today.getFullYear();
+    
+    // Find the next year that should be generated
+    const yearsSinceStart = currentYear - startYear;
+    const nextYearIndex = yearsSinceStart + 1;
+    
+    const nextBillYear = startYear + nextYearIndex;
+    const nextYearBillKey = `${billKey}_year_${nextBillYear}`;
+    
+    // Only create if we're actually in the next year or later (not just when paying)
+    // This ensures bills are only created when their start date arrives
+    if (!property.bills[nextYearBillKey] && nextYearIndex > 0) {
+        // Check if we're in the next year or later
+        const nextYearDate = new Date(nextBillYear, 0, 1);
+        if (today >= nextYearDate) {
+            property.bills[nextYearBillKey] = {
+                checked: true,
+                billNo: billData.billNo,
+                trackingDay: billData.trackingDay,
+                period: billData.period,
+                startDate: billData.startDate,
+                dueDate: billData.dueDate,
+                year: nextBillYear,
+                dueDateFull: new Date(nextBillYear, 0, dueDay).toISOString().split('T')[0],
                 creationDate: today.toISOString().split('T')[0],
                 paid: false
             };
@@ -1015,7 +1128,8 @@ function createIndividualBillSection(billKey) {
     
     // Check if we need to generate yearly bills for year periods
     if (!isCustom && billData.trackingDay && billData.period === 'year') {
-        generateYearlyBillsIfNeeded(property, billKey, billData);
+        generateYearlyBatchBillsIfNeeded(property, billKey, billData);
+        saveData(); // Save the data after generating yearly bills
     }
     
     // Check if we need to generate monthly bills for month periods
@@ -1029,13 +1143,20 @@ function createIndividualBillSection(billKey) {
         regenerateMonthlyBillsIfNeeded(property, billKey, billData);
     }
     
+    // Check if we need to regenerate yearly bills when tracking period changes
+    if (!isCustom && billData.trackingDay && billData.period === 'year') {
+        regenerateYearlyBatchBillsIfNeeded(property, billKey, billData);
+    }
+    
     
     // Check if we need to generate next period for paid bills whose period has ended
     if (!isCustom && billData.trackingDay && billData.paid) {
         if (billData.period === 'month') {
             generateNextMonthBillOnPayment(property, billKey, billData);
+        } else if (billData.period === 'year') {
+            generateNextYearBatchBillOnPayment(property, billKey, billData);
         } else {
-        generateNextPeriodOnPayment(property, billKey, billData);
+            generateNextPeriodOnPayment(property, billKey, billData);
         }
     }
 
@@ -1398,23 +1519,198 @@ function createIndividualBillSection(billKey) {
                                 </td>
                             </tr>
                         `;
-                    } else {
-                        // For yearly bills, show individual entries
-                        return allBillsForType.map((bill, index) => {
-                    const currentBillData = bill.data;
-                    const currentBillKey = bill.key;
-                    
-                    // Calculate status for this bill
-                    let currentStatus = 'Active';
-                    let currentStatusClass = 'payment-status--paid';
-                    
-                    if (currentBillData.paid) {
-                        currentStatus = 'Paid';
-                        currentStatusClass = 'payment-status--paid';
-                    } else {
-                        const today = new Date();
-                        let dueDate = null;
+                    } else if (billData.period === 'year') {
+                        // For yearly bills, show combined view
+                        const totalBills = allBillsForType.length;
+                        const paidBills = allBillsForType.filter(bill => bill.data.paid).length;
+                        const unpaidBills = totalBills - paidBills;
                         
+                        // Calculate overall status
+                        let overallStatus = 'Active';
+                        let overallStatusClass = 'payment-status--paid';
+                        
+                        if (unpaidBills > 0) {
+                            // Use the same logic as days calculation for status
+                            const today = new Date();
+                            const dueDay = parseInt(billData.dueDate) || 1;
+                            
+                            // For combined years, use the due date of the LAST year
+                            const sortedBills = allBillsForType
+                                .filter(bill => bill.year)
+                                .sort((a, b) => a.year - b.year);
+                            
+                            if (sortedBills.length > 0) {
+                                const lastBill = sortedBills[sortedBills.length - 1];
+                                const dueDate = new Date(lastBill.year, 0, dueDay);
+                                const todayUTC = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                                const dueDateUTC = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+                                const daysRemaining = Math.floor((dueDateUTC - todayUTC) / (24 * 60 * 60 * 1000));
+                                
+                                if (daysRemaining < 0) {
+                                    overallStatus = 'Overdue';
+                                    overallStatusClass = 'payment-status--overdue';
+                                } else if (daysRemaining === 0) {
+                                    overallStatus = 'Due Today';
+                                    overallStatusClass = 'payment-status--due-today';
+                                } else if (daysRemaining <= 7) {
+                                    overallStatus = 'Due Soon';
+                                    overallStatusClass = 'payment-status--pending';
+                                } else {
+                                    overallStatus = 'Active';
+                                    overallStatusClass = 'payment-status--pending';
+                                }
+                            } else {
+                                overallStatus = 'Active';
+                                overallStatusClass = 'payment-status--pending';
+                            }
+                        } else {
+                            overallStatus = 'Paid';
+                            overallStatusClass = 'payment-status--paid';
+                        }
+                        
+                        // Calculate total amount
+                        const totalAmount = (() => {
+                            // If all bills are paid, use the main bill's amount
+                            if (unpaidBills === 0 && allBillsForType.length > 0) {
+                                return billData.amount || 0;
+                            }
+                            // Otherwise, sum up individual bill amounts
+                            return allBillsForType.reduce((sum, bill) => {
+                                return sum + (bill.data.amount || 0);
+                            }, 0);
+                        })();
+                        
+                        // Show date range
+                        const startDate = billData.startDate ? formatDate(billData.startDate) : 'N/A';
+                        const endDate = allBillsForType.length > 0 ? 
+                            (() => {
+                                const lastBill = allBillsForType[allBillsForType.length - 1];
+                                if (lastBill.year) {
+                                    return lastBill.year.toString();
+                                }
+                                return 'N/A';
+                            })() : 'N/A';
+                        
+                        // Show year range in the Period column
+                        const yearRange = allBillsForType.length > 0 ? 
+                            (() => {
+                                if (allBillsForType.length === 1) {
+                                    // Single year
+                                    const bill = allBillsForType[0];
+                                    if (bill.year) {
+                                        return bill.year.toString();
+                                    }
+                                } else {
+                                    // Multiple years - show range
+                                    const sortedBills = allBillsForType
+                                        .filter(bill => bill.year)
+                                        .sort((a, b) => a.year - b.year);
+                                    
+                                    if (sortedBills.length > 1) {
+                                        const firstYear = sortedBills[0].year;
+                                        const lastYear = sortedBills[sortedBills.length - 1].year;
+                                        return `${firstYear}-${lastYear}`;
+                                    }
+                                }
+                                return 'N/A';
+                            })() : 'N/A';
+                        
+                        // For yearly bills, show the actual years of the bills
+                        const yearDisplay = yearRange;
+                        
+                        return `
+                            <tr>
+                                <td class="serial-number">1</td>
+                                <td>${startDate}</td>
+                                <td>${billData.billNo || 'N/A'}</td>
+                                <td>${yearDisplay}</td>
+                                <td>${(() => {
+                                    // Calculate days remaining based on the next due date among all bills
+                                    const today = new Date();
+                                    const dueDay = parseInt(billData.dueDate) || 1;
+                                    
+                                    if (allBillsForType.length === 0) {
+                                        return 'Not set';
+                                    }
+                                    
+                                    // Sort bills by year to get chronological order
+                                    const sortedBills = allBillsForType
+                                        .filter(bill => bill.year)
+                                        .sort((a, b) => a.year - b.year);
+                                    
+                                    if (sortedBills.length === 0) {
+                                        return 'Not set';
+                                    }
+                                    
+                                    // For combined years, use the due date of the LAST year
+                                    const lastBill = sortedBills[sortedBills.length - 1];
+                                    const nextDueDate = new Date(lastBill.year, 0, dueDay);
+                                    
+                                    if (nextDueDate) {
+                                        const todayUTC = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                                        const nextDueDateUTC = new Date(nextDueDate.getFullYear(), nextDueDate.getMonth(), nextDueDate.getDate());
+                                        const daysDifference = Math.floor((nextDueDateUTC - todayUTC) / (24 * 60 * 60 * 1000));
+                                        
+                                        if (daysDifference < 0) {
+                                            return `<span style="color: red;">-${Math.abs(daysDifference)} days</span>`;
+                                        } else if (daysDifference === 0) {
+                                            return 'Due Today';
+                                        } else {
+                                            return `${daysDifference} days`;
+                                        }
+                                    }
+                                    
+                                    return 'Not set';
+                                })()}</td>
+                                <td>
+                                    <span class="payment-status ${overallStatusClass}">${overallStatus}</span>
+                                </td>
+                                <td class="payment-amount">${totalAmount > 0 ? `₹${totalAmount.toLocaleString()}` : '-'}</td>
+                                <td>${(() => {
+                                    // Check if any bills are paid and get the paid date
+                                    const paidBills = allBillsForType.filter(bill => bill.data.paid && bill.data.paidDate);
+                                    if (paidBills.length > 0) {
+                                        // Use the most recent paid date
+                                        const latestPaidBill = paidBills.sort((a, b) => new Date(b.data.paidDate) - new Date(a.data.paidDate))[0];
+                                        const paidDate = new Date(latestPaidBill.data.paidDate);
+                                        return formatDate(latestPaidBill.data.paidDate) + ' ' + paidDate.toLocaleTimeString('en-US', { 
+                                            hour: '2-digit', 
+                                            minute: '2-digit',
+                                            hour12: true 
+                                        });
+                                    }
+                                    return '-';
+                                })()}</td>
+                                <td class="bill-actions">
+                                    <div class="bill-actions">
+                                        <div class="bill-dropdown">
+                                            <button class="btn btn--outline bill-dropdown-toggle" onclick="toggleBillDropdown('${billKey}')">⋯</button>
+                                            <div class="bill-dropdown-menu" id="bill-dropdown-${billKey}">
+                                                <button class="dropdown-item" onclick="receiveBillPayment('${billKey}')">💰 Receive Payment</button>
+                                                <button class="dropdown-item" onclick="viewBillDocuments('${billKey}')">📄 View Documents</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        // For other periods, show individual entries
+                        return allBillsForType.map((bill, index) => {
+                            const currentBillData = bill.data;
+                            const currentBillKey = bill.key;
+                            
+                            // Calculate status for this bill
+                            let currentStatus = 'Active';
+                            let currentStatusClass = 'payment-status--paid';
+                            
+                            if (currentBillData.paid) {
+                                currentStatus = 'Paid';
+                                currentStatusClass = 'payment-status--paid';
+                            } else {
+                                const today = new Date();
+                                let dueDate = null;
+                                
                                 if (currentBillData.trackingDay && currentBillData.period) {
                                     // Calculate due date based on period and tracking
                                     const trackingNum = parseInt(currentBillData.trackingDay);
@@ -1439,28 +1735,28 @@ function createIndividualBillSection(billKey) {
                                     const daysRemaining = Math.floor((dueDateUTC - todayUTC) / (24 * 60 * 60 * 1000));
                                     
                                     if (daysRemaining < 0) {
-                                currentStatus = 'Overdue';
-                                currentStatusClass = 'payment-status--overdue';
+                                        currentStatus = 'Overdue';
+                                        currentStatusClass = 'payment-status--overdue';
                                     } else if (daysRemaining === 0) {
                                         currentStatus = 'Due Today';
                                         currentStatusClass = 'payment-status--due-today';
-                            } else if (daysRemaining <= 7) {
-                                currentStatus = 'Due Soon';
-                                currentStatusClass = 'payment-status--pending';
+                                    } else if (daysRemaining <= 7) {
+                                        currentStatus = 'Due Soon';
+                                        currentStatusClass = 'payment-status--pending';
+                                    }
+                                }
                             }
-                        }
-                    }
-                    
-                    // Calculate days display
-                    const daysDisplay = currentBillData.trackingDay && currentBillData.period ? (() => {
-                        const trackingNum = parseInt(currentBillData.trackingDay);
+                            
+                            // Calculate days display
+                            const daysDisplay = currentBillData.trackingDay && currentBillData.period ? (() => {
+                                const trackingNum = parseInt(currentBillData.trackingDay);
                                 const period = currentBillData.period || 'year';
                                 const dueDay = parseInt(currentBillData.dueDate) || 1;
-                        
-                        // Calculate next due date based on period and due date day
-                            const today = new Date();
-                        let nextDueDate = new Date();
-                        
+                                
+                                // Calculate next due date based on period and due date day
+                                const today = new Date();
+                                let nextDueDate = new Date();
+                                
                                 if (period === 'year') {
                                     // For year period, use the specific year's due date
                                     if (bill.year) {
@@ -1477,38 +1773,39 @@ function createIndividualBillSection(billKey) {
                                 const todayUTC = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                                 const nextDueDateUTC = new Date(nextDueDate.getFullYear(), nextDueDate.getMonth(), nextDueDate.getDate());
                                 const daysDifference = Math.floor((nextDueDateUTC - todayUTC) / (24 * 60 * 60 * 1000));
+                                
+                                if (daysDifference <= 0) {
+                                    return `<span style="color: red;">-${Math.abs(daysDifference)} days</span>`;
+                                } else {
+                                    return `${daysDifference} days`;
+                                }
+                            })() : 'Not set';
                             
-                            if (daysDifference <= 0) {
-                            return `<span style="color: red;">-${Math.abs(daysDifference)} days</span>`;
-                            } else {
-                            return `${daysDifference} days`;
-                        }
-                    })() : 'Not set';
-                    
                             const periodLabel = bill.isMain ? '' : (bill.year ? ` (${bill.year})` : ` (Period ${bill.period})`);
-                    const serialNum = (index + 1).toString();
-                    
-                    // Use creation date if available, otherwise use today's date
+                            const serialNum = (index + 1).toString();
+                            
+                            // Use creation date if available, otherwise use today's date
                             const rawDate = currentBillData.creationDate || new Date().toISOString().split('T')[0];
                             const displayDate = formatDate(rawDate);
                             
                             // Generate period display based on bill type
                             let periodDisplay = '-';
                             if (bill.year) {
-                                // Yearly bills: show just the year
                                 periodDisplay = bill.year.toString();
+                            } else if (bill.period) {
+                                periodDisplay = `Period ${bill.period}`;
                             }
-                    
-                    return `
-                        <tr>
-                            <td class="serial-number">${serialNum}</td>
-                            <td>${displayDate}</td>
-                            <td>${currentBillData.billNo || 'N/A'}${periodLabel}</td>
+                            
+                            return `
+                                <tr>
+                                    <td class="serial-number">${serialNum}</td>
+                                    <td>${displayDate}</td>
+                                    <td>${currentBillData.billNo || 'N/A'}${periodLabel}</td>
                                     <td>${periodDisplay}</td>
-                            <td>${daysDisplay}</td>
-                            <td>
-                                <span class="payment-status ${currentStatusClass}">${currentStatus}</span>
-                            </td>
+                                    <td>${daysDisplay}</td>
+                                    <td>
+                                        <span class="payment-status ${currentStatusClass}">${currentStatus}</span>
+                                    </td>
                                     <td class="payment-amount">${currentBillData.paid && currentBillData.amount ? `₹${currentBillData.amount.toLocaleString()}` : '-'}</td>
                                     <td>${currentBillData.paid && currentBillData.paidDate ? (() => {
                                         const paidDate = new Date(currentBillData.paidDate);
@@ -1518,19 +1815,19 @@ function createIndividualBillSection(billKey) {
                                             hour12: true 
                                         });
                                     })() : '-'}</td>
-                            <td class="bill-actions">
-                                <div class="bill-actions">
-                                    <div class="bill-dropdown">
-                                        <button class="btn btn--outline bill-dropdown-toggle" onclick="toggleBillDropdown('${currentBillKey}')">⋯</button>
-                                        <div class="bill-dropdown-menu" id="bill-dropdown-${currentBillKey}">
-                                            <button class="dropdown-item" onclick="receiveBillPayment('${currentBillKey}')">💰 Receive Payment</button>
+                                    <td class="bill-actions">
+                                        <div class="bill-actions">
+                                            <div class="bill-dropdown">
+                                                <button class="btn btn--outline bill-dropdown-toggle" onclick="toggleBillDropdown('${currentBillKey}')">⋯</button>
+                                                <div class="bill-dropdown-menu" id="bill-dropdown-${currentBillKey}">
+                                                    <button class="dropdown-item" onclick="receiveBillPayment('${currentBillKey}')">💰 Receive Payment</button>
                                                     <button class="dropdown-item" onclick="viewBillDocuments('${currentBillKey}')">📄 View Documents</button>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
+                                    </td>
+                                </tr>
+                            `;
                         }).join('');
                     }
                 })()}
@@ -5527,6 +5824,22 @@ function processReceivePayment(billKey) {
                     // Don't store amount in individual monthly bills to avoid double counting
                     // The amount is only stored in the main bill
                     monthlyBill.notes = billData.notes;
+                }
+            }
+        });
+    }
+    
+    // For yearly bills, also mark all individual yearly bills as paid
+    if (billData.period === 'year') {
+        Object.keys(property.bills).forEach(billKeyName => {
+            if (billKeyName.startsWith(`${billKey}_year_`)) {
+                const yearlyBill = property.bills[billKeyName];
+                if (yearlyBill) {
+                    yearlyBill.paid = true;
+                    yearlyBill.paidDate = billData.paidDate;
+                    // Don't store amount in individual yearly bills to avoid double counting
+                    // The amount is only stored in the main bill
+                    yearlyBill.notes = billData.notes;
                 }
             }
         });
