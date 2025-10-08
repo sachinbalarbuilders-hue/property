@@ -1,10 +1,11 @@
 // Property Management System JavaScript
 
 // GitHub Storage Configuration
-// To use GitHub storage, set your token in one of these ways:
-// 1. Environment variable: GITHUB_TOKEN=your_token_here
-// 2. Or replace the empty string below with your token
-const GITHUB_TOKEN = (typeof process !== 'undefined' && process.env && process.env.GITHUB_TOKEN) || ''; // GitHub personal access token
+// For GitHub Pages: Token is set via GitHub Secrets and injected via config.js
+// For local development: Use .env file or set window.GITHUB_TOKEN
+const GITHUB_TOKEN = (typeof window !== 'undefined' && window.GITHUB_TOKEN) || 
+                     (typeof process !== 'undefined' && process.env && process.env.GITHUB_TOKEN) || 
+                     ''; // GitHub personal access token
 const GITHUB_REPO_OWNER = 'sachinbalarbuilders-hue'; // GitHub username
 const GITHUB_REPO_NAME = 'property-documents'; // Repository name for storing documents
 
