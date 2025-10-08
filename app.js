@@ -1,9 +1,17 @@
 // Property Management System JavaScript
 
 // GitHub Storage Configuration
-const GITHUB_TOKEN = ''; // GitHub personal access token - set your token here
+// To use GitHub storage, set your token in one of these ways:
+// 1. Environment variable: GITHUB_TOKEN=your_token_here
+// 2. Or replace the empty string below with your token
+const GITHUB_TOKEN = (typeof process !== 'undefined' && process.env && process.env.GITHUB_TOKEN) || ''; // GitHub personal access token
 const GITHUB_REPO_OWNER = 'sachinbalarbuilders-hue'; // GitHub username
 const GITHUB_REPO_NAME = 'property-documents'; // Repository name for storing documents
+
+// Check if GitHub token is available
+const isGitHubStorageAvailable = () => {
+    return GITHUB_TOKEN && GITHUB_TOKEN.trim() !== '';
+};
 
 // Global Data Storage
 let properties = [];
@@ -187,6 +195,12 @@ class GitHubDocumentStorage {
     }
 
     async uploadDocument(file, propertyId) {
+        // Check if GitHub token is available
+        if (!isGitHubStorageAvailable()) {
+            console.log('GitHub token not available, using local storage');
+            return await this.local.upload(file, propertyId);
+        }
+        
         // Use GitHub for all files, fallback to local storage if GitHub fails
         try {
             return await this.github.upload(file, propertyId);
