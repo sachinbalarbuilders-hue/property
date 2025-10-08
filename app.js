@@ -1,7 +1,7 @@
 // Property Management System JavaScript
 
 // GitHub Storage Configuration
-const GITHUB_TOKEN = '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'; // GitHub personal access token
+const GITHUB_TOKEN = ''; // GitHub personal access token - set your token here
 const GITHUB_REPO_OWNER = 'sachinbalarbuilders-hue'; // GitHub username
 const GITHUB_REPO_NAME = 'property-documents'; // Repository name for storing documents
 
