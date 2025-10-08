@@ -1671,8 +1671,17 @@ select.form-control {
 /* Document Management */
 .document-upload {
   display: flex;
-  gap: var(--space-12);
+  flex-direction: column;
+  gap: var(--space-16);
   margin-bottom: var(--space-20);
+}
+
+.document-upload .form-group {
+  margin-bottom: 0;
+}
+
+.document-upload .form-group:last-child {
+  display: flex;
   align-items: flex-end;
 }
 
@@ -1841,6 +1850,11 @@ select.form-control {
 
 /* Payment Table Specific */
 .payment-amount {
+  color: white !important;
+}
+
+/* Payments History - Base, GST, Total columns should be white */
+.payment-table .payment-amount {
   color: white !important;
 }
 
@@ -3511,5 +3525,20 @@ input[type="number"] {
 [data-color-scheme="dark"] div.input-group {
   background-color: transparent !important;
   background: transparent !important;
+}
+
+/* Required field indicator */
+.required {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+/* Form validation styling */
+.form-control:required:invalid {
+  border-color: #dc3545;
+}
+
+.form-control:required:valid {
+  border-color: #28a745;
 }
 

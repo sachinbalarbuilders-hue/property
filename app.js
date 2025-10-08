@@ -1,9 +1,9 @@
 // Property Management System JavaScript
 
-// JSONBin Configuration
-const JSONBIN_API_KEY = 'YOUR_JSONBIN_API_KEY'; // Replace with your JSONBin API key
-const JSONBIN_BIN_ID = 'YOUR_JSONBIN_BIN_ID'; // Replace with your JSONBin bin ID
-const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+// GitHub Storage Configuration
+const GITHUB_TOKEN = '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'; // GitHub personal access token
+const GITHUB_REPO_OWNER = 'sachinbalarbuilders-hue'; // GitHub username
+const GITHUB_REPO_NAME = 'property-documents'; // Repository name for storing documents
 
 // Global Data Storage
 let properties = [];
@@ -124,15 +124,15 @@ const billsSection = document.getElementById('billsSection');
 const addCustomBillBtn = document.getElementById('addCustomBillBtn');
 const customBillsList = document.getElementById('customBillsList');
 const documentInput = document.getElementById('documentInput');
+const documentNameInput = document.getElementById('documentNameInput');
 const uploadDocBtn = document.getElementById('uploadDocBtn');
 const documentList = document.getElementById('documentList');
 const backToPropertiesBtn = document.getElementById('backToPropertiesBtn');
 const billButtons = document.getElementById('billButtons');
 const individualBillSections = document.getElementById('individualBillSections');
 
-// JSONBin Data Management Functions
-async function saveData() {
-    try {
+// Local Data Management Functions
+function saveData() {
         const data = {
             properties: properties,
             nextId: nextId,
@@ -140,65 +140,10 @@ async function saveData() {
             nextInvoiceId: nextInvoiceId,
             updated_at: new Date().toISOString()
         };
-        
-        const response = await fetch(JSONBIN_URL, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': JSONBIN_API_KEY
-            },
-            body: JSON.stringify(data)
-        });
-        
-        if (!response.ok) throw new Error('Failed to save data');
-        console.log('Data saved to JSONBin successfully');
-    } catch (error) {
-        console.error('Error saving data to JSONBin:', error);
-        // Fallback to localStorage
-        const data = {
-            properties: properties,
-            nextId: nextId,
-            nextReceiptId: nextReceiptId,
-            nextInvoiceId: nextInvoiceId
-        };
         localStorage.setItem('propertyManagementData', JSON.stringify(data));
-    }
 }
 
-async function loadData() {
-    try {
-        const response = await fetch(JSONBIN_URL, {
-            method: 'GET',
-            headers: {
-                'X-Master-Key': JSONBIN_API_KEY
-            }
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            const data = result.record;
-            
-            properties = data.properties || [];
-            nextId = data.nextId || 1;
-            nextReceiptId = data.nextReceiptId || 1;
-            nextInvoiceId = data.nextInvoiceId || 1;
-            console.log('Data loaded from JSONBin successfully');
-        } else {
-            // Try loading from localStorage as fallback
-        const savedData = localStorage.getItem('propertyManagementData');
-        if (savedData) {
-            const data = JSON.parse(savedData);
-            properties = data.properties || [];
-            nextId = data.nextId || 1;
-            nextReceiptId = data.nextReceiptId || 1;
-            nextInvoiceId = data.nextInvoiceId || 1;
-                // Migrate to JSONBin
-                await saveData();
-            }
-        }
-    } catch (error) {
-        console.error('Error loading data from JSONBin:', error);
-        // Fallback to localStorage
+function loadData() {
         const savedData = localStorage.getItem('propertyManagementData');
         if (savedData) {
             const data = JSON.parse(savedData);
@@ -207,12 +152,11 @@ async function loadData() {
             nextReceiptId = data.nextReceiptId || 1;
             nextInvoiceId = data.nextInvoiceId || 1;
         } else {
-        // Reset to default data if loading fails
+        // Reset to default data if no saved data
         properties = [];
         nextId = 1;
         nextReceiptId = 1;
         nextInvoiceId = 1;
-        }
     }
 }
 
@@ -235,9 +179,103 @@ function storeDocumentLocally(file, propertyId) {
     });
 }
 
+// GitHub Document Storage
+class GitHubDocumentStorage {
+    constructor() {
+        this.github = new GitHubStorage();
+        this.local = new LocalStorage();
+    }
+
+    async uploadDocument(file, propertyId) {
+        // Use GitHub for all files, fallback to local storage if GitHub fails
+        try {
+            return await this.github.upload(file, propertyId);
+        } catch (error) {
+            console.error('GitHub upload failed, falling back to local storage:', error);
+            return await this.local.upload(file, propertyId);
+        }
+    }
+}
+
+class GitHubStorage {
+    constructor() {
+        this.token = GITHUB_TOKEN;
+        this.repoOwner = GITHUB_REPO_OWNER;
+        this.repoName = GITHUB_REPO_NAME;
+    }
+
+    async upload(file, propertyId) {
+        try {
+            const fileName = `properties/${propertyId}/${Date.now()}-${file.name}`;
+            const base64Content = await this.fileToBase64(file);
+            
+            const response = await fetch(`https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${fileName}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Upload document: ${file.name} for property ${propertyId}`,
+                    content: base64Content
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('GitHub upload failed');
+            }
+
+            const result = await response.json();
+            return {
+                name: file.name,
+                uploadDate: new Date().toISOString().split('T')[0],
+                size: file.size,
+                type: file.type,
+                url: result.content.download_url,
+                storageMethod: 'github',
+                path: result.content.path
+            };
+        } catch (error) {
+            console.error('GitHub upload error:', error);
+            throw error;
+        }
+    }
+
+    fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+
+class LocalStorage {
+    async upload(file, propertyId) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const document = {
+                    name: file.name,
+                    uploadDate: new Date().toISOString().split('T')[0],
+                    size: file.size,
+                    type: file.type,
+                    data: e.target.result,
+                    storageMethod: 'local'
+                };
+                resolve(document);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
 // Initialize Application
 document.addEventListener('DOMContentLoaded', async function() {
-    await loadData();
+    loadData();
     loadTableSettings();
     initializeApp();
     setupEventListeners();
@@ -547,6 +585,7 @@ function setupEventListeners() {
     paymentModalClose.addEventListener('click', closePaymentModal);
     modalOverlay.addEventListener('click', closePropertyModal);
     paymentModalOverlay.addEventListener('click', closePaymentModal);
+    
     cancelBtn.addEventListener('click', closePropertyModal);
     paymentCancelBtn.addEventListener('click', closePaymentModal);
     savePropertyBtn.addEventListener('click', saveProperty);
@@ -754,6 +793,13 @@ function showPaymentDashboard(propertyId) {
         paymentHistoryTable.style.display = 'block';
     }
     
+    // Show payment summary when entering payment dashboard
+    const paymentSummary = document.querySelector('.payment-summary');
+    if (paymentSummary) {
+        paymentSummary.classList.remove('hidden');
+        paymentSummary.style.display = 'grid';
+    }
+    
     // Hide any open bill sections
     const billSections = document.querySelectorAll('#individualBillSections .table-container');
     billSections.forEach(section => {
@@ -842,6 +888,7 @@ function toggleIndividualBill(billKey) {
         // Hide payment summary when viewing individual bills
         const paymentSummary = document.querySelector('.payment-summary');
         if (paymentSummary) {
+            paymentSummary.classList.add('hidden');
             paymentSummary.style.display = 'none';
         }
         return;
@@ -856,6 +903,7 @@ function toggleIndividualBill(billKey) {
         // Hide payment summary when viewing individual bills
         const paymentSummary = document.querySelector('.payment-summary');
         if (paymentSummary) {
+            paymentSummary.classList.add('hidden');
             paymentSummary.style.display = 'none';
         }
     } else {
@@ -867,6 +915,7 @@ function toggleIndividualBill(billKey) {
         // Show payment summary when closing individual bills
         const paymentSummary = document.querySelector('.payment-summary');
         if (paymentSummary) {
+            paymentSummary.classList.remove('hidden');
             paymentSummary.style.display = 'grid';
         }
         // Update dashboard summary to refresh the values
@@ -1446,7 +1495,6 @@ function createIndividualBillSection(billKey) {
             <button class="btn btn--outline bill-dropdown-toggle" onclick="toggleBillDropdown('${billKey}')">⋯</button>
             <div class="bill-dropdown-menu" id="bill-dropdown-${billKey}">
                 <button class="dropdown-item" onclick="receiveBillPayment('${billKey}')">💰 Receive Payment</button>
-                ${!billData.paid ? `<button class="dropdown-item" onclick="openBillPartialPaymentModal('${billKey}')">💰 Add Partial Payment</button>` : ''}
             </div>
         </div>
     </div>`;
@@ -1529,11 +1577,11 @@ function createIndividualBillSection(billKey) {
                         
                         // Calculate total amount
                         const totalAmount = (() => {
-                            // If all bills are paid, use the main bill's amount
-                            if (unpaidBills === 0 && allBillsForType.length > 0) {
-                                return billData.amount || 0;
+                            // Always use the main bill's amount if it exists (this is set when payment is received)
+                            if (billData.amount && billData.amount > 0) {
+                                return billData.amount;
                             }
-                            // Otherwise, sum up individual bill amounts
+                            // Fallback: sum up individual bill amounts
                             return allBillsForType.reduce((sum, bill) => {
                                 return sum + (bill.data.amount || 0);
                             }, 0);
@@ -1719,7 +1767,6 @@ function createIndividualBillSection(billKey) {
                                             <button class="btn btn--outline bill-dropdown-toggle" onclick="toggleBillDropdown('${billKey}')">⋯</button>
                                             <div class="bill-dropdown-menu" id="bill-dropdown-${billKey}">
                                                 <button class="dropdown-item" onclick="receiveBillPayment('${billKey}')">💰 Receive Payment</button>
-                                                ${!billData.paid ? `<button class="dropdown-item" onclick="openBillPartialPaymentModal('${billKey}')">💰 Add Partial Payment</button>` : ''}
                                                 <button class="dropdown-item" onclick="viewBillDocuments('${billKey}')">📄 View Documents</button>
                                             </div>
                                         </div>
@@ -1778,11 +1825,11 @@ function createIndividualBillSection(billKey) {
                         
                         // Calculate total amount
                         const totalAmount = (() => {
-                            // If all bills are paid, use the main bill's amount
-                            if (unpaidBills === 0 && allBillsForType.length > 0) {
-                                return billData.amount || 0;
+                            // Always use the main bill's amount if it exists (this is set when payment is received)
+                            if (billData.amount && billData.amount > 0) {
+                                return billData.amount;
                             }
-                            // Otherwise, sum up individual bill amounts
+                            // Fallback: sum up individual bill amounts
                             return allBillsForType.reduce((sum, bill) => {
                                 return sum + (bill.data.amount || 0);
                             }, 0);
@@ -1895,7 +1942,6 @@ function createIndividualBillSection(billKey) {
                                             <button class="btn btn--outline bill-dropdown-toggle" onclick="toggleBillDropdown('${billKey}')">⋯</button>
                                             <div class="bill-dropdown-menu" id="bill-dropdown-${billKey}">
                                                 <button class="dropdown-item" onclick="receiveBillPayment('${billKey}')">💰 Receive Payment</button>
-                                                ${!billData.paid ? `<button class="dropdown-item" onclick="openBillPartialPaymentModal('${billKey}')">💰 Add Partial Payment</button>` : ''}
                                                 <button class="dropdown-item" onclick="viewBillDocuments('${billKey}')">📄 View Documents</button>
                                             </div>
                                         </div>
@@ -2085,11 +2131,15 @@ function closeIndividualBill(billKey) {
         // Show payment summary when closing individual bills
         const paymentSummary = document.querySelector('.payment-summary');
         if (paymentSummary) {
+            paymentSummary.classList.remove('hidden');
             paymentSummary.style.display = 'grid';
         }
         
         // Update dashboard summary to refresh the values
         updateDashboardSummary();
+        
+        // Also update payment summary
+        updatePaymentSummary();
     }
 }
 
@@ -2812,8 +2862,10 @@ function collectBillsData() {
 function collectDocumentsData() {
     const documents = [];
     document.querySelectorAll('.document-item').forEach(item => {
-        const name = item.querySelector('.document-name').textContent;
-        const uploadDate = item.querySelector('.document-date').textContent.replace('Uploaded: ', '');
+        const name = item.querySelector('h4').textContent;
+        const detailsText = item.querySelector('.document-details p').textContent;
+        // Extract upload date from the details text (format: "size • date • storage")
+        const uploadDate = detailsText.split(' • ')[1];
         documents.push({ name, uploadDate });
     });
     return documents;
@@ -4650,8 +4702,35 @@ function submitBillPartialPayment(billKey) {
         return;
     }
     
-    if (parseFloat(amount) <= 0) {
+    const amountValue = parseFloat(amount);
+    if (amountValue <= 0) {
         showNotification('Amount must be greater than 0', 'error');
+        return;
+    }
+    
+    // Get the property and bill data to check remaining amount
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.bills) return;
+    
+    let billData;
+    if (property.bills[billKey]) {
+        billData = property.bills[billKey];
+    } else if (property.bills.customBills) {
+        const customBill = property.bills.customBills.find(b => b.id === billKey);
+        if (customBill) {
+            billData = customBill;
+        }
+    }
+    
+    if (!billData) return;
+    
+    // Calculate remaining amount
+    const billAmount = billData.amount || 0;
+    const totalPaid = billData.partialPayments ? billData.partialPayments.reduce((sum, p) => sum + p.amount, 0) : 0;
+    const remainingAmount = billAmount - totalPaid;
+    
+    if (amountValue > remainingAmount) {
+        showNotification(`Amount cannot exceed remaining amount of ₹${remainingAmount.toLocaleString()}`, 'error');
         return;
     }
     
@@ -4892,8 +4971,25 @@ function submitPartialPayment(paymentId) {
         return;
     }
     
-    if (parseFloat(amount) <= 0) {
+    const amountValue = parseFloat(amount);
+    if (amountValue <= 0) {
         showNotification('Please enter a valid amount', 'error');
+        return;
+    }
+    
+    // Get the payment to check remaining amount
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.paymentHistory) return;
+    
+    const payment = property.paymentHistory.find(p => p.id === paymentId);
+    if (!payment) return;
+    
+    // Calculate remaining amount
+    const totalPaid = payment.partialPayments ? payment.partialPayments.reduce((sum, p) => sum + p.amount, 0) : 0;
+    const remainingAmount = payment.totalAmount - totalPaid;
+    
+    if (amountValue > remainingAmount) {
+        showNotification(`Amount cannot exceed remaining amount of ₹${remainingAmount.toLocaleString()}`, 'error');
         return;
     }
     
@@ -5164,48 +5260,60 @@ function addCustomBill(existingBill = null) {
     });
 }
 
+// Enhanced document upload function with free storage
 async function addDocument() {
     const files = documentInput.files;
+    const documentName = documentNameInput.value.trim();
+    
     if (files.length === 0) {
         showNotification('Please select files to upload', 'warning');
         return;
     }
     
-    // Get current property
+    if (!documentName) {
+        showNotification('Please enter a document name', 'warning');
+        documentNameInput.focus();
+        return;
+    }
+    
     const property = properties.find(p => p.id === currentPropertyId);
     if (!property) {
         showNotification('No property selected', 'error');
         return;
     }
     
-    // Initialize documents array if it doesn't exist
     if (!property.documents) {
         property.documents = [];
     }
     
-    // Show loading notification
     showNotification('Uploading documents...', 'info');
     
+    const storage = new GitHubDocumentStorage();
+    
     try {
-        // Store files locally
         const uploadPromises = Array.from(files).map(async (file) => {
-            const document = await storeDocumentLocally(file, currentPropertyId);
-            return document;
+            try {
+                const uploadedDoc = await storage.uploadDocument(file, currentPropertyId);
+                // Use the mandatory document name
+                uploadedDoc.name = documentName;
+                return uploadedDoc;
+            } catch (error) {
+                console.error(`Failed to upload ${file.name}:`, error);
+                // Fallback to local storage
+                const uploadedDoc = await storage.storageMethods.local.upload(file, currentPropertyId);
+                // Use the mandatory document name
+                uploadedDoc.name = documentName;
+                return uploadedDoc;
+            }
         });
         
         const uploadedDocuments = await Promise.all(uploadPromises);
-        
-        // Add documents to property
         property.documents.push(...uploadedDocuments);
         
-        // Save data
-        await saveData();
-        
-        // Update UI
+        saveData();
         renderDocuments();
-    
-    // Clear file input
-    documentInput.value = '';
+        documentInput.value = '';
+        documentNameInput.value = ''; // Clear the document name input
         
         showNotification(`${uploadedDocuments.length} document(s) uploaded successfully`, 'success');
     } catch (error) {
@@ -5214,56 +5322,192 @@ async function addDocument() {
     }
 }
 
+// Enhanced document rendering with storage method indicators
 function renderDocuments() {
     documentList.innerHTML = '';
     
-    if (currentPropertyId) {
         const property = properties.find(p => p.id === currentPropertyId);
-        if (property && property.documents) {
-            property.documents.forEach(doc => {
-                const documentItem = document.createElement('div');
-                documentItem.className = 'document-item';
-                
-                // Create download link if document data exists
-                const downloadLink = doc.data ? 
-                    `<a href="${doc.data}" download="${doc.name}" class="btn btn--sm btn--primary">Download</a>` : 
-                    '';
-                
-                documentItem.innerHTML = `
+    if (!property || !property.documents || property.documents.length === 0) {
+        documentList.innerHTML = '<p class="no-data">No documents uploaded yet.</p>';
+        return;
+    }
+    
+    property.documents.forEach((doc, index) => {
+        console.log(`Creating document element for index ${index}:`, doc.name);
+        
+        const docElement = document.createElement('div');
+        docElement.className = 'document-item';
+        
+        const storageIcon = getStorageIcon(doc.storageMethod);
+        const fileSize = formatFileSize(doc.size);
+        
+        docElement.innerHTML = `
                     <div class="document-info">
-                        <div class="document-name">${doc.name}</div>
-                        <div class="document-date">Uploaded: ${doc.uploadDate}</div>
-                        ${doc.size ? `<div class="document-size">Size: ${(doc.size / 1024).toFixed(1)} KB</div>` : ''}
+                <div class="document-icon">${storageIcon}</div>
+                <div class="document-details">
+                    <h4>${doc.name}</h4>
+                    <p>${fileSize} • ${doc.uploadDate} • ${doc.storageMethod || 'local'}</p>
+                </div>
                     </div>
                     <div class="document-actions">
-                        ${downloadLink}
-                    <button type="button" class="btn btn--sm btn--outline remove-doc-btn">Remove</button>
+                <button class="btn btn--primary btn--sm view-doc-btn" data-index="${index}">
+                    View
+                </button>
+                <button class="btn btn--danger btn--sm delete-doc-btn" data-index="${index}">
+                    Delete
+                </button>
                     </div>
                 `;
                 
-                documentList.appendChild(documentItem);
-                
-                // Add remove functionality
-                const removeBtn = documentItem.querySelector('.remove-doc-btn');
-                removeBtn.addEventListener('click', async () => {
-                    try {
-                        // Remove from property documents
-                        const docIndex = property.documents.findIndex(d => d.name === doc.name && d.uploadDate === doc.uploadDate);
-                        if (docIndex > -1) {
-                            property.documents.splice(docIndex, 1);
-                            await saveData();
-                        }
-                        
-                        documentItem.remove();
-                        showNotification('Document removed successfully', 'success');
-                    } catch (error) {
-                        console.error('Error removing document:', error);
-                        showNotification('Error removing document', 'error');
-                    }
-                });
+        console.log(`Document element created for ${doc.name} with data-index="${index}"`);
+        documentList.appendChild(docElement);
+        
+        // Add event listeners to the buttons
+        const viewBtn = docElement.querySelector('.view-doc-btn');
+        const deleteBtn = docElement.querySelector('.delete-doc-btn');
+        
+        viewBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('View button clicked for index:', index);
+            viewPropertyDocument(index);
+        });
+        
+        deleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Delete button clicked for index:', index);
+            deleteDocument(index);
+        });
+    });
+}
+
+function getStorageIcon(storageMethod) {
+    const icons = {
+        'github': '🐙',
+        'imgur': '🖼️',
+        'fileio': '📁',
+        'local': '💾'
+    };
+    return icons[storageMethod] || '📄';
+}
+
+function formatFileSize(bytes) {
+    if (!bytes || isNaN(bytes) || bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+
+function viewPropertyDocument(index) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    
+    if (!property || !property.documents) {
+        showNotification('No property or documents found', 'error');
+        return;
+    }
+    
+    const doc = property.documents[index];
+    
+    if (!doc) {
+        showNotification('Document not found', 'error');
+        return;
+    }
+    
+    // Get document URL
+    let documentUrl = '';
+    if (doc.storageMethod === 'local' && doc.data) {
+        documentUrl = doc.data;
+    } else if (doc.url) {
+        documentUrl = doc.url;
+    } else {
+        showNotification('Document not available for viewing', 'error');
+        return;
+    }
+    
+    // Open document in new tab
+    window.open(documentUrl, '_blank');
+    showNotification('Document opened in new tab', 'info');
+}
+
+
+function downloadDocument(index) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    const doc = property.documents[index];
+    
+    if (doc.storageMethod === 'local' && doc.data) {
+        // Download from local storage
+        const link = document.createElement('a');
+        link.href = doc.data;
+        link.download = doc.name;
+        link.click();
+    } else if (doc.url) {
+        // Download from external storage
+        window.open(doc.url, '_blank');
+    } else {
+        showNotification('Document not available for download', 'error');
+    }
+}
+
+async function deleteDocument(index) {
+    const property = properties.find(p => p.id === currentPropertyId);
+    if (!property || !property.documents || !property.documents[index]) {
+        showNotification('Document not found', 'error');
+        return;
+    }
+    
+    const document = property.documents[index];
+    
+    // Ask for confirmation
+    if (!confirm(`Are you sure you want to delete "${document.name}"?\n\nThis action cannot be undone.`)) {
+        return; // User cancelled the deletion
+    }
+    
+    // If document is stored on GitHub, delete it from there too
+    if (document.storageMethod === 'github' && document.path) {
+        try {
+            // Get the file info first to get the SHA
+            const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${document.path}`, {
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`
+                }
             });
+            
+            if (response.ok) {
+                const fileInfo = await response.json();
+                
+                // Delete the file from GitHub
+                const deleteResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${document.path}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Delete document: ${document.name}`,
+                        sha: fileInfo.sha
+                    })
+                });
+                
+                if (!deleteResponse.ok) {
+                    console.error('Failed to delete from GitHub:', deleteResponse.statusText);
+                }
+            } else {
+                console.error('Failed to get file info from GitHub:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error deleting from GitHub:', error);
         }
     }
+    
+    // Remove document from local data
+    property.documents.splice(index, 1);
+    saveData();
+    renderDocuments();
+    
+    showNotification('Document deleted successfully', 'success');
 }
 
 function generateInvoice() {
@@ -6266,6 +6510,7 @@ function processReceivePayment(billKey) {
     billData.total = totalAmount; // Store total amount
     billData.notes = remarks || 'Payment received';
     
+    
     // For monthly bills, also mark all individual monthly bills as paid
     if (billData.period === 'month') {
         Object.keys(property.bills).forEach(billKeyName => {
@@ -6327,6 +6572,13 @@ function processReceivePayment(billKey) {
     // Update the bill section if it's currently open
     updateBillSection(billKey);
     
+    // Force refresh the bill section even if hidden
+    const billSection = document.getElementById(`bill-section-${billKey}`);
+    if (billSection) {
+        billSection.remove();
+        createIndividualBillSection(billKey);
+    }
+    
     // Save data to localStorage
     saveData();
     
@@ -6366,7 +6618,7 @@ function renderBillDocuments(billKey, billData) {
     `).join('');
 }
 
-function uploadBillDocument(billKey) {
+async function uploadBillDocument(billKey) {
     const fileInput = document.getElementById(`bill-document-${billKey}`);
     const files = fileInput.files;
     
@@ -6395,25 +6647,36 @@ function uploadBillDocument(billKey) {
         billData.documents = [];
     }
     
-    // Process each file
-    Array.from(files).forEach(file => {
-        const document = {
-            name: file.name,
-            uploadDate: new Date().toISOString().split('T')[0],
-            size: file.size,
-            type: file.type
-        };
-        
-        billData.documents.push(document);
-    });
+    showNotification('Uploading documents...', 'info');
     
-    // Clear the file input
-    fileInput.value = '';
+    const storage = new GitHubDocumentStorage();
+    
+    try {
+        const uploadPromises = Array.from(files).map(async (file) => {
+            try {
+                return await storage.uploadDocument(file, currentPropertyId);
+            } catch (error) {
+                console.error(`Failed to upload ${file.name}:`, error);
+                // Fallback to local storage
+                return await storage.local.upload(file, currentPropertyId);
+            }
+        });
+        
+        const uploadedDocuments = await Promise.all(uploadPromises);
+        billData.documents.push(...uploadedDocuments);
     
     // Update the bill section to show the new documents
     updateBillSection(billKey);
     
-    showNotification(`Uploaded ${files.length} document(s) successfully`);
+        saveData();
+        showNotification(`${uploadedDocuments.length} document(s) uploaded successfully`, 'success');
+    } catch (error) {
+        console.error('Error uploading documents:', error);
+        showNotification('Error uploading documents. Please try again.', 'error');
+    }
+    
+    // Clear the file input
+    fileInput.value = '';
 }
 
 function viewBillDocuments(billKey) {
@@ -6472,7 +6735,7 @@ function viewBillDocuments(billKey) {
     });
 }
 
-function uploadBillDocumentFromModal(billKey) {
+async function uploadBillDocumentFromModal(billKey) {
     const fileInput = document.getElementById(`modal-bill-document-${billKey}`);
     const files = fileInput.files;
     
@@ -6501,17 +6764,23 @@ function uploadBillDocumentFromModal(billKey) {
         billData.documents = [];
     }
     
-    // Process each file
-    Array.from(files).forEach(file => {
-        const document = {
-            name: file.name,
-            uploadDate: new Date().toISOString().split('T')[0],
-            size: file.size,
-            type: file.type
-        };
+    showNotification('Uploading documents...', 'info');
+    
+    const storage = new GitHubDocumentStorage();
+    
+    try {
+        const uploadPromises = Array.from(files).map(async (file) => {
+            try {
+                return await storage.uploadDocument(file, currentPropertyId);
+            } catch (error) {
+                console.error(`Failed to upload ${file.name}:`, error);
+                // Fallback to local storage
+                return await storage.local.upload(file, currentPropertyId);
+            }
+        });
         
-        billData.documents.push(document);
-    });
+        const uploadedDocuments = await Promise.all(uploadPromises);
+        billData.documents.push(...uploadedDocuments);
     
     // Update the documents list display in the modal
     const documentsList = document.getElementById(`modal-bill-documents-${billKey}`);
@@ -6519,13 +6788,18 @@ function uploadBillDocumentFromModal(billKey) {
         documentsList.innerHTML = renderBillDocuments(billKey, billData);
     }
     
-    // Clear the file input
-    fileInput.value = '';
-    
     // Update the bill section to show the new documents
     updateBillSection(billKey);
     
-    showNotification(`Uploaded ${files.length} document(s) successfully`);
+        saveData();
+        showNotification(`${uploadedDocuments.length} document(s) uploaded successfully`, 'success');
+    } catch (error) {
+        console.error('Error uploading documents:', error);
+        showNotification('Error uploading documents. Please try again.', 'error');
+    }
+    
+    // Clear the file input
+    fileInput.value = '';
 }
 
 function viewBillDocument(billKey, documentIndex) {
@@ -6549,37 +6823,26 @@ function viewBillDocument(billKey, documentIndex) {
     
     const document = billData.documents[documentIndex];
     
-    // Create a simple document viewer modal
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>${document.name}</h3>
-                <button class="btn btn--outline" onclick="this.closest('.modal').remove()">Close</button>
-            </div>
-            <div class="modal-body">
-                <div class="document-viewer">
-                    <div class="document-info">
-                        <p><strong>File Name:</strong> ${document.name}</p>
-                        <p><strong>Upload Date:</strong> ${formatDate(document.uploadDate)}</p>
-                        <p><strong>File Size:</strong> ${(document.size / 1024).toFixed(2)} KB</p>
-                        <p><strong>File Type:</strong> ${document.type}</p>
-                    </div>
-                    <div class="document-preview">
-                        <p class="document-placeholder">
-                            📄 Document Preview<br>
-                            <small>File: ${document.name}</small><br>
-                            <small>Click "Download" to view the actual document</small>
-                        </p>
-                        <button class="btn btn--primary" onclick="downloadBillDocument('${billKey}', ${documentIndex})">Download</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
+    // Open document in new tab (same as main property documents)
+    if (document.url) {
+        // GitHub or external URL
+        window.open(document.url, '_blank');
+    } else if (document.data) {
+        // Local storage - create blob and open
+        const byteCharacters = atob(document.data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: document.type });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        // Clean up the URL after a delay
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } else {
+        showNotification('Document data not available. Please re-upload this document.', 'error');
+    }
 }
 
 function downloadBillDocument(billKey, documentIndex) {
@@ -6744,8 +7007,80 @@ function showNotification(message, type = 'success') {
     }, 3000);
 }
 
+
+// Function to clean up dummy documents
+function cleanupDummyDocuments() {
+    properties.forEach(property => {
+        if (property.documents) {
+            // Remove documents with NaN size or undefined size
+            property.documents = property.documents.filter(doc => {
+                const isValid = doc.size && !isNaN(doc.size) && doc.size > 0;
+                if (!isValid) {
+                    console.log('Removing dummy document:', doc.name);
+                }
+                return isValid;
+            });
+        }
+    });
+    
+    // Save the cleaned data
+    saveData();
+    showNotification('Dummy documents removed', 'success');
+    
+    // Refresh the current view if we're viewing a property
+    if (currentPropertyId) {
+        renderDocuments();
+    }
+}
+
+// Function to clean up bill documents without proper data
+function cleanupBillDocuments() {
+    let cleanedCount = 0;
+    
+    properties.forEach(property => {
+        if (property.bills) {
+            // Check standard bills
+            Object.keys(property.bills).forEach(billKey => {
+                const billData = property.bills[billKey];
+                if (billData && billData.documents) {
+                    const originalLength = billData.documents.length;
+                    billData.documents = billData.documents.filter(doc => {
+                        // Keep documents that have either url or data
+                        return doc.url || doc.data;
+                    });
+                    cleanedCount += (originalLength - billData.documents.length);
+                }
+            });
+            
+            // Check custom bills
+            if (property.bills.customBills) {
+                property.bills.customBills.forEach(customBill => {
+                    if (customBill.documents) {
+                        const originalLength = customBill.documents.length;
+                        customBill.documents = customBill.documents.filter(doc => {
+                            // Keep documents that have either url or data
+                            return doc.url || doc.data;
+                        });
+                        cleanedCount += (originalLength - customBill.documents.length);
+                    }
+                });
+            }
+        }
+    });
+    
+    if (cleanedCount > 0) {
+        saveData();
+        showNotification(`Removed ${cleanedCount} bill documents without data`, 'success');
+    } else {
+        showNotification('No bill documents to clean up', 'info');
+    }
+}
+
 // Global functions for button onclick handlers
 window.viewProperty = viewProperty;
 window.deleteProperty = deleteProperty;
 window.showPaymentDashboard = showPaymentDashboard;
 window.openPaymentModal = openPaymentModal;
+window.viewPropertyDocument = viewPropertyDocument;
+window.cleanupDummyDocuments = cleanupDummyDocuments;
+window.cleanupBillDocuments = cleanupBillDocuments;
