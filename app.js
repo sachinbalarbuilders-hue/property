@@ -1128,12 +1128,29 @@ function showPaymentDashboard(propertyId) {
 }
 
 function resetPaymentDashboardState() {
+    // First, hide ALL individual bill sections completely
+    const billSections = document.querySelectorAll('#individualBillSections .table-container');
+    billSections.forEach(section => {
+        section.classList.add('hidden');
+        section.style.display = 'none';
+    });
+    
+    // Also hide any bill sections that might be outside the individualBillSections container
+    const allBillSections = document.querySelectorAll('[id^="bill-section-"]');
+    allBillSections.forEach(section => {
+        section.classList.add('hidden');
+        section.style.display = 'none';
+    });
+    
     // Ensure payment history table is visible when entering payment dashboard
-    const paymentHistoryTable = document.querySelector('#paymentDashboard .table-container');
-    if (paymentHistoryTable) {
-        paymentHistoryTable.style.display = 'block';
-        paymentHistoryTable.classList.remove('hidden');
-    }
+    // Find the table-container that's not inside individualBillSections
+    const allTableContainers = document.querySelectorAll('#paymentDashboard .table-container');
+    allTableContainers.forEach(container => {
+        if (!container.closest('#individualBillSections')) {
+            container.style.display = 'block';
+            container.classList.remove('hidden');
+        }
+    });
     
     // Show payment summary when entering payment dashboard
     const paymentSummary = document.querySelector('.payment-summary');
@@ -1142,18 +1159,16 @@ function resetPaymentDashboardState() {
         paymentSummary.style.display = 'grid';
     }
     
-    // Hide any open bill sections and ensure they don't interfere
-    const billSections = document.querySelectorAll('#individualBillSections .table-container');
-    billSections.forEach(section => {
-        section.classList.add('hidden');
-        section.style.display = 'none';
-    });
-    
     // Also ensure the payment table body is visible
     const paymentTableBody = document.getElementById('paymentTableBody');
     if (paymentTableBody) {
         paymentTableBody.style.display = '';
     }
+    
+    // Force a re-render of the payment table to ensure it's populated
+    setTimeout(() => {
+        renderPaymentTable();
+    }, 100);
 }
 
 function refreshPaymentDashboardIfOpen(propertyId) {
