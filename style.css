@@ -950,6 +950,44 @@ select.form-control {
   -ms-user-select: none !important;
 }
 
+/* Target all text content within the button */
+#addPropertyBtn,
+#addPropertyBtn *,
+#addPropertyBtn::before,
+#addPropertyBtn::after {
+  cursor: pointer !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+/* Force pointer cursor on all button content */
+#addPropertyBtn {
+  cursor: pointer !important;
+}
+
+/* Override any inherited cursor styles */
+#addPropertyBtn:hover,
+#addPropertyBtn:focus,
+#addPropertyBtn:active {
+  cursor: pointer !important;
+}
+
+/* Most specific selector to override everything */
+.header-actions #addPropertyBtn,
+.header-actions #addPropertyBtn *,
+.header-actions #addPropertyBtn span,
+.header-actions #addPropertyBtn:hover,
+.header-actions #addPropertyBtn:focus,
+.header-actions #addPropertyBtn:active {
+  cursor: pointer !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
 .brand h1 {
   margin: 0;
   font-size: var(--font-size-3xl);
