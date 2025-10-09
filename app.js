@@ -106,39 +106,49 @@ const gstRate = 18;
 
 // Sample data removed - starting fresh
 
-// DOM Elements
-const mainDashboard = document.getElementById('mainDashboard');
-const paymentDashboard = document.getElementById('paymentDashboard');
-const addPropertyBtn = document.getElementById('addPropertyBtn');
-const propertyModal = document.getElementById('propertyModal');
-const paymentModal = document.getElementById('paymentModal');
-const modalOverlay = document.getElementById('modalOverlay');
-const paymentModalOverlay = document.getElementById('paymentModalOverlay');
-const modalClose = document.getElementById('modalClose');
-const paymentModalClose = document.getElementById('paymentModalClose');
-const cancelBtn = document.getElementById('cancelBtn');
-const paymentCancelBtn = document.getElementById('paymentCancelBtn');
-const savePropertyBtn = document.getElementById('savePropertyBtn');
-const submitPaymentBtn = document.getElementById('submitPaymentBtn');
-const searchInput = document.getElementById('searchInput');
-const typeFilter = document.getElementById('typeFilter');
-const propertiesTableBody = document.getElementById('propertiesTableBody');
-const paymentTableBody = document.getElementById('paymentTableBody');
-const billTrackingTableBody = document.getElementById('billTrackingTableBody');
-const modalTitle = document.getElementById('modalTitle');
-const propertyTypeSelect = document.getElementById('propertyTypeSelect');
-const agreementTypeSelect = document.getElementById('agreementTypeSelect');
-const isRentalCheckbox = document.getElementById('isRentalToggle');
-const billsSection = document.getElementById('billsSection');
-const addCustomBillBtn = document.getElementById('addCustomBillBtn');
-const customBillsList = document.getElementById('customBillsList');
-const documentInput = document.getElementById('documentInput');
-const documentNameInput = document.getElementById('documentNameInput');
-const uploadDocBtn = document.getElementById('uploadDocBtn');
-const documentList = document.getElementById('documentList');
-const backToPropertiesBtn = document.getElementById('backToPropertiesBtn');
-const billButtons = document.getElementById('billButtons');
-const individualBillSections = document.getElementById('individualBillSections');
+// DOM Elements - Initialize after DOM is loaded
+let mainDashboard, paymentDashboard, addPropertyBtn, propertyModal, paymentModal;
+let modalOverlay, paymentModalOverlay, modalClose, paymentModalClose;
+let cancelBtn, paymentCancelBtn, savePropertyBtn, submitPaymentBtn;
+let searchInput, typeFilter, propertiesTableBody, paymentTableBody, billTrackingTableBody;
+let modalTitle, propertyTypeSelect, agreementTypeSelect, isRentalCheckbox;
+let billsSection, addCustomBillBtn, customBillsList, documentInput, documentNameInput;
+let uploadDocBtn, documentList, backToPropertiesBtn, billButtons, individualBillSections;
+
+function initializeDOMElements() {
+    mainDashboard = document.getElementById('mainDashboard');
+    paymentDashboard = document.getElementById('paymentDashboard');
+    addPropertyBtn = document.getElementById('addPropertyBtn');
+    propertyModal = document.getElementById('propertyModal');
+    paymentModal = document.getElementById('paymentModal');
+    modalOverlay = document.getElementById('modalOverlay');
+    paymentModalOverlay = document.getElementById('paymentModalOverlay');
+    modalClose = document.getElementById('modalClose');
+    paymentModalClose = document.getElementById('paymentModalClose');
+    cancelBtn = document.getElementById('cancelBtn');
+    paymentCancelBtn = document.getElementById('paymentCancelBtn');
+    savePropertyBtn = document.getElementById('savePropertyBtn');
+    submitPaymentBtn = document.getElementById('submitPaymentBtn');
+    searchInput = document.getElementById('searchInput');
+    typeFilter = document.getElementById('typeFilter');
+    propertiesTableBody = document.getElementById('propertiesTableBody');
+    paymentTableBody = document.getElementById('paymentTableBody');
+    billTrackingTableBody = document.getElementById('billTrackingTableBody');
+    modalTitle = document.getElementById('modalTitle');
+    propertyTypeSelect = document.getElementById('propertyTypeSelect');
+    agreementTypeSelect = document.getElementById('agreementTypeSelect');
+    isRentalCheckbox = document.getElementById('isRentalToggle');
+    billsSection = document.getElementById('billsSection');
+    addCustomBillBtn = document.getElementById('addCustomBillBtn');
+    customBillsList = document.getElementById('customBillsList');
+    documentInput = document.getElementById('documentInput');
+    documentNameInput = document.getElementById('documentNameInput');
+    uploadDocBtn = document.getElementById('uploadDocBtn');
+    documentList = document.getElementById('documentList');
+    backToPropertiesBtn = document.getElementById('backToPropertiesBtn');
+    billButtons = document.getElementById('billButtons');
+    individualBillSections = document.getElementById('individualBillSections');
+}
 
 // Local Data Management Functions
 function saveData() {
@@ -327,6 +337,7 @@ class LocalStorage {
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', async function() {
+    initializeDOMElements();
     loadData();
     loadTableSettings();
     initializeApp();
@@ -870,7 +881,9 @@ function clearAllDataAndReload() {
 
 function setupEventListeners() {
     // Modal controls
-    addPropertyBtn.addEventListener('click', () => openPropertyModal());
+    if (addPropertyBtn) {
+        addPropertyBtn.addEventListener('click', () => openPropertyModal());
+    }
     modalClose.addEventListener('click', closePropertyModal);
     paymentModalClose.addEventListener('click', closePaymentModal);
     modalOverlay.addEventListener('click', closePropertyModal);
