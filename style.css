@@ -1679,7 +1679,7 @@ select.form-control {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1000;
+  z-index: 10003;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1785,7 +1785,7 @@ select.form-control {
   background: #1e3a8a;
   color: var(--color-white);
   position: relative;
-  z-index: 100;
+  z-index: 10004;
 }
 
 .modal-header h2 {
@@ -1839,7 +1839,7 @@ select.form-control {
 /* Ensure close button is always visible and clickable */
 #modalClose {
   position: relative !important;
-  z-index: 1001 !important;
+  z-index: 10005 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
