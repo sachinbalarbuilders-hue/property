@@ -470,6 +470,9 @@ pre code {
 .btn--primary {
   background: var(--color-primary);
   color: var(--color-btn-primary-text);
+  position: relative;
+  z-index: 10003;
+  pointer-events: auto;
 }
 
 .btn--primary:hover {
@@ -483,6 +486,9 @@ pre code {
 .btn--secondary {
   background: var(--color-secondary);
   color: var(--color-text);
+  position: relative;
+  z-index: 10003;
+  pointer-events: auto;
 }
 
 .btn--secondary:hover {
@@ -496,6 +502,9 @@ pre code {
 .btn--danger {
   background: var(--color-error);
   color: var(--color-white);
+  position: relative;
+  z-index: 10003;
+  pointer-events: auto;
 }
 
 .btn--danger:hover {
@@ -852,11 +861,23 @@ select.form-control {
   color: var(--color-white);
   padding: var(--space-16) 0;
   box-shadow: var(--shadow-md);
+  position: relative;
+  z-index: 10000;
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 10001;
+}
+
+.header-actions {
+  position: relative;
+  z-index: 10002;
+  display: flex;
+  gap: var(--space-12);
   align-items: center;
 }
 

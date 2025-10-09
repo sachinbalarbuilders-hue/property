@@ -882,7 +882,7 @@ function clearAllDataAndReload() {
 function setupEventListeners() {
     // Modal controls
     if (addPropertyBtn) {
-        addPropertyBtn.addEventListener('click', () => openPropertyModal());
+    addPropertyBtn.addEventListener('click', () => openPropertyModal());
     }
     modalClose.addEventListener('click', closePropertyModal);
     paymentModalClose.addEventListener('click', closePaymentModal);
@@ -1276,17 +1276,17 @@ function toggleIndividualBill(billKey) {
                 newBillSection.style.display = 'block';
             }
             
-            // Hide payment history table
-            if (paymentHistoryTable) {
-                paymentHistoryTable.style.display = 'none';
-            }
+        // Hide payment history table
+        if (paymentHistoryTable) {
+            paymentHistoryTable.style.display = 'none';
+        }
             
-            // Hide payment summary when viewing individual bills
-            const paymentSummary = document.querySelector('.payment-summary');
-            if (paymentSummary) {
-                paymentSummary.classList.add('hidden');
-                paymentSummary.style.display = 'none';
-            }
+        // Hide payment summary when viewing individual bills
+        const paymentSummary = document.querySelector('.payment-summary');
+        if (paymentSummary) {
+            paymentSummary.classList.add('hidden');
+            paymentSummary.style.display = 'none';
+        }
         }, 50);
         return;
     }
@@ -2542,10 +2542,19 @@ function closeIndividualBill(billKey) {
         // Remove the bill section from DOM
         billSection.remove();
         
-        // Find and show the payment history table container (the one that contains the payment table)
-        const paymentHistoryContainer = document.querySelector('#paymentDashboard .table-container');
+        // Find the payment history table container specifically (the one NOT inside individualBillSections)
+        const allTableContainers = document.querySelectorAll('#paymentDashboard .table-container');
+        let paymentHistoryContainer = null;
+        allTableContainers.forEach(container => {
+            if (!container.closest('#individualBillSections')) {
+                paymentHistoryContainer = container;
+            }
+        });
+        
+        // Show payment history table
         if (paymentHistoryContainer) {
             paymentHistoryContainer.style.display = 'block';
+            paymentHistoryContainer.classList.remove('hidden');
         }
         
         // Also ensure payment table body is visible
@@ -2560,6 +2569,11 @@ function closeIndividualBill(billKey) {
             paymentSummary.classList.remove('hidden');
             paymentSummary.style.display = 'grid';
         }
+        
+        // Force a re-render of the payment table to ensure it's populated
+        setTimeout(() => {
+            renderPaymentTable();
+        }, 100);
         
         // Update dashboard summary to refresh the values
         updateDashboardSummary();
