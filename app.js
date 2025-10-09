@@ -737,7 +737,7 @@ function initializeApp() {
     // Only create test properties if no data exists
     if (properties.length === 0) {
         // Create fresh test properties
-        createSampleProperty();
+    createSampleProperty();
     }
     
     // Clean up any incorrectly generated monthly bills
@@ -1019,7 +1019,15 @@ function showMainDashboard() {
     mainDashboard.classList.remove('hidden');
     paymentDashboard.classList.add('hidden');
     document.getElementById('analyticsDashboard').classList.add('hidden');
-    currentPropertyId = null;
+    // Don't reset currentPropertyId here - keep it for when user returns to payment dashboard
+    updateDashboardSummary();
+}
+
+function closePaymentDashboard() {
+    // This function properly closes the payment dashboard while preserving currentPropertyId
+    paymentDashboard.classList.add('hidden');
+    mainDashboard.classList.remove('hidden');
+    document.getElementById('analyticsDashboard').classList.add('hidden');
     updateDashboardSummary();
 }
 
@@ -1095,7 +1103,10 @@ function refreshPaymentDashboardIfOpen(propertyId) {
 
 function renderBillButtons() {
     const property = properties.find(p => p.id === currentPropertyId);
-    if (!property || !property.bills || !billButtons) return;
+    if (!property || !property.bills || !billButtons) {
+        console.log('renderBillButtons: Property, bills, or billButtons not found. currentPropertyId:', currentPropertyId, 'property:', property);
+        return;
+    }
 
     billButtons.innerHTML = '';
 
@@ -3702,7 +3713,13 @@ function renderPaymentTable() {
     const paymentTableBody = document.getElementById('paymentTableBody');
     const paymentTableHeader = document.querySelector('#paymentDashboard .payment-table th:nth-child(5)');
     
-    if (!property || !paymentTableBody) return;
+    if (!property || !paymentTableBody) {
+        console.log('renderPaymentTable: Property or table body not found. currentPropertyId:', currentPropertyId, 'property:', property);
+        if (paymentTableBody) {
+            paymentTableBody.innerHTML = '<tr><td colspan="8" class="empty-state"><h3>No property selected</h3><p>Please select a property to view payment details.</p></td></tr>';
+        }
+        return;
+    }
 
     // Update GST header with dynamic percentage
     if (paymentTableHeader) {
@@ -3863,7 +3880,10 @@ function renderPaymentTable() {
 
 function updatePaymentSummary() {
     const property = properties.find(p => p.id === currentPropertyId);
-    if (!property) return;
+    if (!property) {
+        console.log('updatePaymentSummary: Property not found. currentPropertyId:', currentPropertyId);
+        return;
+    }
 
     // Use the same payment schedule logic as the payment table
     let payments = [];
