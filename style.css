@@ -1850,12 +1850,12 @@ select.form-control {
 
 /* Payment Table Specific */
 .payment-amount {
-  color: white !important;
+  color: var(--color-text) !important;
 }
 
-/* Payments History - Base, GST, Total columns should be white */
+/* Payments History - Base, GST, Total columns should be dark for visibility */
 .payment-table .payment-amount {
-  color: white !important;
+  color: var(--color-text) !important;
 }
 
 .receive-btn {
