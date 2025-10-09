@@ -473,6 +473,7 @@ pre code {
   position: relative;
   z-index: 10003;
   pointer-events: auto;
+  cursor: pointer !important;
 }
 
 .btn--primary:hover {
@@ -489,6 +490,7 @@ pre code {
   position: relative;
   z-index: 10003;
   pointer-events: auto;
+  cursor: pointer !important;
 }
 
 .btn--secondary:hover {
@@ -871,6 +873,8 @@ select.form-control {
   align-items: center;
   position: relative;
   z-index: 10001;
+  flex-wrap: wrap;
+  gap: var(--space-12);
 }
 
 .header-actions {
@@ -879,6 +883,18 @@ select.form-control {
   display: flex;
   gap: var(--space-12);
   align-items: center;
+  flex-shrink: 0;
+  min-width: fit-content;
+}
+
+/* Ensure Add Property button is always accessible */
+#addPropertyBtn {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  z-index: 10004 !important;
+  position: relative;
+  flex-shrink: 0;
+  min-width: fit-content;
 }
 
 .brand h1 {
@@ -2748,6 +2764,23 @@ select.form-control {
 }
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+  .header-content {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  
+  .header-actions {
+    flex-shrink: 0;
+    min-width: fit-content;
+  }
+  
+  .brand {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+}
+
 @media (max-width: 768px) {
   .header-content {
     flex-direction: column;
