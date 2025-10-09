@@ -86,7 +86,7 @@ let tableColumns = {
 const billTypes = [
     { name: "Property Tax", key: "propertyTax" },
     { name: "Electricity Bill", key: "electricityBill" },
-    { name: "Water Bill", key: "waterBill" },
+    { name: "Internet Bill", key: "internetBill" },
     { name: "Gas Bill", key: "gasBill" }
 ];
 
@@ -150,6 +150,43 @@ function saveData() {
             updated_at: new Date().toISOString()
         };
         localStorage.setItem('propertyManagementData', JSON.stringify(data));
+        
+        // Show a subtle save indicator
+        showSaveIndicator();
+}
+
+function showSaveIndicator() {
+    // Create or update save indicator
+    let indicator = document.getElementById('saveIndicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'saveIndicator';
+        indicator.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        `;
+        document.body.appendChild(indicator);
+    }
+    
+    indicator.textContent = '💾 Data Saved';
+    indicator.style.opacity = '1';
+    
+    // Hide after 2 seconds
+    setTimeout(() => {
+        indicator.style.opacity = '0';
+    }, 2000);
 }
 
 function loadData() {
@@ -297,30 +334,58 @@ document.addEventListener('DOMContentLoaded', async function() {
     populateSelectOptions();
     renderPropertiesTable();
     updateDashboardSummary();
+    
+    // Set up auto-save functionality
+    setupAutoSave();
 });
 
-// Function to create a sample property for testing
+function setupAutoSave() {
+    // Auto-save every 30 seconds
+    setInterval(() => {
+        if (properties.length > 0) {
+            saveData();
+        }
+    }, 30000);
+    
+    // Save when user leaves the page
+    window.addEventListener('beforeunload', () => {
+        saveData();
+    });
+    
+    // Save when user makes changes (debounced)
+    let saveTimeout;
+    const originalSaveData = saveData;
+    window.saveData = function() {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            originalSaveData();
+        }, 1000); // Save 1 second after last change
+    };
+}
+
+// Function to create test properties with complete data
 function createSampleProperty() {
-    const sampleProperty = {
+    // Property 1: Residential Apartment
+    const property1 = {
         id: nextId++,
-            name: "Sample Apartment A-101",
+        name: "Luxury Apartment A-101",
             projectName: "Green Valley Residency",
-            address: "Plot No. 123, Sector 15, New City",
+        address: "Plot No. 123, Sector 15, Andheri West",
             city: "Mumbai",
             state: "Maharashtra",
-            pincode: "400001",
+        pincode: "400058",
             type: "Residential",
             officerNo: "A-101",
             floorNo: "1st Floor",
             furniture: "Semi-Furnished",
-            carpetArea: "1000 sqft",
-            superBuiltupArea: "1200 sqft",
-            balconyArea: "100 sqft",
+        carpetArea: "1200 sqft",
+        superBuiltupArea: "1400 sqft",
+        balconyArea: "150 sqft",
             terraceArea: "0 sqft",
             isRental: true,
-            rentAmount: 15000,
+        rentAmount: 35000,
             rentPeriod: "month",
-            rentPerSqft: 12.5,
+        rentPerSqft: 25,
             gstEnabled: true,
             gstType: 'excluded',
             gstIncludedInRent: false,
@@ -329,23 +394,23 @@ function createSampleProperty() {
                 borneBy: 'lessee'
             },
             rentPayableDate: 5,
-            agreementStartDate: "2025-01-01",
+        agreementStartDate: "2024-12-01",
             agreementTenureAmount: 2,
             agreementTenureUnit: "years",
-            securityDeposit: 30000,
+        securityDeposit: 70000,
             escalationPercentage: 5,
             escalationAmount: 1,
             escalationPeriod: 'years',
             rentFreePeriodAmount: 15,
             rentFreePeriodUnit: "days",
             lessorName: "Mr. Rajesh Kumar",
-            lessorAddress: "456 Owner Street, Mumbai, Maharashtra - 400002",
+        lessorAddress: "456 Owner Street, Bandra West, Mumbai - 400050",
             lessorContact: "9123456789",
             lessorEmail: "rajesh.kumar@example.com",
             lesseeName: "Mr. John Doe",
             lesseeContact: "9876543210",
             lesseeEmail: "john.doe@example.com",
-            lesseeAddress: "789 Tenant Road, Mumbai, Maharashtra - 400003",
+        lesseeAddress: "789 Tenant Road, Andheri East, Mumbai - 400069",
             gstin: "27ABCDE1234F1Z5",
             panNo: "ABCDE1234F",
             agreementType: "Notary",
@@ -355,22 +420,58 @@ function createSampleProperty() {
             branchName: "Andheri West Branch",
             maintenanceEnabled: true,
             maintenance: {
-                amount: 2000,
+            amount: 3000,
                 period: "month"
             },
             status: "Active",
             paymentHistory: [
                 {
                     id: 1,
-                    dueDate: "2025-02-05",
-                    base: 15000,
-                    gst: 2700,
-                    total: 17700,
+                dueDate: "2024-12-05",
+                base: 35000,
+                gst: 6300,
+                total: 41300,
                     status: "Paid",
-                    paymentDate: "2025-02-03",
+                paymentDate: "2024-12-03",
                     paymentMode: "Bank Transfer",
-                    receiptNo: "RCP-20250203001",
-                    notes: "First month rent payment"
+                receiptNo: "RCP-20241203001",
+                notes: "December 2024 rent payment"
+            },
+            {
+                id: 2,
+                dueDate: "2025-01-05",
+                base: 35000,
+                gst: 6300,
+                total: 41300,
+                status: "Paid",
+                paymentDate: "2025-01-02",
+                paymentMode: "UPI",
+                receiptNo: "RCP-20250102001",
+                notes: "January 2025 rent payment"
+            },
+            {
+                id: 3,
+                dueDate: "2025-02-05",
+                base: 35000,
+                gst: 6300,
+                total: 41300,
+                status: "Overdue",
+                paymentDate: null,
+                paymentMode: null,
+                receiptNo: null,
+                notes: "February 2025 rent payment - overdue"
+            },
+            {
+                id: 4,
+                dueDate: "2025-03-05",
+                base: 35000,
+                gst: 6300,
+                total: 41300,
+                status: "Partially Paid",
+                paymentDate: "2025-03-02",
+                paymentMode: "Cheque",
+                receiptNo: "RCP-20250302001",
+                notes: "March 2025 rent payment - partial"
                 }
             ],
             bills: {
@@ -380,134 +481,246 @@ function createSampleProperty() {
                     trackingDay: "1",
                     period: "year",
                 dueDate: "31",
-                startDate: "2025-01-01"
+                startDate: "2025-01-01",
+                amount: 15000
                 },
                 electricityBill: {
                     checked: true,
                     billNo: "EB12345",
                     trackingDay: "1",
                     period: "month",
-                dueDate: "5",
-                startDate: "2025-01-01"
+                dueDate: "15",
+                startDate: "2025-01-01",
+                amount: 4500
                 },
-                waterBill: {
+            internetBill: {
                     checked: true, 
-                    billNo: "WB67890",
-                    trackingDay: "2",
+                billNo: "IN67890",
+                trackingDay: "1",
                     period: "month",
                 dueDate: "10",
-                startDate: "2025-01-01"
+                startDate: "2025-01-01",
+                amount: 1500
                 },
                 gasBill: { 
                     checked: true, 
                     billNo: "GB54321",
                     trackingDay: "1",
                     period: "month",
-                dueDate: "15",
-                startDate: "2025-01-01"
+                dueDate: "20",
+                startDate: "2025-01-01",
+                amount: 2000
+            },
+            customBills: [
+                {
+                    name: "Maintenance Charges",
+                    billNo: "MC001",
+                    trackingDay: "1",
+                    period: "month",
+                    dueDate: "5",
+                    startDate: "2025-01-01",
+                    amount: 3000,
+                    checked: true
+                },
+                {
+                    name: "Parking Charges",
+                    billNo: "PC001",
+                    trackingDay: "1",
+                    period: "month",
+                    dueDate: "10",
+                    startDate: "2025-01-01",
+                    amount: 2000,
+                    checked: true
                 }
+            ]
             },
                     documents: [
-                { name: "Rent Agreement.pdf", uploadDate: "2025-01-01" },
-                { name: "Property Papers.pdf", uploadDate: "2025-01-01" }
+            { name: "Rent Agreement.pdf", uploadDate: "2024-12-01" },
+            { name: "Property Papers.pdf", uploadDate: "2024-12-01" },
+            { name: "PAN Card.pdf", uploadDate: "2024-12-01" }
         ]
     };
     
-    // Add the sample property
-    properties.push(sampleProperty);
-    
-    // Create a second sample property with GST included
-    const sampleProperty2 = {
+    // Property 2: Commercial Office
+    const property2 = {
         id: nextId++,
-        name: "Sample Office B-205",
+        name: "Premium Office B-205",
         projectName: "Business Park Plaza",
-        address: "Plot No. 456, Commercial Zone, New City",
+        address: "Plot No. 456, Commercial Zone, BKC",
         city: "Mumbai",
         state: "Maharashtra",
-        pincode: "400004",
+        pincode: "400051",
         type: "Commercial",
         officerNo: "B-205",
         floorNo: "2nd Floor",
         furniture: "Fully Furnished",
-        carpetArea: "800 sqft",
-        superBuiltupArea: "1000 sqft",
-        balconyArea: "50 sqft",
+        carpetArea: "1500 sqft",
+        superBuiltupArea: "1800 sqft",
+        balconyArea: "100 sqft",
         terraceArea: "0 sqft",
         isRental: true,
-        rentAmount: 25000,
+        rentAmount: 80000,
         rentPeriod: "month",
-        rentPerSqft: 25,
+        rentPerSqft: 44.44,
         gstEnabled: true,
         gstType: 'included',
-        gstIncludedInRent: true, // GST is included in rent
+        gstIncludedInRent: true,
         gstPercentage: 18,
         gst: {
-            borneBy: 'lessor' // GST borne by lessor
+            borneBy: 'lessor'
         },
         rentPayableDate: 10,
-        agreementStartDate: "2025-01-01",
+        agreementStartDate: "2024-11-01",
         agreementTenureAmount: 3,
         agreementTenureUnit: "years",
-        securityDeposit: 75000,
+        securityDeposit: 240000,
         escalationPercentage: 3,
         escalationAmount: 1,
         escalationPeriod: 'years',
         rentFreePeriodAmount: 30,
         rentFreePeriodUnit: "days",
         lessorName: "Ms. Priya Sharma",
-        lessorAddress: "789 Owner Avenue, Mumbai, Maharashtra - 400005",
+        lessorAddress: "789 Owner Avenue, Juhu, Mumbai - 400049",
         lessorContact: "9123456788",
         lessorEmail: "priya.sharma@example.com",
         lesseeName: "ABC Technologies Pvt Ltd",
         lesseeContact: "9876543211",
         lesseeEmail: "admin@abctech.com",
-        lesseeAddress: "321 Business Street, Mumbai, Maharashtra - 400006",
+        lesseeAddress: "321 Business Street, Powai, Mumbai - 400076",
         gstin: "27FGHIJ5678K2L6",
         panNo: "FGHIJ5678K",
         agreementType: "Registry",
         bankName: "ICICI Bank",
         accountNo: "98765432109876",
         ifscCode: "ICIC0001234",
+        branchName: "BKC Branch",
+        maintenanceEnabled: false,
+        maintenance: {
+            amount: 0,
+            period: "month"
+        },
+        status: "Active",
         paymentHistory: [
             {
                 id: 1,
-                date: "2025-01-10",
-                dueDate: "2025-01-10",
-                amount: 25000,
-                base: 25000,
-                gst: 0, // GST included, so no separate GST
-                total: 25000,
-                period: "January 2025",
-                paid: true,
-                paymentDate: "2025-01-08",
+                dueDate: "2024-11-10",
+                base: 80000,
+                gst: 0,
+                total: 80000,
+                status: "Paid",
+                paymentDate: "2024-11-08",
                 paymentMode: "Online",
-                receiptNo: "RCP-0002",
-                notes: "Monthly rent payment"
+                receiptNo: "RCP-20241108001",
+                notes: "November 2024 rent payment"
+            },
+            {
+                id: 2,
+                dueDate: "2024-12-10",
+                base: 80000,
+                gst: 0,
+                total: 80000,
+                status: "Paid",
+                paymentDate: "2024-12-05",
+                paymentMode: "NEFT",
+                receiptNo: "RCP-20241205001",
+                notes: "December 2024 rent payment"
+            },
+            {
+                id: 3,
+                dueDate: "2025-01-10",
+                base: 80000,
+                gst: 0,
+                total: 80000,
+                status: "Paid",
+                paymentDate: "2025-01-08",
+                paymentMode: "RTGS",
+                receiptNo: "RCP-20250108001",
+                notes: "January 2025 rent payment"
+            },
+            {
+                id: 4,
+                dueDate: "2025-02-10",
+                base: 80000,
+                gst: 0,
+                total: 80000,
+                status: "Overdue",
+                paymentDate: null,
+                paymentMode: null,
+                receiptNo: null,
+                notes: "February 2025 rent payment - overdue"
             }
         ],
         bills: {
+            propertyTax: { 
+                checked: true, 
+                billNo: "PT2025002",
+                trackingDay: "1",
+                period: "year",
+                dueDate: "31",
+                startDate: "2025-01-01",
+                amount: 25000
+            },
             electricityBill: {
                 checked: true,
-                billNo: "EL-2025-001",
+                billNo: "EL-2025-002",
                 trackingDay: "1",
                 period: "month",
-                startDate: "2025-01-01",
                 dueDate: "15",
-                paid: false
+                startDate: "2025-01-01",
+                amount: 12000
             },
-            waterBill: {
+            internetBill: {
                 checked: true,
-                billNo: "WT-2025-001",
+                billNo: "IN-2025-002",
                 trackingDay: "1",
                 period: "month",
+                dueDate: "10",
                 startDate: "2025-01-01",
+                amount: 3000
+            },
+            gasBill: { 
+                checked: true, 
+                billNo: "GB-2025-002",
+                trackingDay: "1",
+                period: "month",
                 dueDate: "20",
-                paid: false
-            }
-        }
+                startDate: "2025-01-01",
+                amount: 5000
+            },
+            customBills: [
+                {
+                    name: "Security Charges",
+                    billNo: "SC002",
+                    trackingDay: "1",
+                    period: "month",
+                    dueDate: "5",
+                    startDate: "2025-01-01",
+                    amount: 5000,
+                    checked: true
+                },
+                {
+                    name: "Cleaning Charges",
+                    billNo: "CC002",
+                    trackingDay: "1",
+                    period: "month",
+                    dueDate: "10",
+                    startDate: "2025-01-01",
+                    amount: 3000,
+                    checked: true
+                }
+            ]
+        },
+        documents: [
+            { name: "Commercial Rent Agreement.pdf", uploadDate: "2024-11-01" },
+            { name: "Property Registration.pdf", uploadDate: "2024-11-01" },
+            { name: "GST Certificate.pdf", uploadDate: "2024-11-01" },
+            { name: "Company PAN.pdf", uploadDate: "2024-11-01" }
+        ]
     };
     
-    properties.push(sampleProperty2);
+    // Add both properties
+    properties.push(property1);
+    properties.push(property2);
     
     // Save the data
     saveData();
@@ -516,14 +729,15 @@ function createSampleProperty() {
     renderPropertiesTable();
     updateDashboardSummary();
     
-    showNotification('Sample properties created successfully', 'success');
+    showNotification('Test properties created successfully with complete data', 'success');
 }
 
+
 function initializeApp() {
-    // Only create sample data if no data exists
+    // Only create test properties if no data exists
     if (properties.length === 0) {
-    // Create sample property for testing
-    createSampleProperty();
+        // Create fresh test properties
+        createSampleProperty();
     }
     
     // Clean up any incorrectly generated monthly bills
@@ -608,6 +822,18 @@ function setupEventListeners() {
 
     // Navigation
     backToPropertiesBtn.addEventListener('click', showMainDashboard);
+
+    // Analytics Dashboard Navigation
+    const viewAnalyticsBtn = document.getElementById('viewAnalyticsBtn');
+    const backToMainBtn = document.getElementById('backToMainBtn');
+    
+    if (viewAnalyticsBtn) {
+        viewAnalyticsBtn.addEventListener('click', showAnalyticsDashboard);
+    }
+    
+    if (backToMainBtn) {
+        backToMainBtn.addEventListener('click', showMainDashboard);
+    }
 
     // Bill tracking will be handled dynamically
 
@@ -742,6 +968,18 @@ function setupEventListeners() {
             });
         }
     });
+
+    // Chart control event listeners
+    const revenuePeriodSelect = document.getElementById('revenuePeriod');
+    if (revenuePeriodSelect) {
+        revenuePeriodSelect.addEventListener('change', updateRevenueChart);
+    }
+
+
+    const billTrendsTypeSelect = document.getElementById('billTrendsType');
+    if (billTrendsTypeSelect) {
+        billTrendsTypeSelect.addEventListener('change', updateBillTrendsChart);
+    }
 }
 
 function populateSelectOptions() {
@@ -780,7 +1018,16 @@ function populateSelectOptions() {
 function showMainDashboard() {
     mainDashboard.classList.remove('hidden');
     paymentDashboard.classList.add('hidden');
+    document.getElementById('analyticsDashboard').classList.add('hidden');
     currentPropertyId = null;
+    updateDashboardSummary();
+}
+
+function showAnalyticsDashboard() {
+    mainDashboard.classList.add('hidden');
+    paymentDashboard.classList.add('hidden');
+    document.getElementById('analyticsDashboard').classList.remove('hidden');
+    updateAllCharts();
 }
 
 function showPaymentDashboard(propertyId) {
@@ -3925,6 +4172,733 @@ function updateDashboardSummary() {
     document.getElementById('activeRentals').textContent = activeRentals;
     document.getElementById('pendingBills').textContent = pendingBills;
     document.getElementById('monthlyRevenue').textContent = `₹${Math.round(monthlyRevenue).toLocaleString()}`;
+}
+
+// Chart instances
+let revenueChart = null;
+let propertyStatusChart = null;
+let billStatusChart = null;
+let billTrendsChart = null;
+
+// Chart color schemes - Modern gradient palette
+const chartColors = {
+    primary: '#667eea',
+    secondary: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    info: '#06b6d4',
+    purple: '#8b5cf6',
+    pink: '#ec4899',
+    indigo: '#6366f1',
+    gradient1: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    gradient2: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    gradient3: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    gradient4: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    gradient5: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+};
+
+function updateAllCharts() {
+    updateRevenueChart();
+    updatePropertyStatusChart();
+    updateBillStatusChart();
+    updateBillTrendsChart();
+}
+
+function updateRevenueChart() {
+    const ctx = document.getElementById('revenueChart');
+    if (!ctx) return;
+    
+    const period = parseInt(document.getElementById('revenuePeriod')?.value || 12);
+    const revenueData = generateRevenueData(period);
+    
+    if (revenueChart) {
+        revenueChart.destroy();
+    }
+    
+    revenueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: revenueData.labels,
+            datasets: [{
+                label: 'Monthly Revenue (₹)',
+                data: revenueData.values,
+                borderColor: chartColors.primary,
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 4,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: chartColors.primary,
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 3,
+                pointRadius: 8,
+                pointHoverRadius: 12,
+                pointHoverBackgroundColor: chartColors.primary,
+                pointHoverBorderColor: '#ffffff',
+                pointHoverBorderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 2000,
+                easing: 'easeInOutQuart'
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: chartColors.primary,
+                    borderWidth: 2,
+                    cornerRadius: 12,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return 'Revenue: ₹' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6b7280',
+                        font: {
+                            size: 12,
+                            weight: '500'
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#6b7280',
+                        font: {
+                            size: 12,
+                            weight: '500'
+                        },
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function generateRevenueData(months) {
+    const labels = [];
+    const values = [];
+    const currentDate = new Date();
+    
+    for (let i = months - 1; i >= 0; i--) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const monthName = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+        labels.push(monthName);
+        
+        // Calculate revenue for this month
+        const monthlyRevenue = properties
+            .filter(p => p.isRental && p.rentAmount)
+            .reduce((sum, p) => {
+                const monthlyRent = p.rentPeriod === 'year' ? p.rentAmount / 12 : p.rentAmount;
+                return sum + monthlyRent;
+            }, 0);
+        
+        // Add some variation for demo purposes
+        const variation = (Math.random() - 0.5) * 0.2; // ±10% variation
+        values.push(Math.round(monthlyRevenue * (1 + variation)));
+    }
+    
+    return { labels, values };
+}
+
+function updatePropertyStatusChart() {
+    const ctx = document.getElementById('propertyStatusChart');
+    if (!ctx) return;
+    
+    const statusData = calculatePropertyStatus();
+    
+    if (propertyStatusChart) {
+        propertyStatusChart.destroy();
+    }
+    
+    propertyStatusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: statusData.labels,
+            datasets: [{
+                data: statusData.values,
+                backgroundColor: [
+                    'rgba(102, 126, 234, 0.8)',
+                    'rgba(16, 185, 129, 0.8)'
+                ],
+                borderColor: [
+                    '#667eea',
+                    '#10b981'
+                ],
+                borderWidth: 3,
+                hoverBorderWidth: 5,
+                hoverBackgroundColor: [
+                    'rgba(102, 126, 234, 1)',
+                    'rgba(16, 185, 129, 1)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            animation: {
+                animateRotate: true,
+                animateScale: true,
+                duration: 2000,
+                easing: 'easeInOutQuart'
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 25,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: {
+                            size: 14,
+                            weight: '600'
+                        },
+                        color: '#374151'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#667eea',
+                    borderWidth: 2,
+                    cornerRadius: 12,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function calculatePropertyStatus() {
+    const occupied = properties.filter(p => p.isRental).length;
+    const vacant = properties.filter(p => !p.isRental).length;
+    
+    return {
+        labels: ['Occupied', 'Vacant'],
+        values: [occupied, vacant]
+    };
+}
+
+function updateBillStatusChart() {
+    const ctx = document.getElementById('billStatusChart');
+    if (!ctx) return;
+    
+    const billData = calculateBillStatus();
+    
+    if (billStatusChart) {
+        billStatusChart.destroy();
+    }
+    
+    billStatusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: billData.labels,
+            datasets: [{
+                data: billData.values,
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.8)',   // Paid - Green
+                    'rgba(239, 68, 68, 0.8)',    // Overdue - Red
+                    'rgba(6, 182, 212, 0.8)'     // Partial Paid - Blue
+                ],
+                borderColor: [
+                    '#10b981',
+                    '#ef4444',
+                    '#06b6d4'
+                ],
+                borderWidth: 3,
+                hoverBorderWidth: 5,
+                hoverBackgroundColor: [
+                    'rgba(16, 185, 129, 1)',
+                    'rgba(239, 68, 68, 1)',
+                    'rgba(6, 182, 212, 1)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            animation: {
+                animateRotate: true,
+                animateScale: true,
+                duration: 2000,
+                easing: 'easeInOutQuart'
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 25,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: {
+                            size: 14,
+                            weight: '600'
+                        },
+                        color: '#374151',
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((label, i) => {
+                                    const value = data.datasets[0].data[i];
+                                    const formattedValue = value > 0 ? `₹${value.toLocaleString()}` : '₹0';
+                                    return {
+                                        text: `${label}: ${formattedValue}`,
+                                        fillStyle: data.datasets[0].backgroundColor[i],
+                                        strokeStyle: data.datasets[0].borderColor[i],
+                                        lineWidth: 2,
+                                        pointStyle: 'circle',
+                                        hidden: false,
+                                        index: i
+                                    };
+                                });
+                            }
+                            return [];
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#10b981',
+                    borderWidth: 2,
+                    cornerRadius: 12,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed;
+                            const formattedValue = value > 0 ? `₹${value.toLocaleString()}` : '₹0';
+                            return `${context.label}: ${formattedValue}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function calculateBillStatus() {
+    let paid = 0;
+    let overdue = 0;
+    let partialPaid = 0;
+    
+    properties.forEach(property => {
+        if (property.isRental && property.paymentHistory) {
+            property.paymentHistory.forEach(payment => {
+                // Get the payment amount (use total if available, otherwise calculate from base + gst)
+                const amount = payment.total || (payment.base + payment.gst) || 0;
+                
+                // Check for actual status values used in the system
+                if (payment.status === 'Paid') {
+                    paid += amount;
+                } else if (payment.status === 'Partially Paid' || payment.status === 'Partial' || payment.status === 'partial') {
+                    partialPaid += amount;
+                } else if (payment.status === 'Overdue' || payment.status === 'overdue') {
+                    overdue += amount;
+                }
+                // Skip pending payments - not included in chart
+            });
+        }
+    });
+    
+    
+    return {
+        labels: ['Paid', 'Overdue', 'Partially Paid'],
+        values: [paid, overdue, partialPaid]
+    };
+}
+
+function updateBillTrendsChart() {
+    const ctx = document.getElementById('billTrendsChart');
+    if (!ctx) return;
+    
+    const billType = document.getElementById('billTrendsType')?.value || 'electricity';
+    const trendsData = generateBillTrendsData(billType);
+    
+    if (billTrendsChart) {
+        billTrendsChart.destroy();
+    }
+    
+    billTrendsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: trendsData.labels,
+            datasets: trendsData.datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 2000,
+                easing: 'easeInOutQuart'
+            },
+            plugins: {
+                legend: {
+                    display: trendsData.datasets.length > 1,
+                    position: 'top',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: {
+                            size: 13,
+                            weight: '600'
+                        },
+                        color: '#374151'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#667eea',
+                    borderWidth: 2,
+                    cornerRadius: 12,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ₹' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6b7280',
+                        font: {
+                            size: 12,
+                            weight: '500'
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#6b7280',
+                        font: {
+                            size: 12,
+                            weight: '500'
+                        },
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function generateBillTrendsData(billType) {
+    const labels = [];
+    const currentDate = new Date();
+    
+    // Generate last 12 months
+    for (let i = 11; i >= 0; i--) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const monthName = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+        labels.push(monthName);
+    }
+    
+    if (billType === 'all') {
+        // Show all bill types
+        const datasets = [
+            {
+                label: 'Electricity',
+                data: generateRealBillData('electricity', 12),
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4,
+                pointBackgroundColor: '#667eea',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 10
+            },
+            {
+                label: 'Internet',
+                data: generateRealBillData('internet', 12),
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4,
+                pointBackgroundColor: '#10b981',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 10
+            },
+            {
+                label: 'Gas',
+                data: generateRealBillData('gas', 12),
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4,
+                pointBackgroundColor: '#f59e0b',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 10
+            },
+            {
+                label: 'Property Tax',
+                data: generateRealBillData('propertyTax', 12),
+                borderColor: '#8b5cf6',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4,
+                pointBackgroundColor: '#8b5cf6',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 10
+            }
+        ];
+        
+        // Add individual custom bills if they exist
+        const customBills = generateIndividualCustomBillsData(12);
+        customBills.forEach((billData, index) => {
+            const colors = ['#ec4899', '#f97316', '#84cc16', '#06b6d4', '#8b5cf6', '#ef4444'];
+            const color = colors[index % colors.length];
+            
+            datasets.push({
+                label: billData.name,
+                data: billData.data,
+                borderColor: color,
+                backgroundColor: color + '20',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4,
+                pointBackgroundColor: color,
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 10
+            });
+        });
+        
+        return { labels, datasets };
+    } else {
+        // Show single bill type
+        const colors = {
+            electricity: chartColors.primary,
+            internet: chartColors.secondary,
+            gas: chartColors.warning,
+            propertyTax: chartColors.purple
+        };
+        
+        const color = colors[billType] || chartColors.primary;
+        
+        return {
+            labels,
+            datasets: [{
+                label: billType.charAt(0).toUpperCase() + billType.slice(1),
+                data: generateRealBillData(billType, 12),
+                borderColor: color,
+                backgroundColor: color + '20',
+                borderWidth: 4,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: color,
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 3,
+                pointRadius: 8,
+                pointHoverRadius: 12
+            }]
+        };
+    }
+}
+
+function generateRealBillData(billType, months) {
+    const data = [];
+    const currentDate = new Date();
+    
+    for (let i = 0; i < months; i++) {
+        const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - (months - 1 - i), 1);
+        let totalAmount = 0;
+        
+        properties.forEach(property => {
+            if (property.bills) {
+                // Handle standard bills
+                const billKey = billType; // electricity, water, gas, internet
+                const billData = property.bills[billKey];
+                
+                if (billData && billData.checked) {
+                    // Use actual bill amount if available, otherwise use realistic defaults
+                    let billAmount = 0;
+                    
+                    if (billData.amount && billData.amount > 0) {
+                        // Use actual stored bill amount
+                        billAmount = billData.amount;
+                    } else {
+                        // Use realistic default amounts based on bill type
+                        const baseAmounts = {
+                            electricity: 2000,
+                            internet: 1000,
+                            gas: 1200,
+                            propertyTax: 5000
+                        };
+                        billAmount = baseAmounts[billType] || 1000;
+                        
+                        // Add seasonal variation for electricity
+                        const month = targetDate.getMonth();
+                        if (billType === 'electricity') {
+                            // Higher in summer (May-Aug) and winter (Dec-Feb)
+                            if (month >= 4 && month <= 7) billAmount += 500; // Summer
+                            if (month === 11 || month <= 1) billAmount += 300; // Winter
+                        }
+                        
+                        // Add some random variation (±10%) for realism
+                        const variation = (Math.random() - 0.5) * 0.2;
+                        billAmount = Math.round(billAmount * (1 + variation));
+                    }
+                    
+                    totalAmount += billAmount;
+                }
+            }
+        });
+        
+        data.push(Math.max(0, totalAmount));
+    }
+    
+    return data;
+}
+
+function generateCustomBillsData(months) {
+    const data = [];
+    const currentDate = new Date();
+    
+    for (let i = 0; i < months; i++) {
+        const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - (months - 1 - i), 1);
+        let totalAmount = 0;
+        
+        properties.forEach(property => {
+            if (property.bills && property.bills.customBills) {
+                property.bills.customBills.forEach(customBill => {
+                    if (customBill.checked) {
+                        // Use actual custom bill amount if available, otherwise use default
+                        if (customBill.amount && customBill.amount > 0) {
+                            totalAmount += customBill.amount;
+                        } else {
+                            // Default amount for custom bills
+                            totalAmount += 500;
+                        }
+                    }
+                });
+            }
+        });
+        
+        // Add some random variation (±10%) for realism
+        const variation = (Math.random() - 0.5) * 0.2;
+        totalAmount = Math.round(totalAmount * (1 + variation));
+        
+        data.push(Math.max(0, totalAmount));
+    }
+    
+    return data;
+}
+
+function generateIndividualCustomBillsData(months) {
+    const customBillsMap = new Map();
+    const currentDate = new Date();
+    
+    // Collect all unique custom bills from all properties
+    properties.forEach(property => {
+        if (property.bills && property.bills.customBills) {
+            property.bills.customBills.forEach(customBill => {
+                if (customBill.checked && customBill.name) {
+                    if (!customBillsMap.has(customBill.name)) {
+                        customBillsMap.set(customBill.name, {
+                            name: customBill.name,
+                            data: new Array(months).fill(0)
+                        });
+                    }
+                }
+            });
+        }
+    });
+    
+    // Generate monthly data for each custom bill
+    for (let i = 0; i < months; i++) {
+        const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - (months - 1 - i), 1);
+        
+        properties.forEach(property => {
+            if (property.bills && property.bills.customBills) {
+                property.bills.customBills.forEach(customBill => {
+                    if (customBill.checked && customBill.name && customBillsMap.has(customBill.name)) {
+                        const billData = customBillsMap.get(customBill.name);
+                        
+                        // Use actual custom bill amount if available, otherwise use default
+                        let amount = 0;
+                        if (customBill.amount && customBill.amount > 0) {
+                            amount = customBill.amount;
+                        } else {
+                            // Default amount for custom bills
+                            amount = 500;
+                        }
+                        
+                        // Add some random variation (±10%) for realism
+                        const variation = (Math.random() - 0.5) * 0.2;
+                        amount = Math.round(amount * (1 + variation));
+                        
+                        billData.data[i] += Math.max(0, amount);
+                    }
+                });
+            }
+        });
+    }
+    
+    // Convert map to array and filter out bills with no data
+    return Array.from(customBillsMap.values()).filter(bill => 
+        bill.data.some(amount => amount > 0)
+    );
 }
 
 // Table Settings Functions
