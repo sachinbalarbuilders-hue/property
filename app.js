@@ -1104,7 +1104,6 @@ function refreshPaymentDashboardIfOpen(propertyId) {
 function renderBillButtons() {
     const property = properties.find(p => p.id === currentPropertyId);
     if (!property || !property.bills || !billButtons) {
-        console.log('renderBillButtons: Property, bills, or billButtons not found. currentPropertyId:', currentPropertyId, 'property:', property);
         return;
     }
 
@@ -3714,7 +3713,6 @@ function renderPaymentTable() {
     const paymentTableHeader = document.querySelector('#paymentDashboard .payment-table th:nth-child(5)');
     
     if (!property || !paymentTableBody) {
-        console.log('renderPaymentTable: Property or table body not found. currentPropertyId:', currentPropertyId, 'property:', property);
         if (paymentTableBody) {
             paymentTableBody.innerHTML = '<tr><td colspan="8" class="empty-state"><h3>No property selected</h3><p>Please select a property to view payment details.</p></td></tr>';
         }
@@ -3881,7 +3879,6 @@ function renderPaymentTable() {
 function updatePaymentSummary() {
     const property = properties.find(p => p.id === currentPropertyId);
     if (!property) {
-        console.log('updatePaymentSummary: Property not found. currentPropertyId:', currentPropertyId);
         return;
     }
 
