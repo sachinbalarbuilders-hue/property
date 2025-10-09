@@ -907,6 +907,19 @@ select.form-control {
   font-weight: 500 !important;
   text-decoration: none !important;
   transition: all var(--duration-normal) var(--ease-standard) !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+#addPropertyBtn * {
+  cursor: pointer !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
 }
 
 #addPropertyBtn:hover {
@@ -926,6 +939,15 @@ select.form-control {
   box-shadow: var(--focus-ring) !important;
   cursor: pointer !important;
   pointer-events: auto !important;
+}
+
+#addPropertyBtn span {
+  cursor: pointer !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
 }
 
 .brand h1 {
