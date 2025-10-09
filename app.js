@@ -161,43 +161,9 @@ function saveData() {
         };
         localStorage.setItem('propertyManagementData', JSON.stringify(data));
         
-        // Show a subtle save indicator
-        showSaveIndicator();
+        // Data saved silently
 }
 
-function showSaveIndicator() {
-    // Create or update save indicator
-    let indicator = document.getElementById('saveIndicator');
-    if (!indicator) {
-        indicator = document.createElement('div');
-        indicator.id = 'saveIndicator';
-        indicator.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(16, 185, 129, 0.9);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 10000;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        `;
-        document.body.appendChild(indicator);
-    }
-    
-    indicator.textContent = '💾 Data Saved';
-    indicator.style.opacity = '1';
-    
-    // Hide after 2 seconds
-    setTimeout(() => {
-        indicator.style.opacity = '0';
-    }, 2000);
-}
 
 function loadData() {
         const savedData = localStorage.getItem('propertyManagementData');
