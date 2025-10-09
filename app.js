@@ -1052,15 +1052,21 @@ function showPaymentDashboard(propertyId) {
     mainDashboard.classList.add('hidden');
     paymentDashboard.classList.remove('hidden');
     
+    // Reset payment dashboard state to ensure clean display
+    resetPaymentDashboardState();
+    
     // Render payment data
     renderPaymentTable();
     renderBillButtons();
     updatePaymentSummary();
-    
+}
+
+function resetPaymentDashboardState() {
     // Ensure payment history table is visible when entering payment dashboard
     const paymentHistoryTable = document.querySelector('#paymentDashboard .table-container');
     if (paymentHistoryTable) {
         paymentHistoryTable.style.display = 'block';
+        paymentHistoryTable.classList.remove('hidden');
     }
     
     // Show payment summary when entering payment dashboard
@@ -1070,11 +1076,18 @@ function showPaymentDashboard(propertyId) {
         paymentSummary.style.display = 'grid';
     }
     
-    // Hide any open bill sections
+    // Hide any open bill sections and ensure they don't interfere
     const billSections = document.querySelectorAll('#individualBillSections .table-container');
     billSections.forEach(section => {
         section.classList.add('hidden');
+        section.style.display = 'none';
     });
+    
+    // Also ensure the payment table body is visible
+    const paymentTableBody = document.getElementById('paymentTableBody');
+    if (paymentTableBody) {
+        paymentTableBody.style.display = '';
+    }
 }
 
 function refreshPaymentDashboardIfOpen(propertyId) {
