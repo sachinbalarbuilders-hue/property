@@ -315,20 +315,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Set up auto-save functionality
     setupAutoSave();
     
-    // Fallback: Ensure Add Property button is clickable after a delay
-    setTimeout(() => {
-        const addBtn = document.getElementById('addPropertyBtn');
-        if (addBtn && !addBtn.hasAttribute('data-listener-added')) {
-            console.log('Adding fallback event listener to Add Property button');
-            addBtn.addEventListener('click', (e) => {
-                console.log('Fallback: Add Property button clicked!', e);
-                e.preventDefault();
-                e.stopPropagation();
-                openPropertyModal();
-            });
-            addBtn.setAttribute('data-listener-added', 'true');
-        }
-    }, 1000);
 });
 
 function setupAutoSave() {
@@ -803,38 +789,16 @@ function clearAllData() {
 function setupEventListeners() {
     // Modal controls
     if (addPropertyBtn) {
-        // Add comprehensive event listeners
         addPropertyBtn.addEventListener('click', (e) => {
-            console.log('Add Property button clicked!', e);
             e.preventDefault();
             e.stopPropagation();
             openPropertyModal();
-        });
-        
-        addPropertyBtn.addEventListener('mousedown', (e) => {
-            console.log('Add Property button mousedown!', e);
-        });
-        
-        addPropertyBtn.addEventListener('mouseup', (e) => {
-            console.log('Add Property button mouseup!', e);
-        });
-        
-        // Add debugging for button state
-        addPropertyBtn.addEventListener('mouseenter', () => {
-            console.log('Mouse entered Add Property button');
-        });
-        
-        addPropertyBtn.addEventListener('mouseleave', () => {
-            console.log('Mouse left Add Property button');
         });
         
         // Ensure button is properly styled
         addPropertyBtn.style.pointerEvents = 'auto';
         addPropertyBtn.style.cursor = 'pointer';
         addPropertyBtn.style.zIndex = '10006';
-        
-    } else {
-        console.error('Add Property button not found!');
     }
     modalClose.addEventListener('click', closePropertyModal);
     paymentModalClose.addEventListener('click', closePaymentModal);
