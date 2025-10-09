@@ -833,66 +833,6 @@ function clearAllData() {
     showNotification('All data cleared successfully', 'success');
 }
 
-function clearAllDataAndReload() {
-    // Show confirmation dialog
-    const confirmed = confirm(
-        '⚠️ WARNING: This will permanently delete ALL data including:\n\n' +
-        '• All properties and their details\n' +
-        '• All payment history\n' +
-        '• All bills and documents\n' +
-        '• All analytics data\n\n' +
-        'This action cannot be undone!\n\n' +
-        'Are you sure you want to reset all data?'
-    );
-    
-    if (!confirmed) {
-        return; // User cancelled
-    }
-    
-    // Second confirmation for extra safety
-    const doubleConfirmed = confirm(
-        '🚨 FINAL WARNING 🚨\n\n' +
-        'You are about to PERMANENTLY DELETE ALL DATA.\n\n' +
-        'This will:\n' +
-        '• Remove all properties\n' +
-        '• Delete all payment records\n' +
-        '• Clear all bills and documents\n' +
-        '• Reset the entire application\n\n' +
-        'Click OK to proceed or Cancel to abort.'
-    );
-    
-    if (!doubleConfirmed) {
-        return; // User cancelled again
-    }
-    
-    // Clear localStorage completely
-    localStorage.removeItem('propertyManagementData');
-    
-    // Reset all global variables
-    properties = [];
-    currentPropertyId = null;
-    currentPaymentId = null;
-    nextId = 1;
-    nextReceiptId = 1;
-    nextInvoiceId = 1;
-    
-    // Save empty state
-    saveData();
-    
-    // Refresh the UI
-    renderPropertiesTable();
-    updateDashboardSummary();
-    
-    // Show success message
-    showNotification('🗑️ All data has been permanently deleted. You can now start fresh!', 'success');
-    
-    // Optional: Reload the page to ensure clean state
-    setTimeout(() => {
-        if (confirm('Would you like to reload the page to ensure a completely fresh start?')) {
-            window.location.reload();
-        }
-    }, 2000);
-}
 
 function setupEventListeners() {
     // Modal controls
@@ -939,9 +879,6 @@ function setupEventListeners() {
         backToMainBtn.addEventListener('click', showMainDashboard);
     }
     
-    if (resetDataBtn) {
-        resetDataBtn.addEventListener('click', clearAllDataAndReload);
-    }
 
     // Bill tracking will be handled dynamically
 
