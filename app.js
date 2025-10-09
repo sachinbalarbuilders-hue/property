@@ -1078,19 +1078,27 @@ function generateAdditionalBillsIfNeeded(property, billKey, billData) {
 }
 
 function generateYearlyBillsIfNeeded(property, billKey, billData) {
-    if (!billData.trackingDay || billData.period !== 'year') return;
+    if (!billData.trackingDay || billData.period !== 'year' || !billData.startDate) return;
     
     const today = new Date();
     const currentYear = today.getFullYear();
-    const dueDay = parseInt(billData.dueDate) || 1;
+    const dueDays = parseInt(billData.dueDate) || 1;
     
     // Check if we need to generate bills for each year since the start date
-    const startDate = billData.startDate ? new Date(billData.startDate) : new Date(currentYear, 0, 1);
+    const startDate = new Date(billData.startDate);
     const startYear = startDate.getFullYear();
+    const trackingYears = parseInt(billData.trackingDay) || 1;
     
-    // Generate bills for each year from start year to current year
-    for (let year = startYear; year <= currentYear; year++) {
-        const yearBillKey = `${billKey}_year_${year}`;
+    // Generate bills for each tracking period from start year
+    for (let i = 0; i < trackingYears; i++) {
+        // Calculate the start of this period
+        const periodStart = new Date(startDate.getTime() + (i * 365.25 * 24 * 60 * 60 * 1000)); // Account for leap years
+        const periodStartYear = periodStart.getFullYear();
+        
+        // Calculate the due date for this period (start date + due days)
+        const periodDueDate = new Date(periodStart.getTime() + (dueDays * 24 * 60 * 60 * 1000));
+        
+        const yearBillKey = `${billKey}_year_${periodStartYear}`;
         
         // Check if this year's bill already exists
         if (!property.bills[yearBillKey]) {
@@ -1102,8 +1110,8 @@ function generateYearlyBillsIfNeeded(property, billKey, billData) {
                 period: billData.period,
                 startDate: billData.startDate,
                 dueDate: billData.dueDate,
-                year: year,
-                dueDateFull: new Date(year, 0, dueDay).toISOString().split('T')[0],
+                year: periodStartYear,
+                dueDateFull: periodDueDate.toISOString().split('T')[0],
                 creationDate: today.toISOString().split('T')[0],
                 paid: false
             };
@@ -1112,18 +1120,23 @@ function generateYearlyBillsIfNeeded(property, billKey, billData) {
 }
 
 function generateYearlyBatchBillsIfNeeded(property, billKey, billData) {
-    if (!billData.trackingDay || billData.period !== 'year') return;
+    if (!billData.trackingDay || billData.period !== 'year' || !billData.startDate) return;
     
     const today = new Date();
-    const dueDay = parseInt(billData.dueDate) || 1;
-    const startDate = billData.startDate ? new Date(billData.startDate) : new Date(today.getFullYear(), 0, 1);
-    const startYear = startDate.getFullYear();
+    const dueDays = parseInt(billData.dueDate) || 1;
+    const startDate = new Date(billData.startDate);
     const trackingYears = parseInt(billData.trackingDay) || 1;
     
     // Generate bills for the specified number of years from start date
     for (let i = 0; i < trackingYears; i++) {
-        const billYear = startYear + i;
-        const yearBillKey = `${billKey}_year_${billYear}`;
+        // Calculate the start of this period
+        const periodStart = new Date(startDate.getTime() + (i * 365.25 * 24 * 60 * 60 * 1000)); // Account for leap years
+        const periodStartYear = periodStart.getFullYear();
+        
+        // Calculate the due date for this period (start date + due days)
+        const periodDueDate = new Date(periodStart.getTime() + (dueDays * 24 * 60 * 60 * 1000));
+        
+        const yearBillKey = `${billKey}_year_${periodStartYear}`;
         
         // Check if this year's bill already exists
         if (!property.bills[yearBillKey]) {
@@ -1135,8 +1148,8 @@ function generateYearlyBatchBillsIfNeeded(property, billKey, billData) {
                 period: billData.period,
                 startDate: billData.startDate,
                 dueDate: billData.dueDate,
-                year: billYear,
-                dueDateFull: new Date(billYear, 0, dueDay).toISOString().split('T')[0],
+                year: periodStartYear,
+                dueDateFull: periodDueDate.toISOString().split('T')[0],
                 creationDate: today.toISOString().split('T')[0],
                 paid: false
             };
@@ -1145,12 +1158,11 @@ function generateYearlyBatchBillsIfNeeded(property, billKey, billData) {
 }
 
 function regenerateYearlyBatchBillsIfNeeded(property, billKey, billData) {
-    if (!billData.trackingDay || billData.period !== 'year') return;
+    if (!billData.trackingDay || billData.period !== 'year' || !billData.startDate) return;
     
     const today = new Date();
-    const dueDay = parseInt(billData.dueDate) || 1;
-    const startDate = billData.startDate ? new Date(billData.startDate) : new Date(today.getFullYear(), 0, 1);
-    const startYear = startDate.getFullYear();
+    const dueDays = parseInt(billData.dueDate) || 1;
+    const startDate = new Date(billData.startDate);
     const trackingYears = parseInt(billData.trackingDay) || 1;
     
     // Count existing yearly bills for this bill type
@@ -1161,8 +1173,14 @@ function regenerateYearlyBatchBillsIfNeeded(property, billKey, billData) {
     // If we need more bills than exist, generate them
     if (existingYearlyBills.length < trackingYears) {
         for (let i = existingYearlyBills.length; i < trackingYears; i++) {
-            const billYear = startYear + i;
-            const yearBillKey = `${billKey}_year_${billYear}`;
+            // Calculate the start of this period
+            const periodStart = new Date(startDate.getTime() + (i * 365.25 * 24 * 60 * 60 * 1000)); // Account for leap years
+            const periodStartYear = periodStart.getFullYear();
+            
+            // Calculate the due date for this period (start date + due days)
+            const periodDueDate = new Date(periodStart.getTime() + (dueDays * 24 * 60 * 60 * 1000));
+            
+            const yearBillKey = `${billKey}_year_${periodStartYear}`;
             
             // Create bill for this year if it doesn't exist
             if (!property.bills[yearBillKey]) {
@@ -1173,8 +1191,8 @@ function regenerateYearlyBatchBillsIfNeeded(property, billKey, billData) {
                     period: billData.period,
                     startDate: billData.startDate,
                     dueDate: billData.dueDate,
-                    year: billYear,
-                    dueDateFull: new Date(billYear, 0, dueDay).toISOString().split('T')[0],
+                    year: periodStartYear,
+                    dueDateFull: periodDueDate.toISOString().split('T')[0],
                     creationDate: today.toISOString().split('T')[0],
                     paid: false
                 };
@@ -1224,21 +1242,25 @@ function generateNextYearBatchBillOnPayment(property, billKey, billData) {
 }
 
 function generateMonthlyBillsIfNeeded(property, billKey, billData) {
-    if (!billData.trackingDay || billData.period !== 'month') return;
+    if (!billData.trackingDay || billData.period !== 'month' || !billData.startDate) return;
     
     const today = new Date();
-    const dueDay = parseInt(billData.dueDate) || 1;
-    const startDate = billData.startDate ? new Date(billData.startDate) : new Date(today.getFullYear(), today.getMonth(), 1);
-    const startMonth = startDate.getMonth();
-    const startYear = startDate.getFullYear();
+    const dueDays = parseInt(billData.dueDate) || 1;
+    const startDate = new Date(billData.startDate);
     const trackingMonths = parseInt(billData.trackingDay) || 1;
     
     // Generate bills for the specified number of months from start date
     for (let i = 0; i < trackingMonths; i++) {
-        const billMonth = new Date(startYear, startMonth + i, 1);
-        const billYear = billMonth.getFullYear();
-        const billMonthNum = billMonth.getMonth() + 1; // JavaScript months are 0-based
-        const monthBillKey = `${billKey}_month_${billYear}_${billMonthNum}`;
+        // Calculate the start of this period
+        const periodStart = new Date(startDate.getTime() + (i * 30.44 * 24 * 60 * 60 * 1000)); // Average days per month
+        const periodStartMonth = periodStart.getMonth();
+        const periodStartYear = periodStart.getFullYear();
+        const periodStartMonthNum = periodStartMonth + 1; // JavaScript months are 0-based
+        
+        // Calculate the due date for this period (start date + due days)
+        const periodDueDate = new Date(periodStart.getTime() + (dueDays * 24 * 60 * 60 * 1000));
+        
+        const monthBillKey = `${billKey}_month_${periodStartYear}_${periodStartMonthNum}`;
         
         // Check if this month's bill already exists
         if (!property.bills[monthBillKey]) {
@@ -1250,9 +1272,9 @@ function generateMonthlyBillsIfNeeded(property, billKey, billData) {
                 period: billData.period,
                 startDate: billData.startDate,
                 dueDate: billData.dueDate,
-                month: billMonthNum,
-                year: billYear,
-                dueDateFull: new Date(billYear, billMonthNum - 1, dueDay).toISOString().split('T')[0],
+                month: periodStartMonthNum,
+                year: periodStartYear,
+                dueDateFull: periodDueDate.toISOString().split('T')[0],
                 creationDate: today.toISOString().split('T')[0],
                 paid: false
             };
@@ -1261,13 +1283,11 @@ function generateMonthlyBillsIfNeeded(property, billKey, billData) {
 }
 
 function regenerateMonthlyBillsIfNeeded(property, billKey, billData) {
-    if (!billData.trackingDay || billData.period !== 'month') return;
+    if (!billData.trackingDay || billData.period !== 'month' || !billData.startDate) return;
     
     const today = new Date();
-    const dueDay = parseInt(billData.dueDate) || 1;
-    const startDate = billData.startDate ? new Date(billData.startDate) : new Date(today.getFullYear(), today.getMonth(), 1);
-    const startMonth = startDate.getMonth();
-    const startYear = startDate.getFullYear();
+    const dueDays = parseInt(billData.dueDate) || 1;
+    const startDate = new Date(billData.startDate);
     const trackingMonths = parseInt(billData.trackingDay) || 1;
     
     // Count existing monthly bills for this bill type
@@ -1278,10 +1298,16 @@ function regenerateMonthlyBillsIfNeeded(property, billKey, billData) {
     // If we need more bills than exist, generate them
     if (existingMonthlyBills.length < trackingMonths) {
         for (let i = existingMonthlyBills.length; i < trackingMonths; i++) {
-            const billMonth = new Date(startYear, startMonth + i, 1);
-            const billYear = billMonth.getFullYear();
-            const billMonthNum = billMonth.getMonth() + 1; // JavaScript months are 0-based
-            const monthBillKey = `${billKey}_month_${billYear}_${billMonthNum}`;
+            // Calculate the start of this period
+            const periodStart = new Date(startDate.getTime() + (i * 30.44 * 24 * 60 * 60 * 1000)); // Average days per month
+            const periodStartMonth = periodStart.getMonth();
+            const periodStartYear = periodStart.getFullYear();
+            const periodStartMonthNum = periodStartMonth + 1; // JavaScript months are 0-based
+            
+            // Calculate the due date for this period (start date + due days)
+            const periodDueDate = new Date(periodStart.getTime() + (dueDays * 24 * 60 * 60 * 1000));
+            
+            const monthBillKey = `${billKey}_month_${periodStartYear}_${periodStartMonthNum}`;
             
             // Create bill for this month if it doesn't exist
             if (!property.bills[monthBillKey]) {
@@ -1292,9 +1318,9 @@ function regenerateMonthlyBillsIfNeeded(property, billKey, billData) {
                     period: billData.period,
                     startDate: billData.startDate,
                     dueDate: billData.dueDate,
-                    month: billMonthNum,
-                    year: billYear,
-                    dueDateFull: new Date(billYear, billMonthNum - 1, dueDay).toISOString().split('T')[0],
+                    month: periodStartMonthNum,
+                    year: periodStartYear,
+                    dueDateFull: periodDueDate.toISOString().split('T')[0],
                     creationDate: today.toISOString().split('T')[0],
                     paid: false
                 };
@@ -1442,35 +1468,29 @@ function createIndividualBillSection(billKey) {
         const today = new Date();
         let dueDate = null;
         
-        if (billData.trackingDay && billData.period) {
-            // Calculate due date based on period and tracking
+        if (billData.trackingDay && billData.period && billData.startDate) {
+            // Calculate due date based on start date and days from start date
             const trackingNum = parseInt(billData.trackingDay);
             const period = billData.period;
-            const dueDay = parseInt(billData.dueDate) || 1;
+            const dueDays = parseInt(billData.dueDate) || 1;
+            const startDate = new Date(billData.startDate);
             
             if (period === 'month') {
-                // For month period, check if current month's due date has passed
-                const currentMonthDueDate = new Date(today.getFullYear(), today.getMonth(), dueDay);
+                // For month period, calculate due date by adding due days to start date
+                // Then add tracking months to get the current period's due date
+                const monthsSinceStart = Math.floor((today - startDate) / (30.44 * 24 * 60 * 60 * 1000)); // Average days per month
+                const currentPeriodStart = new Date(startDate.getTime() + (Math.floor(monthsSinceStart / trackingNum) * trackingNum * 30.44 * 24 * 60 * 60 * 1000));
+                const currentPeriodDueDate = new Date(currentPeriodStart.getTime() + (dueDays * 24 * 60 * 60 * 1000));
                 
-                if (currentMonthDueDate < today) {
-                    // Current month's due date has passed - bill is overdue
-                    dueDate = currentMonthDueDate; // This will make daysRemaining negative
-                } else {
-                    // Current month's due date hasn't passed yet
-                    dueDate = currentMonthDueDate;
-                }
+                dueDate = currentPeriodDueDate;
             } else if (period === 'year') {
-                // For year period, check if current year's due date has passed
-                const currentYearDueDate = new Date(today.getFullYear(), 0, dueDay);
+                // For year period, calculate due date by adding due days to start date
+                // Then add tracking years to get the current period's due date
+                const yearsSinceStart = Math.floor((today - startDate) / (365.25 * 24 * 60 * 60 * 1000)); // Account for leap years
+                const currentPeriodStart = new Date(startDate.getTime() + (Math.floor(yearsSinceStart / trackingNum) * trackingNum * 365.25 * 24 * 60 * 60 * 1000));
+                const currentPeriodDueDate = new Date(currentPeriodStart.getTime() + (dueDays * 24 * 60 * 60 * 1000));
                 
-                if (currentYearDueDate < today) {
-                    // Current year's due date has passed - bill is overdue
-                    // Show how many days overdue from the current year's due date
-                    dueDate = currentYearDueDate; // This will make daysRemaining negative
-                } else {
-                    // Current year's due date hasn't passed yet
-                    dueDate = currentYearDueDate;
-                }
+                dueDate = currentPeriodDueDate;
             }
             
             // Calculate remaining days (using UTC to avoid timezone issues)
@@ -3828,33 +3848,28 @@ function updateDashboardSummary() {
                     let dueDate = null;
                     
                     // Calculate due date based on bill configuration
-                    if (billData.trackingDay && billData.period) {
+                    if (billData.trackingDay && billData.period && billData.startDate) {
                         const trackingNum = parseInt(billData.trackingDay);
                         const period = billData.period;
-                        const dueDay = parseInt(billData.dueDate) || 1;
+                        const dueDays = parseInt(billData.dueDate) || 1;
+                        const startDate = new Date(billData.startDate);
                         
                         if (period === 'month') {
-                            // For month period, check if current month's due date has passed
-                            const currentMonthDueDate = new Date(today.getFullYear(), today.getMonth(), dueDay);
+                            // For month period, calculate due date by adding due days to start date
+                            // Then add tracking months to get the current period's due date
+                            const monthsSinceStart = Math.floor((today - startDate) / (30.44 * 24 * 60 * 60 * 1000)); // Average days per month
+                            const currentPeriodStart = new Date(startDate.getTime() + (Math.floor(monthsSinceStart / trackingNum) * trackingNum * 30.44 * 24 * 60 * 60 * 1000));
+                            const currentPeriodDueDate = new Date(currentPeriodStart.getTime() + (dueDays * 24 * 60 * 60 * 1000));
                             
-                            if (currentMonthDueDate < today) {
-                                // Current month's due date has passed - bill is overdue
-                                dueDate = currentMonthDueDate; // This will make daysRemaining negative
-                            } else {
-                                // Current month's due date hasn't passed yet
-                                dueDate = currentMonthDueDate;
-                            }
+                            dueDate = currentPeriodDueDate;
                         } else if (period === 'year') {
-                            // For year period, check if current year's due date has passed
-                            const currentYearDueDate = new Date(today.getFullYear(), 0, dueDay);
+                            // For year period, calculate due date by adding due days to start date
+                            // Then add tracking years to get the current period's due date
+                            const yearsSinceStart = Math.floor((today - startDate) / (365.25 * 24 * 60 * 60 * 1000)); // Account for leap years
+                            const currentPeriodStart = new Date(startDate.getTime() + (Math.floor(yearsSinceStart / trackingNum) * trackingNum * 365.25 * 24 * 60 * 60 * 1000));
+                            const currentPeriodDueDate = new Date(currentPeriodStart.getTime() + (dueDays * 24 * 60 * 60 * 1000));
                             
-                            if (currentYearDueDate < today) {
-                                // Current year's due date has passed - bill is overdue
-                                dueDate = currentYearDueDate; // This will make it overdue
-                            } else {
-                                // Current year's due date hasn't passed yet
-                                dueDate = currentYearDueDate;
-                            }
+                            dueDate = currentPeriodDueDate;
                         }
                     }
                     
@@ -3871,32 +3886,28 @@ function updateDashboardSummary() {
                         let dueDate = null;
                         
                         // Calculate due date based on custom bill configuration
-                        if (customBill.trackingDay && customBill.period) {
+                        if (customBill.trackingDay && customBill.period && customBill.startDate) {
                             const trackingNum = parseInt(customBill.trackingDay);
                             const period = customBill.period;
-                            const dueDay = parseInt(customBill.dueDate) || 1;
+                            const dueDays = parseInt(customBill.dueDate) || 1;
+                            const startDate = new Date(customBill.startDate);
                             
                             if (period === 'month') {
-                                // For month period, use the specific month's due date
-                                if (bill.month && bill.year) {
-                                    // This is a specific monthly bill (e.g., October 2024)
-                                    dueDate = new Date(bill.year, bill.month - 1, dueDay);
-                                } else {
-                                    // Fallback to current month's due date
-                                    const currentMonthDueDate = new Date(today.getFullYear(), today.getMonth(), dueDay);
-                                    dueDate = currentMonthDueDate;
-                                }
-                            } else if (period === 'year') {
-                                // For year period, check if current year's due date has passed
-                                const currentYearDueDate = new Date(today.getFullYear(), 0, dueDay);
+                                // For month period, calculate due date by adding due days to start date
+                                // Then add tracking months to get the current period's due date
+                                const monthsSinceStart = Math.floor((today - startDate) / (30.44 * 24 * 60 * 60 * 1000)); // Average days per month
+                                const currentPeriodStart = new Date(startDate.getTime() + (Math.floor(monthsSinceStart / trackingNum) * trackingNum * 30.44 * 24 * 60 * 60 * 1000));
+                                const currentPeriodDueDate = new Date(currentPeriodStart.getTime() + (dueDays * 24 * 60 * 60 * 1000));
                                 
-                                if (currentYearDueDate < today) {
-                                    // Current year's due date has passed - bill is overdue
-                                    dueDate = currentYearDueDate; // This will make it overdue
-                                } else {
-                                    // Current year's due date hasn't passed yet
-                                    dueDate = currentYearDueDate;
-                                }
+                                dueDate = currentPeriodDueDate;
+                            } else if (period === 'year') {
+                                // For year period, calculate due date by adding due days to start date
+                                // Then add tracking years to get the current period's due date
+                                const yearsSinceStart = Math.floor((today - startDate) / (365.25 * 24 * 60 * 60 * 1000)); // Account for leap years
+                                const currentPeriodStart = new Date(startDate.getTime() + (Math.floor(yearsSinceStart / trackingNum) * trackingNum * 365.25 * 24 * 60 * 60 * 1000));
+                                const currentPeriodDueDate = new Date(currentPeriodStart.getTime() + (dueDays * 24 * 60 * 60 * 1000));
+                                
+                                dueDate = currentPeriodDueDate;
                             }
                         }
                         
@@ -5150,9 +5161,9 @@ function setupBillsSection(existingBills = null) {
                            value="${existingBill ? existingBill.startDate || '' : ''}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Due Date (Day of Month)</label>
+                    <label class="form-label">Due Date (Days from Start Date)</label>
                     <input type="number" class="form-control" name="bill-${bill.key}-due-date" 
-                           placeholder="Enter day (1-31)" min="1" max="31"
+                           placeholder="Enter days (e.g., 250)" min="1" max="365"
                            value="${existingBill ? existingBill.dueDate || '' : ''}">
                 </div>
             </div>
@@ -5236,9 +5247,9 @@ function addCustomBill(existingBill = null) {
                        value="${existingBill ? existingBill.startDate || '' : ''}">
             </div>
             <div class="form-group">
-                <label class="form-label">Due Date (Day of Month)</label>
+                <label class="form-label">Due Date (Days from Start Date)</label>
                 <input type="number" class="form-control" name="custom-bill-due-date" 
-                       placeholder="Enter day (1-31)" min="1" max="31"
+                       placeholder="Enter days (e.g., 250)" min="1" max="365"
                        value="${existingBill ? existingBill.dueDate || '' : ''}">
             </div>
         </div>
