@@ -341,188 +341,78 @@ function setupAutoSave() {
     };
 }
 
-// Function to create test properties with complete data
+// Function to create simple test properties
 function createSampleProperty() {
-    // Property 1: Residential Apartment
+    // Simple Property 1: Residential Apartment
     const property1 = {
         id: nextId++,
-        name: "Luxury Apartment A-101",
-            projectName: "Green Valley Residency",
+        name: "Apartment A-101",
+        projectName: "Green Valley Residency",
         address: "Plot No. 123, Sector 15, Andheri West",
-            city: "Mumbai",
-            state: "Maharashtra",
+        city: "Mumbai",
+        state: "Maharashtra",
         pincode: "400058",
-            type: "Residential",
-            officerNo: "A-101",
-            floorNo: "1st Floor",
-            furniture: "Semi-Furnished",
+        type: "Residential",
+        officerNo: "A-101",
+        floorNo: "1st Floor",
+        furniture: "Semi-Furnished",
         carpetArea: "1200 sqft",
         superBuiltupArea: "1400 sqft",
         balconyArea: "150 sqft",
-            terraceArea: "0 sqft",
-            isRental: true,
+        terraceArea: "0 sqft",
+        isRental: true,
         rentAmount: 35000,
-            rentPeriod: "month",
+        rentPeriod: "month",
         rentPerSqft: 25,
-            gstEnabled: true,
-            gstType: 'excluded',
-            gstIncludedInRent: false,
-            gstPercentage: 18,
-            gst: {
-                borneBy: 'lessee'
-            },
-            rentPayableDate: 5,
-        agreementStartDate: "2024-12-01",
-            agreementTenureAmount: 2,
-            agreementTenureUnit: "years",
+        gstEnabled: false,
+        gstType: 'excluded',
+        gstIncludedInRent: false,
+        gstPercentage: 0,
+        gst: {
+            borneBy: 'lessee'
+        },
+        rentPayableDate: 5,
+        agreementStartDate: "2025-10-20",
+        agreementTenureAmount: 2,
+        agreementTenureUnit: "years",
         securityDeposit: 70000,
-            escalationPercentage: 5,
-            escalationAmount: 1,
-            escalationPeriod: 'years',
-            rentFreePeriodAmount: 15,
-            rentFreePeriodUnit: "days",
-            lessorName: "Mr. Rajesh Kumar",
+        escalationPercentage: 5,
+        escalationAmount: 1,
+        escalationPeriod: 'years',
+        rentFreePeriodAmount: 15,
+        rentFreePeriodUnit: "days",
+        lessorName: "Mr. Rajesh Kumar",
         lessorAddress: "456 Owner Street, Bandra West, Mumbai - 400050",
-            lessorContact: "9123456789",
-            lessorEmail: "rajesh.kumar@example.com",
-            lesseeName: "Mr. John Doe",
-            lesseeContact: "9876543210",
-            lesseeEmail: "john.doe@example.com",
+        lessorContact: "9123456789",
+        lessorEmail: "rajesh.kumar@example.com",
+        lesseeName: "Mr. John Doe",
+        lesseeContact: "9876543210",
+        lesseeEmail: "john.doe@example.com",
         lesseeAddress: "789 Tenant Road, Andheri East, Mumbai - 400069",
-            gstin: "27ABCDE1234F1Z5",
-            panNo: "ABCDE1234F",
-            agreementType: "Notary",
-            bankName: "HDFC Bank",
-            accountNo: "12345678901234",
-            ifscCode: "HDFC0001234",
-            branchName: "Andheri West Branch",
-            maintenanceEnabled: true,
-            maintenance: {
-            amount: 3000,
-                period: "month"
-            },
-            status: "Active",
-            paymentHistory: [
-                {
-                    id: 1,
-                dueDate: "2024-12-05",
-                base: 35000,
-                gst: 6300,
-                total: 41300,
-                    status: "Paid",
-                paymentDate: "2024-12-03",
-                    paymentMode: "Bank Transfer",
-                receiptNo: "RCP-20241203001",
-                notes: "December 2024 rent payment"
-            },
-            {
-                id: 2,
-                dueDate: "2025-01-05",
-                base: 35000,
-                gst: 6300,
-                total: 41300,
-                status: "Paid",
-                paymentDate: "2025-01-02",
-                paymentMode: "UPI",
-                receiptNo: "RCP-20250102001",
-                notes: "January 2025 rent payment"
-            },
-            {
-                id: 3,
-                dueDate: "2025-02-05",
-                base: 35000,
-                gst: 6300,
-                total: 41300,
-                status: "Overdue",
-                paymentDate: null,
-                paymentMode: null,
-                receiptNo: null,
-                notes: "February 2025 rent payment - overdue"
-            },
-            {
-                id: 4,
-                dueDate: "2025-03-05",
-                base: 35000,
-                gst: 6300,
-                total: 41300,
-                status: "Partially Paid",
-                paymentDate: "2025-03-02",
-                paymentMode: "Cheque",
-                receiptNo: "RCP-20250302001",
-                notes: "March 2025 rent payment - partial"
-                }
-            ],
-            bills: {
-                propertyTax: { 
-                    checked: true, 
-                    billNo: "PT2025001",
-                    trackingDay: "1",
-                    period: "year",
-                dueDate: "31",
-                startDate: "2025-01-01",
-                amount: 15000
-                },
-                electricityBill: {
-                    checked: true,
-                    billNo: "EB12345",
-                    trackingDay: "1",
-                    period: "month",
-                dueDate: "15",
-                startDate: "2025-01-01",
-                amount: 4500
-                },
-            internetBill: {
-                    checked: true, 
-                billNo: "IN67890",
-                trackingDay: "1",
-                    period: "month",
-                dueDate: "10",
-                startDate: "2025-01-01",
-                amount: 1500
-                },
-                gasBill: { 
-                    checked: true, 
-                    billNo: "GB54321",
-                    trackingDay: "1",
-                    period: "month",
-                dueDate: "20",
-                startDate: "2025-01-01",
-                amount: 2000
-            },
-            customBills: [
-                {
-                    name: "Maintenance Charges",
-                    billNo: "MC001",
-                    trackingDay: "1",
-                    period: "month",
-                    dueDate: "5",
-                    startDate: "2025-01-01",
-                    amount: 3000,
-                    checked: true
-                },
-                {
-                    name: "Parking Charges",
-                    billNo: "PC001",
-                    trackingDay: "1",
-                    period: "month",
-                    dueDate: "10",
-                    startDate: "2025-01-01",
-                    amount: 2000,
-                    checked: true
-                }
-            ]
-            },
-                    documents: [
-            { name: "Rent Agreement.pdf", uploadDate: "2024-12-01" },
-            { name: "Property Papers.pdf", uploadDate: "2024-12-01" },
-            { name: "PAN Card.pdf", uploadDate: "2024-12-01" }
-        ]
+        gstin: "",
+        panNo: "ABCDE1234F",
+        agreementType: "Notary",
+        agreementDate: "2025-10-15",
+        agreementNumber: "AGR-2025-001",
+        bankName: "HDFC Bank",
+        accountNo: "12345678901234",
+        ifscCode: "HDFC0001234",
+        branchName: "Andheri West Branch",
+        maintenanceEnabled: false,
+        maintenance: {
+            amount: 0,
+            period: "month"
+        },
+        status: "Active",
+        paymentHistory: [],
+        bills: {},
+        documents: []
     };
     
-    // Property 2: Commercial Office
+    // Simple Property 2: Commercial Office
     const property2 = {
         id: nextId++,
-        name: "Premium Office B-205",
+        name: "Office B-205",
         projectName: "Business Park Plaza",
         address: "Plot No. 456, Commercial Zone, BKC",
         city: "Mumbai",
@@ -540,15 +430,15 @@ function createSampleProperty() {
         rentAmount: 80000,
         rentPeriod: "month",
         rentPerSqft: 44.44,
-        gstEnabled: true,
-        gstType: 'included',
-        gstIncludedInRent: true,
-        gstPercentage: 18,
+        gstEnabled: false,
+        gstType: 'excluded',
+        gstIncludedInRent: false,
+        gstPercentage: 0,
         gst: {
-            borneBy: 'lessor'
+            borneBy: 'lessee'
         },
         rentPayableDate: 10,
-        agreementStartDate: "2024-11-01",
+        agreementStartDate: "2025-10-20",
         agreementTenureAmount: 3,
         agreementTenureUnit: "years",
         securityDeposit: 240000,
@@ -565,9 +455,11 @@ function createSampleProperty() {
         lesseeContact: "9876543211",
         lesseeEmail: "admin@abctech.com",
         lesseeAddress: "321 Business Street, Powai, Mumbai - 400076",
-        gstin: "27FGHIJ5678K2L6",
+        gstin: "",
         panNo: "FGHIJ5678K",
         agreementType: "Registry",
+        agreementDate: "2025-10-15",
+        agreementNumber: "AGR-2025-002",
         bankName: "ICICI Bank",
         accountNo: "98765432109876",
         ifscCode: "ICIC0001234",
@@ -578,122 +470,9 @@ function createSampleProperty() {
             period: "month"
         },
         status: "Active",
-        paymentHistory: [
-            {
-                id: 1,
-                dueDate: "2024-11-10",
-                base: 80000,
-                gst: 0,
-                total: 80000,
-                status: "Paid",
-                paymentDate: "2024-11-08",
-                paymentMode: "Online",
-                receiptNo: "RCP-20241108001",
-                notes: "November 2024 rent payment"
-            },
-            {
-                id: 2,
-                dueDate: "2024-12-10",
-                base: 80000,
-                gst: 0,
-                total: 80000,
-                status: "Paid",
-                paymentDate: "2024-12-05",
-                paymentMode: "NEFT",
-                receiptNo: "RCP-20241205001",
-                notes: "December 2024 rent payment"
-            },
-            {
-                id: 3,
-                dueDate: "2025-01-10",
-                base: 80000,
-                gst: 0,
-                total: 80000,
-                status: "Paid",
-                paymentDate: "2025-01-08",
-                paymentMode: "RTGS",
-                receiptNo: "RCP-20250108001",
-                notes: "January 2025 rent payment"
-            },
-            {
-                id: 4,
-                dueDate: "2025-02-10",
-                base: 80000,
-                gst: 0,
-                total: 80000,
-                status: "Overdue",
-                paymentDate: null,
-                paymentMode: null,
-                receiptNo: null,
-                notes: "February 2025 rent payment - overdue"
-            }
-        ],
-        bills: {
-            propertyTax: { 
-                checked: true, 
-                billNo: "PT2025002",
-                trackingDay: "1",
-                period: "year",
-                dueDate: "31",
-                startDate: "2025-01-01",
-                amount: 25000
-            },
-            electricityBill: {
-                checked: true,
-                billNo: "EL-2025-002",
-                trackingDay: "1",
-                period: "month",
-                dueDate: "15",
-                startDate: "2025-01-01",
-                amount: 12000
-            },
-            internetBill: {
-                checked: true,
-                billNo: "IN-2025-002",
-                trackingDay: "1",
-                period: "month",
-                dueDate: "10",
-                startDate: "2025-01-01",
-                amount: 3000
-            },
-            gasBill: { 
-                checked: true, 
-                billNo: "GB-2025-002",
-                trackingDay: "1",
-                period: "month",
-                dueDate: "20",
-                startDate: "2025-01-01",
-                amount: 5000
-            },
-            customBills: [
-                {
-                    name: "Security Charges",
-                    billNo: "SC002",
-                    trackingDay: "1",
-                    period: "month",
-                    dueDate: "5",
-                    startDate: "2025-01-01",
-                    amount: 5000,
-                    checked: true
-                },
-                {
-                    name: "Cleaning Charges",
-                    billNo: "CC002",
-                    trackingDay: "1",
-                    period: "month",
-                    dueDate: "10",
-                    startDate: "2025-01-01",
-                    amount: 3000,
-                    checked: true
-                }
-            ]
-        },
-        documents: [
-            { name: "Commercial Rent Agreement.pdf", uploadDate: "2024-11-01" },
-            { name: "Property Registration.pdf", uploadDate: "2024-11-01" },
-            { name: "GST Certificate.pdf", uploadDate: "2024-11-01" },
-            { name: "Company PAN.pdf", uploadDate: "2024-11-01" }
-        ]
+        paymentHistory: [],
+        bills: {},
+        documents: []
     };
     
     // Add both properties
@@ -707,7 +486,7 @@ function createSampleProperty() {
     renderPropertiesTable();
     updateDashboardSummary();
     
-    showNotification('Test properties created successfully with complete data', 'success');
+    showNotification('Simple test properties created successfully', 'success');
 }
 
 
