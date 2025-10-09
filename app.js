@@ -348,6 +348,21 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Set up auto-save functionality
     setupAutoSave();
+    
+    // Fallback: Ensure Add Property button is clickable after a delay
+    setTimeout(() => {
+        const addBtn = document.getElementById('addPropertyBtn');
+        if (addBtn && !addBtn.hasAttribute('data-listener-added')) {
+            console.log('Adding fallback event listener to Add Property button');
+            addBtn.addEventListener('click', (e) => {
+                console.log('Fallback: Add Property button clicked!', e);
+                e.preventDefault();
+                e.stopPropagation();
+                openPropertyModal();
+            });
+            addBtn.setAttribute('data-listener-added', 'true');
+        }
+    }, 1000);
 });
 
 function setupAutoSave() {
@@ -882,7 +897,21 @@ function clearAllDataAndReload() {
 function setupEventListeners() {
     // Modal controls
     if (addPropertyBtn) {
-    addPropertyBtn.addEventListener('click', () => openPropertyModal());
+        addPropertyBtn.addEventListener('click', (e) => {
+            console.log('Add Property button clicked!', e);
+            openPropertyModal();
+        });
+        
+        // Add debugging for button state
+        addPropertyBtn.addEventListener('mouseenter', () => {
+            console.log('Mouse entered Add Property button');
+        });
+        
+        addPropertyBtn.addEventListener('mouseleave', () => {
+            console.log('Mouse left Add Property button');
+        });
+    } else {
+        console.error('Add Property button not found!');
     }
     modalClose.addEventListener('click', closePropertyModal);
     paymentModalClose.addEventListener('click', closePaymentModal);
