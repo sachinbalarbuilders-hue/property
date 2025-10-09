@@ -1254,31 +1254,53 @@ function renderBillButtons() {
 
 function toggleIndividualBill(billKey) {
     const billSection = document.getElementById(`bill-section-${billKey}`);
-    // Find the payment history table container specifically
-    const paymentHistoryTable = document.querySelector('#paymentDashboard .table-container');
+    
+    // Find the payment history table container specifically (the one NOT inside individualBillSections)
+    const allTableContainers = document.querySelectorAll('#paymentDashboard .table-container');
+    let paymentHistoryTable = null;
+    allTableContainers.forEach(container => {
+        if (!container.closest('#individualBillSections')) {
+            paymentHistoryTable = container;
+        }
+    });
     
     if (!billSection) {
         // Create the bill section if it doesn't exist
         createIndividualBillSection(billKey);
-        // Hide payment history table
-        if (paymentHistoryTable) {
-            paymentHistoryTable.style.display = 'none';
-        }
-        // Hide payment summary when viewing individual bills
-        const paymentSummary = document.querySelector('.payment-summary');
-        if (paymentSummary) {
-            paymentSummary.classList.add('hidden');
-            paymentSummary.style.display = 'none';
-        }
+        
+        // Use setTimeout to ensure the bill section is fully created
+        setTimeout(() => {
+            const newBillSection = document.getElementById(`bill-section-${billKey}`);
+            if (newBillSection) {
+                newBillSection.classList.remove('hidden');
+                newBillSection.style.display = 'block';
+            }
+            
+            // Hide payment history table
+            if (paymentHistoryTable) {
+                paymentHistoryTable.style.display = 'none';
+            }
+            
+            // Hide payment summary when viewing individual bills
+            const paymentSummary = document.querySelector('.payment-summary');
+            if (paymentSummary) {
+                paymentSummary.classList.add('hidden');
+                paymentSummary.style.display = 'none';
+            }
+        }, 50);
         return;
     }
     
     if (billSection.classList.contains('hidden')) {
+        // Show individual bill section
         billSection.classList.remove('hidden');
+        billSection.style.display = 'block';
+        
         // Hide payment history table
         if (paymentHistoryTable) {
             paymentHistoryTable.style.display = 'none';
         }
+        
         // Hide payment summary when viewing individual bills
         const paymentSummary = document.querySelector('.payment-summary');
         if (paymentSummary) {
@@ -1286,17 +1308,22 @@ function toggleIndividualBill(billKey) {
             paymentSummary.style.display = 'none';
         }
     } else {
+        // Hide individual bill section
         billSection.classList.add('hidden');
+        billSection.style.display = 'none';
+        
         // Show payment history table
         if (paymentHistoryTable) {
             paymentHistoryTable.style.display = 'block';
         }
+        
         // Show payment summary when closing individual bills
         const paymentSummary = document.querySelector('.payment-summary');
         if (paymentSummary) {
             paymentSummary.classList.remove('hidden');
             paymentSummary.style.display = 'grid';
         }
+        
         // Update dashboard summary to refresh the values
         updateDashboardSummary();
     }
