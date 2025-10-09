@@ -1017,18 +1017,44 @@ select.form-control {
   transition: all var(--duration-normal) var(--ease-standard) !important;
   box-sizing: border-box !important;
   overflow: visible !important;
+  isolation: isolate !important;
+  transform: translateZ(0) !important;
+  will-change: transform !important;
 }
 
 #addPropertyBtn::before {
   content: '' !important;
   position: absolute !important;
-  top: -5px !important;
-  left: -5px !important;
-  right: -5px !important;
-  bottom: -5px !important;
+  top: -10px !important;
+  left: -10px !important;
+  right: -10px !important;
+  bottom: -10px !important;
   z-index: -1 !important;
   pointer-events: auto !important;
   cursor: pointer !important;
+  background: transparent !important;
+}
+
+/* Ensure no other elements can interfere */
+.header-actions {
+  position: relative !important;
+  z-index: 10005 !important;
+}
+
+.header-actions * {
+  pointer-events: auto !important;
+}
+
+/* Remove any potential interference from parent elements */
+.header-actions #addPropertyBtn,
+.header-actions #addPropertyBtn *,
+.header-actions #addPropertyBtn span {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
 }
 
 #addPropertyBtn:hover {

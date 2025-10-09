@@ -803,9 +803,20 @@ function clearAllData() {
 function setupEventListeners() {
     // Modal controls
     if (addPropertyBtn) {
+        // Add comprehensive event listeners
         addPropertyBtn.addEventListener('click', (e) => {
             console.log('Add Property button clicked!', e);
+            e.preventDefault();
+            e.stopPropagation();
             openPropertyModal();
+        });
+        
+        addPropertyBtn.addEventListener('mousedown', (e) => {
+            console.log('Add Property button mousedown!', e);
+        });
+        
+        addPropertyBtn.addEventListener('mouseup', (e) => {
+            console.log('Add Property button mouseup!', e);
         });
         
         // Add debugging for button state
@@ -816,6 +827,12 @@ function setupEventListeners() {
         addPropertyBtn.addEventListener('mouseleave', () => {
             console.log('Mouse left Add Property button');
         });
+        
+        // Ensure button is properly styled
+        addPropertyBtn.style.pointerEvents = 'auto';
+        addPropertyBtn.style.cursor = 'pointer';
+        addPropertyBtn.style.zIndex = '10006';
+        
     } else {
         console.error('Add Property button not found!');
     }
