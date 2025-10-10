@@ -1440,11 +1440,16 @@ select.form-control {
 /* Ensure no other elements can interfere */
 .header-actions {
   position: relative !important;
-  z-index: 10005 !important;
+  z-index: 10002 !important;
 }
 
 .header-actions * {
   pointer-events: auto !important;
+}
+
+/* Ensure header-actions doesn't appear in modals */
+.modal .header-actions {
+  display: none !important;
 }
 
 /* Remove any potential interference from parent elements */
