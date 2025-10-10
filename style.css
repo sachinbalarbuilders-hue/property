@@ -3560,23 +3560,34 @@ select.form-control {
 /* Notification Styles */
 .notification {
   position: fixed;
-  top: var(--space-20);
-  right: var(--space-20);
-  background: var(--color-success);
-  color: var(--color-white);
-  padding: var(--space-12) var(--space-16);
-  border-radius: var(--radius-base);
-  box-shadow: var(--shadow-lg);
-  z-index: 1001;
+  top: 20px;
+  right: 20px;
+  background: #10b981;
+  color: #ffffff;
+  padding: 16px 20px;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 10000;
   animation: slideIn 0.3s ease-out;
+  font-weight: 500;
+  font-size: 14px;
+  max-width: 400px;
+  word-wrap: break-word;
 }
 
 .notification.error {
-  background: var(--color-error);
+  background: #ef4444 !important;
+  color: #ffffff !important;
 }
 
 .notification.warning {
-  background: var(--color-warning);
+  background: #f59e0b !important;
+  color: #ffffff !important;
+}
+
+.notification.success {
+  background: #10b981 !important;
+  color: #ffffff !important;
 }
 
 @keyframes slideIn {
@@ -3585,6 +3596,17 @@ select.form-control {
   }
   to {
     transform: translateX(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
   }
 }
 

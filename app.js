@@ -7853,15 +7853,31 @@ function getCurrentDate() {
 }
 
 function showNotification(message, type = 'success') {
+    // Remove any existing notifications to prevent stacking
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notif => notif.remove());
+    
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.textContent = message;
     
+    // Add icon based on type
+    const icon = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : '✅';
+    notification.innerHTML = `${icon} ${message}`;
+    
     document.body.appendChild(notification);
     
+    // Auto remove after 4 seconds for better visibility
     setTimeout(() => {
-        notification.remove();
-    }, 3000);
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOut 0.3s ease-in';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 300);
+        }
+    }, 4000);
 }
 
 
