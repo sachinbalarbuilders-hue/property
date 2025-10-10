@@ -2649,9 +2649,9 @@ select.form-control {
   align-items: end;
 }
 
-/* Reduce margin for checkbox rows to bring details closer */
-.form-row:has(.checkbox-label) {
-  margin-bottom: var(--space-8);
+/* Reduce gap for checkbox rows */
+.form-row.checkbox-row {
+  gap: var(--space-8);
 }
 
 /* Make details sections appear closer to their checkboxes */
@@ -2661,8 +2661,38 @@ select.form-control {
 .legal-charges-details,
 .legal-charges-custom,
 .maintenance-details {
-  margin-top: var(--space-4);
-  margin-bottom: var(--space-12);
+  margin-top: var(--space-4) !important;
+  margin-bottom: var(--space-8) !important;
+  padding-top: 0 !important;
+}
+
+/* Reduce spacing for checkbox form groups */
+.form-row .form-group .checkbox-label {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Target checkbox rows specifically */
+.form-row.checkbox-row {
+  margin-bottom: var(--space-4) !important;
+  padding-bottom: 0 !important;
+}
+
+/* Target checkbox form groups specifically */
+.form-row.checkbox-row .form-group {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  min-height: auto !important;
+}
+
+/* Override default form-group margin for checkbox rows */
+.form-row.checkbox-row .form-group {
+  margin-bottom: 0 !important;
+}
+
+/* Keep normal spacing for other form rows */
+.form-row:not(.checkbox-row) {
+  margin-bottom: var(--space-16) !important;
 }
 
 .form-row:has(.form-group--full) {
