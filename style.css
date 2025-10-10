@@ -501,6 +501,23 @@ pre code {
   background: var(--color-secondary-active);
 }
 
+/* Analytics button white text */
+#viewAnalyticsBtn {
+  color: white !important;
+}
+
+#viewAnalyticsBtn span {
+  color: white !important;
+}
+
+#viewAnalyticsBtn:hover {
+  color: white !important;
+}
+
+#viewAnalyticsBtn:hover span {
+  color: white !important;
+}
+
 .btn--danger {
   background: var(--color-error);
   color: var(--color-white);
