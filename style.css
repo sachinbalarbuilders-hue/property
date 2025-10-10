@@ -578,6 +578,200 @@ pre code {
   border-radius: var(--radius-base);
   transition: border-color var(--duration-fast) var(--ease-standard),
     box-shadow var(--duration-fast) var(--ease-standard);
+  /* Ensure good contrast and visibility by default */
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+/* Light mode form styling for media query */
+@media (prefers-color-scheme: light) {
+  .form-control,
+  input.form-control,
+  select.form-control,
+  textarea.form-control {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .form-control:focus,
+  input.form-control:focus,
+  select.form-control:focus,
+  textarea.form-control:focus {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    border-color: #33a8b2 !important;
+    color: #374151 !important;
+    box-shadow: 0 0 0 3px rgba(51, 168, 178, 0.1) !important;
+    outline: none !important;
+  }
+  
+  .form-control:hover,
+  input.form-control:hover,
+  select.form-control:hover,
+  textarea.form-control:hover {
+    border-color: #9ca3af !important;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .form-control::placeholder {
+    color: #9ca3af !important;
+    opacity: 1 !important;
+    font-weight: 400 !important;
+  }
+  
+  .form-label {
+    color: #374151 !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+  }
+  
+  .tab-content h3 {
+    color: #1e3a8a !important;
+    border-bottom-color: #d1d5db !important;
+  }
+  
+  .tab-content h4 {
+    color: #374151 !important;
+  }
+  
+  /* Light mode styling for all form contexts - media query */
+  .modal .form-control,
+  .modal input,
+  .modal select,
+  .modal textarea,
+  .modal-body .form-control,
+  .modal-body input,
+  .modal-body select,
+  .modal-body textarea,
+  .payment-modal-content .form-control,
+  .payment-modal-content input,
+  .payment-modal-content select,
+  .payment-modal-content textarea,
+  .search-input,
+  .filter-select,
+  .bill-item .form-control,
+  .bill-item input,
+  .bill-item select,
+  .bill-item textarea,
+  .document-upload .form-control,
+  .document-upload input,
+  .document-upload select,
+  .document-upload textarea {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .modal .form-control:focus,
+  .modal input:focus,
+  .modal select:focus,
+  .modal textarea:focus,
+  .modal-body .form-control:focus,
+  .modal-body input:focus,
+  .modal-body select:focus,
+  .modal-body textarea:focus,
+  .payment-modal-content .form-control:focus,
+  .payment-modal-content input:focus,
+  .payment-modal-content select:focus,
+  .payment-modal-content textarea:focus,
+  .search-input:focus,
+  .filter-select:focus,
+  .bill-item .form-control:focus,
+  .bill-item input:focus,
+  .bill-item select:focus,
+  .bill-item textarea:focus,
+  .document-upload .form-control:focus,
+  .document-upload input:focus,
+  .document-upload select:focus,
+  .document-upload textarea:focus {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    border-color: #33a8b2 !important;
+    color: #374151 !important;
+    box-shadow: 0 0 0 3px rgba(51, 168, 178, 0.1) !important;
+    outline: none !important;
+  }
+  
+  .modal .form-control:hover,
+  .modal input:hover,
+  .modal select:hover,
+  .modal textarea:hover,
+  .modal-body .form-control:hover,
+  .modal-body input:hover,
+  .modal-body select:hover,
+  .modal-body textarea:hover,
+  .payment-modal-content .form-control:hover,
+  .payment-modal-content input:hover,
+  .payment-modal-content select:hover,
+  .payment-modal-content textarea:hover,
+  .search-input:hover,
+  .filter-select:hover,
+  .bill-item .form-control:hover,
+  .bill-item input:hover,
+  .bill-item select:hover,
+  .bill-item textarea:hover,
+  .document-upload .form-control:hover,
+  .document-upload input:hover,
+  .document-upload select:hover,
+  .document-upload textarea:hover {
+    border-color: #9ca3af !important;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .modal .form-control::placeholder,
+  .modal input::placeholder,
+  .modal textarea::placeholder,
+  .modal-body .form-control::placeholder,
+  .modal-body input::placeholder,
+  .modal-body textarea::placeholder,
+  .payment-modal-content .form-control::placeholder,
+  .payment-modal-content input::placeholder,
+  .payment-modal-content textarea::placeholder,
+  .search-input::placeholder,
+  .bill-item .form-control::placeholder,
+  .bill-item input::placeholder,
+  .bill-item textarea::placeholder,
+  .document-upload .form-control::placeholder,
+  .document-upload input::placeholder,
+  .document-upload textarea::placeholder {
+    color: #9ca3af !important;
+    opacity: 1 !important;
+    font-weight: 400 !important;
+  }
+  
+  .modal .form-label,
+  .modal-body .form-label,
+  .payment-modal-content .form-label,
+  .bill-item .form-label,
+  .document-upload .form-label,
+  .modal label,
+  .modal-body label,
+  .payment-modal-content label,
+  .bill-item label,
+  .document-upload label {
+    color: #374151 !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+  }
 }
 
 /* Modern Dark Input Styling - Enhanced Design */
@@ -706,6 +900,180 @@ select.form-control {
   background-image: var(--select-caret-light);
 }
 
+/* Light mode form control styling */
+[data-color-scheme="light"] .form-control,
+[data-color-scheme="light"] input.form-control,
+[data-color-scheme="light"] select.form-control,
+[data-color-scheme="light"] textarea.form-control {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border-color: #d1d5db !important;
+  color: #374151 !important;
+  border-width: 1px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  transition: all 0.2s ease !important;
+}
+
+[data-color-scheme="light"] .form-control:focus,
+[data-color-scheme="light"] input.form-control:focus,
+[data-color-scheme="light"] select.form-control:focus,
+[data-color-scheme="light"] textarea.form-control:focus {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border-color: #33a8b2 !important;
+  color: #374151 !important;
+  box-shadow: 0 0 0 3px rgba(51, 168, 178, 0.1) !important;
+  outline: none !important;
+}
+
+[data-color-scheme="light"] .form-control:hover,
+[data-color-scheme="light"] input.form-control:hover,
+[data-color-scheme="light"] select.form-control:hover,
+[data-color-scheme="light"] textarea.form-control:hover {
+  border-color: #9ca3af !important;
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-color-scheme="light"] .form-control::placeholder {
+  color: #9ca3af !important;
+  opacity: 1 !important;
+  font-weight: 400 !important;
+}
+
+/* Light mode styling for all form contexts */
+[data-color-scheme="light"] .modal .form-control,
+[data-color-scheme="light"] .modal input,
+[data-color-scheme="light"] .modal select,
+[data-color-scheme="light"] .modal textarea,
+[data-color-scheme="light"] .modal-body .form-control,
+[data-color-scheme="light"] .modal-body input,
+[data-color-scheme="light"] .modal-body select,
+[data-color-scheme="light"] .modal-body textarea,
+[data-color-scheme="light"] .payment-modal-content .form-control,
+[data-color-scheme="light"] .payment-modal-content input,
+[data-color-scheme="light"] .payment-modal-content select,
+[data-color-scheme="light"] .payment-modal-content textarea,
+[data-color-scheme="light"] .search-input,
+[data-color-scheme="light"] .filter-select,
+[data-color-scheme="light"] .bill-item .form-control,
+[data-color-scheme="light"] .bill-item input,
+[data-color-scheme="light"] .bill-item select,
+[data-color-scheme="light"] .bill-item textarea,
+[data-color-scheme="light"] .document-upload .form-control,
+[data-color-scheme="light"] .document-upload input,
+[data-color-scheme="light"] .document-upload select,
+[data-color-scheme="light"] .document-upload textarea {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border-color: #d1d5db !important;
+  color: #374151 !important;
+  border-width: 1px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  transition: all 0.2s ease !important;
+}
+
+[data-color-scheme="light"] .modal .form-control:focus,
+[data-color-scheme="light"] .modal input:focus,
+[data-color-scheme="light"] .modal select:focus,
+[data-color-scheme="light"] .modal textarea:focus,
+[data-color-scheme="light"] .modal-body .form-control:focus,
+[data-color-scheme="light"] .modal-body input:focus,
+[data-color-scheme="light"] .modal-body select:focus,
+[data-color-scheme="light"] .modal-body textarea:focus,
+[data-color-scheme="light"] .payment-modal-content .form-control:focus,
+[data-color-scheme="light"] .payment-modal-content input:focus,
+[data-color-scheme="light"] .payment-modal-content select:focus,
+[data-color-scheme="light"] .payment-modal-content textarea:focus,
+[data-color-scheme="light"] .search-input:focus,
+[data-color-scheme="light"] .filter-select:focus,
+[data-color-scheme="light"] .bill-item .form-control:focus,
+[data-color-scheme="light"] .bill-item input:focus,
+[data-color-scheme="light"] .bill-item select:focus,
+[data-color-scheme="light"] .bill-item textarea:focus,
+[data-color-scheme="light"] .document-upload .form-control:focus,
+[data-color-scheme="light"] .document-upload input:focus,
+[data-color-scheme="light"] .document-upload select:focus,
+[data-color-scheme="light"] .document-upload textarea:focus {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border-color: #33a8b2 !important;
+  color: #374151 !important;
+  box-shadow: 0 0 0 3px rgba(51, 168, 178, 0.1) !important;
+  outline: none !important;
+}
+
+[data-color-scheme="light"] .modal .form-control:hover,
+[data-color-scheme="light"] .modal input:hover,
+[data-color-scheme="light"] .modal select:hover,
+[data-color-scheme="light"] .modal textarea:hover,
+[data-color-scheme="light"] .modal-body .form-control:hover,
+[data-color-scheme="light"] .modal-body input:hover,
+[data-color-scheme="light"] .modal-body select:hover,
+[data-color-scheme="light"] .modal-body textarea:hover,
+[data-color-scheme="light"] .payment-modal-content .form-control:hover,
+[data-color-scheme="light"] .payment-modal-content input:hover,
+[data-color-scheme="light"] .payment-modal-content select:hover,
+[data-color-scheme="light"] .payment-modal-content textarea:hover,
+[data-color-scheme="light"] .search-input:hover,
+[data-color-scheme="light"] .filter-select:hover,
+[data-color-scheme="light"] .bill-item .form-control:hover,
+[data-color-scheme="light"] .bill-item input:hover,
+[data-color-scheme="light"] .bill-item select:hover,
+[data-color-scheme="light"] .bill-item textarea:hover,
+[data-color-scheme="light"] .document-upload .form-control:hover,
+[data-color-scheme="light"] .document-upload input:hover,
+[data-color-scheme="light"] .document-upload select:hover,
+[data-color-scheme="light"] .document-upload textarea:hover {
+  border-color: #9ca3af !important;
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-color-scheme="light"] .modal .form-control::placeholder,
+[data-color-scheme="light"] .modal input::placeholder,
+[data-color-scheme="light"] .modal textarea::placeholder,
+[data-color-scheme="light"] .modal-body .form-control::placeholder,
+[data-color-scheme="light"] .modal-body input::placeholder,
+[data-color-scheme="light"] .modal-body textarea::placeholder,
+[data-color-scheme="light"] .payment-modal-content .form-control::placeholder,
+[data-color-scheme="light"] .payment-modal-content input::placeholder,
+[data-color-scheme="light"] .payment-modal-content textarea::placeholder,
+[data-color-scheme="light"] .search-input::placeholder,
+[data-color-scheme="light"] .bill-item .form-control::placeholder,
+[data-color-scheme="light"] .bill-item input::placeholder,
+[data-color-scheme="light"] .bill-item textarea::placeholder,
+[data-color-scheme="light"] .document-upload .form-control::placeholder,
+[data-color-scheme="light"] .document-upload input::placeholder,
+[data-color-scheme="light"] .document-upload textarea::placeholder {
+  color: #9ca3af !important;
+  opacity: 1 !important;
+  font-weight: 400 !important;
+}
+
+[data-color-scheme="light"] .modal .form-label,
+[data-color-scheme="light"] .modal-body .form-label,
+[data-color-scheme="light"] .payment-modal-content .form-label,
+[data-color-scheme="light"] .bill-item .form-label,
+[data-color-scheme="light"] .document-upload .form-label,
+[data-color-scheme="light"] .modal label,
+[data-color-scheme="light"] .modal-body label,
+[data-color-scheme="light"] .payment-modal-content label,
+[data-color-scheme="light"] .bill-item label,
+[data-color-scheme="light"] .document-upload label {
+  color: #374151 !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+}
+
 .form-control:focus {
   border-color: var(--color-primary);
   outline: var(--focus-outline);
@@ -737,6 +1105,13 @@ select.form-control {
   color: var(--color-gray-200) !important;
   font-weight: 500 !important;
   font-size: 13px !important;
+}
+
+/* Light mode form label styling */
+[data-color-scheme="light"] .form-label {
+  color: #374151 !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
 }
 
 .form-group {
@@ -2043,6 +2418,16 @@ select.form-control {
 
 [data-color-scheme="dark"] .tab-content h4 {
   color: var(--color-gray-200) !important;
+}
+
+/* Light mode tab content styling */
+[data-color-scheme="light"] .tab-content h3 {
+  color: #1e3a8a !important;
+  border-bottom-color: #d1d5db !important;
+}
+
+[data-color-scheme="light"] .tab-content h4 {
+  color: #374151 !important;
 }
 
 /* Form Styles */
