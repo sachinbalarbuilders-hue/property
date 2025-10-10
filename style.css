@@ -2649,6 +2649,22 @@ select.form-control {
   align-items: end;
 }
 
+/* Reduce margin for checkbox rows to bring details closer */
+.form-row:has(.checkbox-label) {
+  margin-bottom: var(--space-8);
+}
+
+/* Make details sections appear closer to their checkboxes */
+.gst-details,
+.municipal-taxes-details,
+.signage-tax-details,
+.legal-charges-details,
+.legal-charges-custom,
+.maintenance-details {
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-12);
+}
+
 .form-row:has(.form-group--full) {
   grid-template-columns: 1fr;
 }
