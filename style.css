@@ -2766,13 +2766,35 @@ select.form-control {
 
 .bill-details {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--space-12);
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-16);
   margin-top: var(--space-12);
+  align-items: start;
 }
 
 .bill-details.hidden {
   display: none;
+}
+
+/* Responsive design for bill details */
+@media (max-width: 1200px) {
+  .bill-details {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .bill-details {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-12);
+  }
+}
+
+@media (max-width: 480px) {
+  .bill-details {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
 }
 
 /* Custom Bills */
