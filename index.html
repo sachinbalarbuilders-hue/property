@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Property Management - Balar Builders</title>
-    <link rel="stylesheet" href="style.css?v=1.1">
+    <!-- Updated for chart redesign deployment -->
+    <link rel="stylesheet" href="style.css?v=1.2">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
 </head>
@@ -96,6 +97,57 @@
                 <div class="dashboard-title">
                     <h1>📊 Analytics Dashboard</h1>
                     <p>Comprehensive insights into your property portfolio performance</p>
+                </div>
+            </div>
+
+            <!-- KPI Summary Cards -->
+            <div class="kpi-section">
+                <div class="kpi-card">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-content">
+                        <h4>Total Revenue</h4>
+                        <div class="kpi-value" id="totalRevenueKPI">₹0</div>
+                        <div class="kpi-trend" id="revenueTrend">
+                            <span class="trend-indicator">↗</span>
+                            <span class="trend-text">+0% this month</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card">
+                    <div class="kpi-icon">🏠</div>
+                    <div class="kpi-content">
+                        <h4>Occupancy Rate</h4>
+                        <div class="kpi-value" id="occupancyRateKPI">0%</div>
+                        <div class="kpi-trend" id="occupancyTrend">
+                            <span class="trend-indicator">↗</span>
+                            <span class="trend-text">0 properties occupied</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card">
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-content">
+                        <h4>Avg. Rent/Sqft</h4>
+                        <div class="kpi-value" id="avgRentPerSqftKPI">₹0</div>
+                        <div class="kpi-trend" id="rentTrend">
+                            <span class="trend-indicator">↗</span>
+                            <span class="trend-text">Across all properties</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card">
+                    <div class="kpi-icon">⏰</div>
+                    <div class="kpi-content">
+                        <h4>Payment Efficiency</h4>
+                        <div class="kpi-value" id="paymentEfficiencyKPI">0%</div>
+                        <div class="kpi-trend" id="efficiencyTrend">
+                            <span class="trend-indicator">↗</span>
+                            <span class="trend-text">On-time payments</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
