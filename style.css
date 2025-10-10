@@ -572,15 +572,16 @@ pre code {
   padding: var(--space-8) var(--space-12);
   font-size: var(--font-size-md);
   line-height: 1.5;
-  color: #374151;
-  background-color: #ffffff;
-  border: 1px solid #d1d5db;
+  color: #1f2937 !important;
+  background-color: #ffffff !important;
+  border: 2px solid #6b7280 !important;
   border-radius: var(--radius-base);
   transition: border-color var(--duration-fast) var(--ease-standard),
     box-shadow var(--duration-fast) var(--ease-standard);
   /* Ensure good contrast and visibility by default */
   min-height: 40px;
   box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Light mode form styling for media query */
@@ -1074,10 +1075,17 @@ select.form-control {
   font-size: 14px !important;
 }
 
+.form-control:hover {
+  border-color: #4b5563 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+}
+
 .form-control:focus {
-  border-color: #33a8b2;
+  border-color: #2563eb !important;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(51, 168, 178, 0.1);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
 }
 
 .form-control[readonly] {
@@ -1089,9 +1097,9 @@ select.form-control {
 .form-label {
   display: block;
   margin-bottom: var(--space-8);
-  font-weight: var(--font-weight-medium);
+  font-weight: 600 !important;
   font-size: var(--font-size-sm);
-  color: #374151;
+  color: #1f2937 !important;
 }
 
 /* Banking-style dark mode form label improvements */
