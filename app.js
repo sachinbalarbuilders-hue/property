@@ -4055,10 +4055,148 @@ const chartColors = {
 };
 
 function updateAllCharts() {
+    updateKPICards();
     updateRevenueChart();
     updatePropertyStatusChart();
     updateBillStatusChart();
     updateBillTrendsChart();
+}
+
+function updateKPICards() {
+    updateTotalRevenueKPI();
+    updateOccupancyRateKPI();
+    updateAvgRentPerSqftKPI();
+    updatePaymentEfficiencyKPI();
+}
+
+function updateTotalRevenueKPI() {
+    const totalRevenue = properties.reduce((sum, property) => {
+        if (property.isRental && property.paymentHistory) {
+            return sum + property.paymentHistory.reduce((paymentSum, payment) => {
+                return paymentSum + (payment.total || (payment.base + payment.gst) || 0);
+            }, 0);
+        }
+        return sum;
+    }, 0);
+    
+    const element = document.getElementById('totalRevenueKPI');
+    if (element) {
+        element.textContent = `₹${Math.round(totalRevenue).toLocaleString()}`;
+    }
+    
+    // Calculate trend (simplified - compare with previous month)
+    const currentMonth = new Date().getMonth();
+    const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const currentYear = new Date().getFullYear();
+    const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+    
+    const currentMonthRevenue = calculateMonthlyRevenue(currentYear, currentMonth);
+    const previousMonthRevenue = calculateMonthlyRevenue(previousYear, previousMonth);
+    
+    const trendElement = document.getElementById('revenueTrend');
+    if (trendElement) {
+        const trendIndicator = trendElement.querySelector('.trend-indicator');
+        const trendText = trendElement.querySelector('.trend-text');
+        
+        if (previousMonthRevenue > 0) {
+            const changePercent = ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue * 100);
+            const isPositive = changePercent >= 0;
+            
+            trendIndicator.textContent = isPositive ? '↗' : '↘';
+            trendIndicator.className = `trend-indicator ${isPositive ? 'positive' : 'negative'}`;
+            trendText.textContent = `${isPositive ? '+' : ''}${Math.round(changePercent)}% this month`;
+        } else {
+            trendIndicator.textContent = '↗';
+            trendIndicator.className = 'trend-indicator positive';
+            trendText.textContent = 'New data this month';
+        }
+    }
+}
+
+function updateOccupancyRateKPI() {
+    const totalProperties = properties.length;
+    const occupiedProperties = properties.filter(property => 
+        property.isRental && property.lesseeName && property.lesseeName.trim() !== ''
+    ).length;
+    
+    const occupancyRate = totalProperties > 0 ? (occupiedProperties / totalProperties * 100) : 0;
+    
+    const element = document.getElementById('occupancyRateKPI');
+    if (element) {
+        element.textContent = `${Math.round(occupancyRate)}%`;
+    }
+    
+    const trendElement = document.getElementById('occupancyTrend');
+    if (trendElement) {
+        const trendText = trendElement.querySelector('.trend-text');
+        trendText.textContent = `${occupiedProperties} of ${totalProperties} properties occupied`;
+    }
+}
+
+function updateAvgRentPerSqftKPI() {
+    const rentalProperties = properties.filter(property => 
+        property.isRental && property.rentPerSqft && property.rentPerSqft > 0
+    );
+    
+    const avgRentPerSqft = rentalProperties.length > 0 
+        ? rentalProperties.reduce((sum, property) => sum + property.rentPerSqft, 0) / rentalProperties.length
+        : 0;
+    
+    const element = document.getElementById('avgRentPerSqftKPI');
+    if (element) {
+        element.textContent = `₹${Math.round(avgRentPerSqft)}`;
+    }
+    
+    const trendElement = document.getElementById('rentTrend');
+    if (trendElement) {
+        const trendText = trendElement.querySelector('.trend-text');
+        trendText.textContent = `Across ${rentalProperties.length} rental properties`;
+    }
+}
+
+function updatePaymentEfficiencyKPI() {
+    let totalPayments = 0;
+    let onTimePayments = 0;
+    
+    properties.forEach(property => {
+        if (property.isRental && property.paymentHistory) {
+            property.paymentHistory.forEach(payment => {
+                totalPayments++;
+                // Consider a payment "on time" if it's paid and not overdue
+                if (payment.status === 'Paid' && payment.status !== 'Overdue') {
+                    onTimePayments++;
+                }
+            });
+        }
+    });
+    
+    const efficiency = totalPayments > 0 ? (onTimePayments / totalPayments * 100) : 0;
+    
+    const element = document.getElementById('paymentEfficiencyKPI');
+    if (element) {
+        element.textContent = `${Math.round(efficiency)}%`;
+    }
+    
+    const trendElement = document.getElementById('efficiencyTrend');
+    if (trendElement) {
+        const trendText = trendElement.querySelector('.trend-text');
+        trendText.textContent = `${onTimePayments} of ${totalPayments} payments on time`;
+    }
+}
+
+function calculateMonthlyRevenue(year, month) {
+    return properties.reduce((sum, property) => {
+        if (property.isRental && property.paymentHistory) {
+            return sum + property.paymentHistory.reduce((paymentSum, payment) => {
+                const paymentDate = new Date(payment.paymentDate || payment.date);
+                if (paymentDate.getFullYear() === year && paymentDate.getMonth() === month) {
+                    return paymentSum + (payment.total || (payment.base + payment.gst) || 0);
+                }
+                return paymentSum;
+            }, 0);
+        }
+        return sum;
+    }, 0);
 }
 
 function updateRevenueChart() {
@@ -5992,7 +6130,7 @@ function setupBillsSection(existingBills = null) {
                            value="${existingBill ? existingBill.startDate || '' : ''}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Due Date (Days from Start Date)</label>
+                    <label class="form-label">Due Date (Days)</label>
                     <input type="number" class="form-control" name="bill-${bill.key}-due-date" 
                            placeholder="Enter days (e.g., 250)" min="1" max="365"
                            value="${existingBill ? existingBill.dueDate || '' : ''}">
@@ -6078,7 +6216,7 @@ function addCustomBill(existingBill = null) {
                        value="${existingBill ? existingBill.startDate || '' : ''}">
             </div>
             <div class="form-group">
-                <label class="form-label">Due Date (Days from Start Date)</label>
+                <label class="form-label">Due Date (Days)</label>
                 <input type="number" class="form-control" name="custom-bill-due-date" 
                        placeholder="Enter days (e.g., 250)" min="1" max="365"
                        value="${existingBill ? existingBill.dueDate || '' : ''}">

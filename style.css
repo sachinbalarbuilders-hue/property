@@ -2767,9 +2767,17 @@ select.form-control {
 .bill-details {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: var(--space-16);
+  gap: var(--space-12);
   margin-top: var(--space-12);
   align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.bill-details .form-group {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .bill-details.hidden {
@@ -2777,9 +2785,17 @@ select.form-control {
 }
 
 /* Responsive design for bill details */
+@media (max-width: 1400px) {
+  .bill-details {
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-8);
+  }
+}
+
 @media (max-width: 1200px) {
   .bill-details {
     grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-12);
   }
 }
 
